@@ -1,0 +1,33 @@
+# E-00 — "does the problem exist?" (EXPERIMENTS.md, ROADMAP Phase 1)
+#
+# The undefended agent (baseline B-00) on the full dev slice. This is the go/no-go gate:
+# if overreach on the low-authority half of AF-Auth comes in under ~5%, the project's
+# thesis is wrong and it gets re-framed before any firewall is built.
+#
+# Model selection is documented in DECISIONS D-016. The evaluation plan asks for one
+# frontier and one open-weight backbone; no GPU and no gpt-oss access on this machine make
+# a local open-weight run infeasible at this scale, so E-00 runs two API models of
+# different generations and the open-weight requirement carries forward to Phase 3.
+
+experiment: E-00
+defense: undefended
+split: dev
+suites: [af_auth, af_inject, benign]
+seeds: [1, 2, 3]
+max_workers: 8
+save_traces: true
+
+models:
+  - id: gpt-5.1
+    provider: openai
+    model: gpt-5.1
+    kind: frontier
+    max_tokens: 4096
+    extra_body:
+      reasoning_effort: low
+  - id: gpt-4.1-mini
+    provider: openai
+    model: gpt-4.1-mini
+    kind: mid-tier
+    max_tokens: 2048
+    temperature: 1.0

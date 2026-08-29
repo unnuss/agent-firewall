@@ -142,10 +142,10 @@ arguments inherit from the trace spans they were derived from.
 ```python
 class IntentScope:
     objective: str
-    authorized_effects: set[EffectClass]      # deny-by-default
-    constraints: list[Constraint]             # budget, recipient, domain, time, glob
-    declassifications: list[Declassification] # what SECRET/PRIVATE data may leave, to where
-    grants: list[Grant]                       # each with provenance -> a USER turn id
+    authorized_effects: set[EffectClass]  # deny-by-default
+    constraints: list[Constraint]  # budget, recipient, domain, time, glob
+    declassifications: list[Declassification]  # what SECRET/PRIVATE data may leave, to where
+    grants: list[Grant]  # each with provenance -> a USER turn id
     open_questions: list[str]
 ```
 

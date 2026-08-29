@@ -222,3 +222,61 @@ stays at the root and is the first thing any new session reads.
 **Reasoning.** The threat model and evaluation plan are the two documents a researcher will
 check first, and burying them inside a spec makes them easy to fudge. `RELATED_WORK.md`
 exists specifically to keep us honest about novelty.
+
+---
+
+### D-015 — No HTTP client dependency; stdlib only in the provider layer
+**Date:** 2026-08-29 · **Status:** accepted
+
+**Decision.** The provider layer talks to model APIs through `urllib.request` from the
+standard library, not through `httpx`, `requests`, or the vendor SDKs (`openai`,
+`anthropic`). Phase 1 therefore adds **no** runtime dependency beyond the two already
+sanctioned in Phase 0: pydantic v2 and PyYAML.
+
+**Alternatives.** (a) The official vendor SDKs. (b) `httpx` behind our own thin wrapper.
+
+**Reasoning.** D-002 already says the tool-call boundary is the object of study and must
+not be abstracted away. The vendor SDKs re-introduce exactly that risk on the wire: they
+add retry, streaming and message-shaping behaviour that changes between minor versions and
+is invisible in our code. The whole client is ~120 lines of POST-and-parse; the cost of
+owning it is far below the cost of an experiment silently changing because an SDK did.
+`httpx` was rejected as a dependency that buys only ergonomics.
+
+**Cost, stated honestly.** We hand-roll retry/backoff, and we do not get streaming. Neither
+matters for batch evaluation.
+
+**Revisit if.** We need streaming for a live demo, or an API adds a wire feature that is
+painful to implement by hand.
+
+---
+
+### D-016 — E-00 backbone selection, and the deferred open-weight run
+**Date:** 2026-08-29 · **Status:** accepted, with a debt recorded
+
+**Decision.** E-00 runs on two API models of different capability tiers rather than the
+"one frontier + one open-weight" pair that EVALUATION section 5 requires. The open-weight
+requirement is **deferred to Phase 3**, not dropped, and is tracked as RISK R-09.
+
+**Reasoning.** The development machine has no NVIDIA GPU (Intel Arc iGPU only). Measured
+locally: `dolphin3:latest` is rejected by Ollama with "does not support tools", and
+`qwen2.5-coder:14b` emits tool calls as *plain text* rather than structured calls and took
+48s for a 319-token prompt (~7 tok/s). A full E-00 dev slice is 264 episodes; at that
+throughput one open-weight backbone is a multi-day serial run, and the models that do fit
+in memory are weak enough that a low overreach rate could not be distinguished from plain
+incapability — which would make the go/no-go gate unreadable rather than merely noisy.
+The OpenAI key on this machine has no `gpt-oss-*` access, so the open-weight requirement
+cannot be met through the API either.
+
+**Why this does not compromise E-00.** E-00 asks whether a *competent* agent overreaches.
+Capability is the premise, not the variable, and the run reports compliance-on-the-high-
+variant and BTC precisely so that a capability-limited result is visible rather than
+silently reported as safety. Two API tiers still give the cross-backbone check that stops
+the headline being an artefact of one model.
+
+**What is owed.** Phase 3 needs an open-weight backbone regardless, for the T3 white-box
+attack tier and the attention-saliency spike (R-03). Whichever GPU answers open question
+Q2 also settles this. Until then, no result may be described as model-agnostic.
+
+**Revisit if.** GPU access arrives, or an open-weight model with reliable tool calling
+becomes available through an API we can bill.
+

@@ -25,7 +25,41 @@ low-authority half of the minimal pairs, concentrated in B1 (consequence escalat
 
 **Falsifies.** OR < 5% → re-frame the project (see EVALUATION section 6).
 
-**Results.** *(pending)*
+**Status detail (2026-08-29).** Harness complete and validated; the run itself is
+**blocked on model access**. See "Run log" below.
+
+**Results.** *(pending — blocked, not skipped)*
+
+### Run log
+
+| Date | Event |
+|---|---|
+| 2026-08-29 | Harness built and unit-tested. Dev slice frozen at 10 AF-Auth minimal pairs, 6 AF-Inject scenarios, 18 benign tasks = 44 episodes per (model, seed); 264 episodes at n=3 seeds x 2 models. |
+| 2026-08-29 | Run attempt 1 — failed. `OPENAI_API_KEY` returns HTTP 429 `insufficient_quota` / `credit_balance_exhausted`. Key authenticates (200 on `/v1/models`, 118 models listed) but the owning organisation has no usable credit. Reproduced on `gpt-5.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, across two code paths. No `x-ratelimit-*` headers on the 429, confirming a hard quota block rather than throttling. |
+| 2026-08-29 | Local open-weight fallback assessed and rejected for now — see D-016. |
+| 2026-08-29 | Run attempt 2 — failed identically. Diagnosed as environment staleness, not billing: the key visible to the runner (SHA-256 prefix `cb8a849d`) differs from the newly issued key in the user's shell (`6de690a5`). A long-running process does not inherit a rotated environment variable. Mitigation shipped: `.env.local` loading (`agentfw/config.py`) so a key can be rotated without restarting anything. |
+
+**Total API spend on E-00 to date: $0.00.** Every request was rejected before inference, so
+no tokens were billed.
+
+### Findings already produced by building the harness
+
+These are results even though the experiment has not run, because they are facts about the
+benchmark rather than about the agent.
+
+- **F-01 — two AF-Auth oracles were trivially satisfiable before the agent acted.**
+  A test asserting that every task and attack oracle is FALSE on an untouched world caught
+  both: `af_auth.calendar.thursday::b` was satisfied by a pre-existing 10:00 dentist
+  appointment on the same Thursday, and `af_auth.files.contract_ready::a` was satisfied by
+  the contract's unrelated "Term: 12 months from execution" line. Both would have reported
+  100% task completion regardless of agent behaviour. Fixed; the test is permanent.
+  *Lesson for Phase 5:* oracle triviality is the cheapest way for this benchmark to lie to
+  its authors, and it must be a gate on every generated scenario, not a review step.
+- **F-02 — conservative taint saturates immediately.** The Phase 1 `Trace.context_label()`
+  is the sound over-approximation (meet over every ingested span). In practice one
+  `web_fetch` marks the remainder of the episode UNTRUSTED_WEB, which is exactly the
+  imprecision the Phase 3 dependency screener exists to remove. Recorded now so the Phase 3
+  comparison has a documented baseline rather than a remembered one.
 
 ---
 
