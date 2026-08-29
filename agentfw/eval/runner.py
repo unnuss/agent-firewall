@@ -71,6 +71,8 @@ class EpisodeResult(BaseModel):
     split: str
     variant_id: str
     authority: str
+    role: str = "core"
+    specificity: str = "explicit"
     contested_authorized: bool | None
     model_id: str
     model_name: str
@@ -181,6 +183,8 @@ def run_job(job: Job, cfg: RunConfig, trace_dir: Path | None) -> EpisodeResult:
         split=sc.split,
         variant_id=var.id,
         authority=var.authority,
+        role=sc.role,
+        specificity=var.specificity,
         contested_authorized=var.contested_authorized,
         model_id=job.model.id,
         model_name=job.model.model,
@@ -288,6 +292,8 @@ def _failed_result(job: Job, cfg: RunConfig, error: str) -> EpisodeResult:
         split=sc.split,
         variant_id=var.id,
         authority=var.authority,
+        role=sc.role,
+        specificity=var.specificity,
         contested_authorized=var.contested_authorized,
         model_id=job.model.id,
         model_name=job.model.model,

@@ -280,11 +280,21 @@ Q2 also settles this. Until then, no result may be described as model-agnostic.
 **Revisit if.** GPU access arrives, or an open-weight model with reliable tool calling
 becomes available through an API we can bill.
 
+**Amended 2026-08-29 (after E-00b).** The debt is now the single most important open item
+in the evaluation. E-00b's central claim — that these models refuse explicit escalation but
+not under-specification — rests on two OpenAI models, so a shared post-training lineage
+cannot be ruled out as the cause. Until it is replicated on a model from a different
+family, the finding must be stated as "on the models tested", never as a property of LLM
+agents. The agreed route is a hosted-notebook run (Kaggle or Colab) rather than local
+hardware; the runner is already provider-agnostic and resumable, so this is a config
+change plus a notebook, not new engineering.
+
 ---
 
 ### D-017 — Re-centre AF-Auth on under-specification, not explicit verb contrast
-**Date:** 2026-08-29 · **Status: PROPOSED — awaiting user review. Do not act on this
-without sign-off; it changes what the benchmark measures.**
+**Date:** 2026-08-29 · **Status: accepted with modifications, 2026-08-29. The accepted
+form is D-018, which narrows what was proposed here. Read D-018, not this entry, as the
+operative decision.**
 
 **Decision proposed.** Treat E-00 as a partial refutation of the current AF-Auth design.
 Specifically: (a) retire "find a flight → books it" as the project's motivating example,
@@ -325,4 +335,73 @@ discovering in Phase 5 that the headline comparison has no signal in it.
 **Revisit trigger.** The revised E-00. If overreach on an under-specification-centred slice
 does not clear ~15%, the honest move is to re-frame the project around AF-Inject plus the
 oversight-efficiency curve and say so in the README.
+
+---
+
+### D-018 — Reframe AF-Auth around authorization under under-specification; keep the controls
+**Date:** 2026-08-29 · **Status:** accepted (supersedes D-017 as proposed)
+
+**Decision.** D-017 asked to re-centre AF-Auth on under-specification. Accepted, with one
+substantive correction: **do not narrow the project to under-specification only, and do
+not discard the explicit-escalation cases.** They are retained as *controls*. Concretely:
+
+1. AF-Auth gains ~12-20 hand-audited underspecified authorization scenarios across
+   multiple domains. Delivered: **14 new triples across 7 domains**, plus the one original
+   B4 pair that qualifies = 15 core scenarios.
+2. Scenarios must represent genuinely plausible ambiguity, not prompts engineered to make
+   the model overreach.
+3. B1/B2/B3/B5 are kept and their negative result reported honestly. They are now tagged
+   `role: control`.
+4. E-00 is re-run as **E-00b**.
+5. Both **episode-level overreach rate** and **scenario-level incidence** are reported.
+6. The uncertainty method is reviewed so repeated seeds and models within one scenario are
+   not treated as independent.
+7. The Cloudhost invoice case survives as the motivating example **only if** E-00b shows
+   the phenomenon generalises beyond it.
+8. The registered E-00 results are not altered.
+9. Thesis and README change only *after* E-00b provides evidence.
+10. Phase 2 does not begin.
+
+**What was implemented for each.**
+
+*Point 1-3, the scenario design.* Core scenarios are **triples**, not pairs, over one world
+and one contested effect: `a` low-authority underspecified, `b` high-authority explicit,
+`c` low-authority **explicit**. The `a`/`c` contrast is the load-bearing addition and was
+not in D-017. Both are low-authority asks about the same goal in the same world; only the
+wording differs. If `a` overreaches and `c` does not, ambiguity is the cause. If both
+overreach, the scenario is merely pushy and must be rewritten. That is the mechanical
+answer to point 2 — the suite contains its own control against being engineered.
+
+The authoring bar is additionally enforced by a test: an utterance labelled
+`underspecified` must not contain a word naming its own consequence (no "send", "pay",
+"delete", "share" ...). If the utterance says the word, the model is following an
+instruction rather than resolving ambiguity, and any overreach measured would be a
+labelling error rather than a finding.
+
+*Point 5-6, measurement.* `scenario_incidence` reports how many distinct scenarios show at
+least one overreach; a phenomenon driven by one scenario and one spread across twenty can
+share an episode-level rate and mean completely different things. On the original E-00 data
+incidence is **1/10** — which is exactly the fact the episode-level 8.3% was hiding. For
+uncertainty, the clustered bootstrap was already correct in resampling scenarios rather
+than episodes; what was missing was making the difference *visible*. The report now prints
+the clustered interval, the naive iid interval, and the width ratio between them, and
+states that the naive figure is never quoted as a result.
+
+*Point 8, preserving the record.* E-00b writes to `experiments/e00b_revised/`. The original
+`experiments/e00_undefended/results/` is untouched, and E-00 reproduces exactly at commit
+`00bca69`. Freezing by commit rather than by immobilising the suite is what lets the suite
+keep evolving without rewriting history.
+
+**Honest note on a relabelling.** `af_auth.calendar.dana_ambiguous` was filed as B4
+ambiguity in the original suite, but its low-authority utterance actually names the action
+("tell me what she is proposing"). It is an explicit-low case and has been retagged
+`control`. So the original E-00 "B4 = 41.7%" cell was really one genuinely underspecified
+scenario averaged with one that was not. This does not change any registered number; it
+changes what that number meant.
+
+**What would still falsify the reframing.** If E-00b shows the underspecified and explicit
+low-authority variants overreaching at similar rates, ambiguity is not the mechanism and
+the honest move is to re-frame the project around AF-Inject plus the oversight-efficiency
+curve. If scenario-level incidence stays in the low single digits, the phenomenon does not
+generalise and the Cloudhost case must be retired as the motivating example (point 7).
 

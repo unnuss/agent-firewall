@@ -1,8 +1,8 @@
 # Agent Firewall
 
 > A runtime authorization layer for tool-using LLM agents.
-> **Status: Phase 1 complete — sandbox, agent, benchmark harness, and the first
-> measurement (E-00). The firewall itself is Phase 2 and does not exist yet.**
+> **Status: Phase 1 engineering complete; the empirical gate has now passed on the
+> revised suite (E-00b). The firewall itself is Phase 2 and does not exist yet.**
 
 An agent being *capable* of an action does not mean it should be *allowed* to perform it.
 
@@ -26,50 +26,47 @@ Nobody attacked anything. The action was maximally relevant to the goal and neve
 licensed. — *This is what we are actually about.*
 
 That example is not hypothetical and it is not the one we started with. We began with
-"find the cheapest flight → the agent books it", measured it in
-[E-00](docs/EXPERIMENTS.md#e-00--does-the-problem-exist-undefended-baseline), and found it
-happens **0 times out of 6**. Modern models refuse explicit consequence escalation. What
-they do not refuse is *under-specification*: when the instruction contains no verb, they
-supply the higher-consequence one. Overreach in our data is 0% when the user says "draft",
-"find" or "show", and 42% when the user says "deal with it".
+"find the cheapest flight → the agent books it", measured it, and found it happens **0
+times out of 6**. Modern models refuse explicit consequence escalation. What they do not
+refuse is *under-specification*: when the instruction names no action, they supply one, and
+they supply the higher-consequence one.
 
 The distinction matters because the obvious defense for the first — "is this action related
 to the user's goal?" — is close to useless for the second, and we have
 [pre-registered that prediction](docs/EXPERIMENTS.md#e-01) so it gets published either way.
 
-## First measurement (E-00, undefended baseline)
+## What we measured
 
-264 episodes · 34 scenarios · 2 models · 3 seeds · bootstrap 95% CIs clustered by scenario.
-Regenerate with `agentfw report experiments/e00_undefended/results`.
+Two undefended-baseline runs. **E-00** (264 episodes) tested explicit consequence
+escalation — "draft" vs "reply", "find" vs "book" — and found essentially nothing.
+**E-00b** (516 episodes, 24 scenarios, 2 models, 3 seeds) added scenarios where the user
+states a goal without naming the action, and held everything else fixed.
 
-| Metric | Undefended agent |
-|---|---|
-| Overreach rate (AF-Auth, low-authority utterance) | 8.3% [0.0, 25.0] |
-| — explicit escalation (B1/B2/B3/B5) | **0.0%** (0/48) |
-| — under-specification (B4) | **41.7%** [0.0, 83.3] (5/12) |
-| Attack success rate (AF-Inject, T1+T2) | 25.0% [5.6, 47.2] |
-| Benign task completion | 89.8% [76.9, 98.1] |
+The headline is a **within-scenario contrast**: same world, same contested effect, same
+authority level, only the wording of the ask differs.
 
-**We are publishing this against our own interest.** The registered prediction was 15-40%
-overreach concentrated in B1 and B4; B1 came in at zero. The go/no-go gate we wrote in
-advance was "under 5% → re-frame the project", and 8.3% with a CI spanning zero does not
-clearly clear it. The consequence — rebuilding AF-Auth around ambiguity rather than verb
-contrast — is written up as [D-017](docs/DECISIONS.md) rather than quietly absorbed.
+| Low-authority utterance | Overreach (episode) | Scenarios with >=1 overreach |
+|---|---|---|
+| **Underspecified** — "deal with it", "sort that out" | **38.9%** [25.6, 52.2] | **13 / 15** |
+| **Explicit** — "tell me what it says", "draft it" | **2.2%** [0.0, 6.5] | **1 / 23** |
 
-## What is different here
+In **11 of 14** scenarios the wording alone flipped the outcome. Across 7 domains. The
+explicit-escalation controls sit at **0.0% (0/54)** and are kept in the suite precisely
+because that zero is evidence: a defense must not take credit for a baseline that was
+already at zero.
 
-- **Authorization over *effects*, not tools.** `(PURCHASE, FINANCIAL)` is the unit that gets
-  licensed, so "find a flight" and "book a flight" have genuinely different scopes.
-- **Scope monotonicity.** Nothing the agent reads can *widen* its authority. Only a human
-  answering an escalation can. Enforced structurally, not statistically.
-- **ML outside the trusted computing base.** Four security properties hold even when every
-  model in the system is wrong.
-- **Human attention is a measured, budgeted resource.** ASK is not a fallback — minimizing
-  interruptions per unit of harm averted is the system's actual objective function, and the
-  headline result is a *curve*, not a point.
-- **A benchmark with ground truth by construction.** AF-Auth uses minimal pairs: identical
-  world, identical tools, utterances differing only in licensed consequence. Blocking
-  everything and allowing everything both score zero.
+Intervals are percentile bootstrap 95% CIs **clustered by scenario** — seeds and models
+within one scenario are not independent observations. Reported alongside every episode-level
+rate is a **scenario-level incidence**, because a phenomenon driven by one scenario and one
+spread across fifteen can share an episode rate and mean completely different things.
+
+**We publish the results that went against us.** The registered prediction was 15-40%
+overreach concentrated in B1; B1 came in at zero and stayed there. The first run's
+motivating example did not survive its own measurement. Known defects in the current suite
+— including one scenario that asks for data the world does not contain — are listed in
+[EXPERIMENTS.md](docs/EXPERIMENTS.md) as F-01 through F-06 rather than quietly fixed.
+
+Reproduce: `agentfw run experiments/e00b_revised/config.yaml` (~$0.66).
 
 ## Documentation
 

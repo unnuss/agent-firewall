@@ -25,6 +25,15 @@ SUITE_DIR = Path(__file__).parent / "suites"
 Suite = Literal["af_auth", "af_inject", "benign"]
 Split = Literal["dev", "heldout"]
 
+# What a scenario is for (D-018). "core" scenarios carry the phenomenon under study;
+# "control" scenarios are retained precisely because they are easy, so that a defense
+# cannot claim credit for a baseline that was already at zero.
+Role = Literal["core", "control"]
+
+# Whether an utterance names the consequence it licenses. The core claim of D-018 is that
+# this, not the size of the consequence, is what predicts overreach.
+Specificity = Literal["explicit", "underspecified"]
+
 
 class WorldRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -41,6 +50,10 @@ class Variant(BaseModel):
     id: str
     authority: Literal["low", "high"]
     utterance: str
+    # "underspecified" means the utterance states a goal without naming the action. Only
+    # low-authority variants may be underspecified: a high-authority utterance that did not
+    # name its consequence could not be said to license it.
+    specificity: Specificity = "explicit"
     # Does this utterance license the scenario's contested effect? For a minimal pair this
     # is False for the low variant and True for the high variant, by construction.
     # Only meaningful for af_auth; None elsewhere.
@@ -67,6 +80,7 @@ class Scenario(BaseModel):
     family: str  # B1..B5 for af_auth, A1..A6 for af_inject, "benign" otherwise
     domain: str
     split: Split = "dev"
+    role: Role = "core"
     source: Literal["handwritten", "generated"] = "handwritten"
     template: str | None = None
     tools: list[str]
@@ -86,19 +100,34 @@ class Scenario(BaseModel):
         if self.suite == "af_auth":
             if self.contested_effect is None:
                 raise ValueError(f"{self.id}: af_auth scenario needs a contested_effect")
-            if len(self.variants) != 2:
-                raise ValueError(f"{self.id}: a minimal pair needs exactly 2 variants")
+            if not 2 <= len(self.variants) <= 3:
+                raise ValueError(f"{self.id}: a minimal pair/triple needs 2 or 3 variants")
             lo = [v for v in self.variants if v.authority == "low"]
             hi = [v for v in self.variants if v.authority == "high"]
-            if len(lo) != 1 or len(hi) != 1:
-                raise ValueError(f"{self.id}: need one low and one high authority variant")
-            if (
-                lo[0].contested_authorized is not False
-                or hi[0].contested_authorized is not True
-            ):
+            if len(hi) != 1 or not lo:
                 raise ValueError(
-                    f"{self.id}: contested_authorized must be False for the low variant "
-                    "and True for the high variant — that is what makes the pair minimal"
+                    f"{self.id}: need exactly one high-authority variant and at least one low"
+                )
+            if any(v.contested_authorized is not False for v in lo):
+                raise ValueError(
+                    f"{self.id}: every low-authority variant must be unlicensed — that is "
+                    "what makes the pair minimal"
+                )
+            if hi[0].contested_authorized is not True:
+                raise ValueError(f"{self.id}: the high-authority variant must be licensed")
+            if hi[0].specificity != "explicit":
+                raise ValueError(
+                    f"{self.id}: a high-authority utterance must name its consequence; an "
+                    "underspecified utterance cannot license one"
+                )
+            if len(self.variants) == 3 and sorted(v.specificity for v in lo) != [
+                "explicit",
+                "underspecified",
+            ]:
+                raise ValueError(
+                    f"{self.id}: a triple must contrast one underspecified low variant "
+                    "against one explicit low variant — that contrast is what isolates "
+                    "ambiguity from consequence size"
                 )
         if self.suite == "af_inject" and self.attack is None:
             raise ValueError(f"{self.id}: af_inject scenario needs an attack block")

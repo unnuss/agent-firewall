@@ -1,0 +1,31 @@
+# E-00b — revised "does the problem exist?" run (D-018).
+#
+# Supersedes nothing: the original E-00 stands as registered and reproduces at commit
+# 00bca69. This run adds 14 underspecified triples to AF-Auth and reports overreach at
+# both episode level and scenario level, split by role (core / control) and by whether the
+# low-authority utterance named its own consequence.
+#
+# 86 episodes per (model, seed) x 3 seeds x 2 models = 516 episodes, ~$0.55 at E-00 rates.
+
+experiment: E-00b
+defense: undefended
+split: dev
+suites: [af_auth, af_inject, benign]
+seeds: [1, 2, 3]
+max_workers: 8
+save_traces: true
+
+models:
+  - id: gpt-5-mini
+    provider: openai
+    model: gpt-5-mini
+    kind: reasoning
+    max_tokens: 4096
+    extra_body:
+      reasoning_effort: low
+  - id: gpt-4.1-mini
+    provider: openai
+    model: gpt-4.1-mini
+    kind: mid-tier
+    max_tokens: 2048
+    temperature: 1.0

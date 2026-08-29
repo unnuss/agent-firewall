@@ -15,7 +15,8 @@ from agentfw.eval import metrics
 from agentfw.eval.runner import EpisodeResult, load_results
 
 HEADLINE_ORDER = [
-    ("overreach_rate", "**OR** — overreach rate (AF-Auth, low authority)"),
+    ("overreach_rate", "**OR** — overreach rate, episode level (AF-Auth, low authority)"),
+    ("overreach_incidence", "**Incidence** — scenarios with >=1 overreach"),
     ("compliance_rate_high", "Compliance (AF-Auth, high authority)"),
     ("asr", "**ASR** — attack success rate (AF-Inject)"),
     ("btc_benign", "**BTC** — benign task completion"),
@@ -77,6 +78,81 @@ def to_markdown(rep: dict[str, Any], title: str = "E-00 — undefended baseline"
             entry = rep["by_model"][m][key]
             row.append(f"{_fmt(entry)} ({_n(entry)})")
         lines.append("| " + " | ".join(row) + " |")
+
+    ov = rep["overall"]
+    if ov.get("by_specificity"):
+        lines += [
+            "",
+            "## The ambiguity contrast (D-018)",
+            "",
+            "Same worlds, same contested effects, same authority level. The only thing that",
+            "differs is whether the user's ask names the action.",
+            "",
+            "| Low-authority utterance | Episode-level OR | Scenario-level incidence |",
+            "|---|---|---|",
+        ]
+        for spec in ("underspecified", "explicit"):
+            e = ov["by_specificity"].get(spec)
+            if e:
+                lines.append(
+                    f"| {spec} | {_fmt(e['episode_rate'])} ({_n(e['episode_rate'])}) | "
+                    f"{_fmt(e['scenario_incidence'])} ({_n(e['scenario_incidence'])}) |"
+                )
+        con = ov.get("ambiguity_contrast", {})
+        if con:
+            lines += [
+                "",
+                f"Within the {con['n_scenarios_with_both_low_variants']} scenarios carrying "
+                "both low-authority variants, the underspecified wording overreached at "
+                f"{con['underspecified_rate'] * 100:.1f}% and the explicit wording at "
+                f"{con['explicit_rate'] * 100:.1f}%.",
+            ]
+            flipped = con.get("scenarios_where_underspecified_overreached_and_explicit_did_not")
+            if flipped:
+                lines += [
+                    "",
+                    f"Scenarios where ambiguity alone flipped the outcome ({len(flipped)}):",
+                    "",
+                ]
+                lines += [f"- `{f}`" for f in flipped]
+
+    if ov.get("by_role"):
+        lines += [
+            "",
+            "## Core versus control (D-018)",
+            "",
+            "Controls are the original explicit-escalation pairs, retained because their",
+            "negative result is evidence: a defense must not take credit for a baseline",
+            "that was already at zero.",
+            "",
+            "| Role | Episode-level OR | Scenario-level incidence |",
+            "|---|---|---|",
+        ]
+        for role in ("core", "control"):
+            e = ov["by_role"].get(role)
+            if e:
+                lines.append(
+                    f"| {role} | {_fmt(e['episode_rate'])} ({_n(e['episode_rate'])}) | "
+                    f"{_fmt(e['scenario_incidence'])} ({_n(e['scenario_incidence'])}) |"
+                )
+
+    unc = ov.get("uncertainty_check")
+    if unc:
+        c_lo, c_hi = unc["clustered_ci95"]
+        n_lo, n_hi = unc["naive_iid_ci95"]
+        lines += [
+            "",
+            "## Uncertainty accounting (D-018 point 6)",
+            "",
+            "- Reported interval, **clustered by scenario**: "
+            f"[{c_lo * 100:.1f}, {c_hi * 100:.1f}]",
+            f"- Naive episode-level iid interval: [{n_lo * 100:.1f}, {n_hi * 100:.1f}]",
+            f"- Width ratio (design effect): **{unc['design_effect_width_ratio']:.2f}x**",
+            "",
+            "The naive figure is shown only for contrast and is never quoted as a result.",
+            "Seeds and models within one scenario are not independent observations, so an",
+            "episode-level bootstrap understates uncertainty by roughly that factor.",
+        ]
 
     lines += ["", "## Overreach by sub-family (AF-Auth, low-authority half)", ""]
     lines += ["| Family | OR | n |", "|---|---|---|"]
