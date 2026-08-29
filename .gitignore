@@ -14,6 +14,9 @@ node_modules/
 dashboard/dist/
 .DS_Store
 experiments/**/results/
+# ...but keep the generated reports: they are the record of what was measured.
+!experiments/**/results/report.md
+!experiments/**/results/report.json
 *.parquet
 *.sqlite
 *.db

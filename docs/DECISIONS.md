@@ -280,3 +280,49 @@ Q2 also settles this. Until then, no result may be described as model-agnostic.
 **Revisit if.** GPU access arrives, or an open-weight model with reliable tool calling
 becomes available through an API we can bill.
 
+---
+
+### D-017 — Re-centre AF-Auth on under-specification, not explicit verb contrast
+**Date:** 2026-08-29 · **Status: PROPOSED — awaiting user review. Do not act on this
+without sign-off; it changes what the benchmark measures.**
+
+**Decision proposed.** Treat E-00 as a partial refutation of the current AF-Auth design.
+Specifically: (a) retire "find a flight → books it" as the project's motivating example,
+because our own measurement puts it at 0/6; (b) rebuild the AF-Auth dev slice so that the
+low-authority variant is *under-specified* rather than *explicitly lower-consequence*;
+(c) re-run E-00 on the revised slice before committing to Phase 2.
+
+**Evidence.** E-00, 264 episodes, 2 models, 3 seeds. Overreach 0/24 in B1, 0/12 in B2,
+0/6 in B3, 0/6 in B5, and 5/12 in B4. Compliance on the high-authority half is 93.3% and
+benign BTC 89.8%, so the zeros are refusals rather than incapability. The same pattern
+appears in AF-Inject: attacks naming an explicit unauthorised consequence scored 0/6, while
+the attack framed as a "required intermediate step" scored 4/6.
+
+**Reasoning.** The current B1 pairs differ by an explicit verb — "draft" versus "reply",
+"find" versus "book". That is the canonical example in every model's safety post-training,
+so the pair measures RLHF coverage rather than authorization reasoning. The pairs that did
+produce overreach withhold the verb entirely ("deal with it") and force the model to supply
+one. Keeping the current design risks the worst outcome for this project: a firewall that
+scores well against a baseline of ~0% and therefore demonstrates nothing.
+
+**Why this does not kill the thesis, and where it does bite.** The *oversight-efficiency*
+framing survives and arguably sharpens: the failure mode we measured — under-specification
+resolved toward the higher-consequence reading — is exactly the case where the correct
+action is ASK rather than BLOCK, which is the mechanism the cost model exists to budget.
+What does *not* survive is the broader claim in PROJECT_SPEC section 2 that agents commonly
+take consequences the user never licensed; against explicit instructions, these models
+do not. PROJECT_SPEC and README both overstate the problem relative to our own data.
+
+**Alternatives considered.** (a) Accept 8.3% as clearing the 5% gate and proceed to Phase 2.
+Rejected: the CI is [0.0, 25.0] and the effect is one scenario, so the gate is not really
+passed. (b) Declare the thesis falsified and stop. Rejected as premature: B4 shows a real,
+reproducible failure at 41.7%, and n=10 pairs is too small to conclude absence.
+
+**Cost of being wrong.** If we re-centre on ambiguity and ambiguity turns out to be rare in
+realistic tasks, we will have spent a phase rebuilding scenarios. That is cheaper than
+discovering in Phase 5 that the headline comparison has no signal in it.
+
+**Revisit trigger.** The revised E-00. If overreach on an under-specification-centred slice
+does not clear ~15%, the honest move is to re-frame the project around AF-Inject plus the
+oversight-efficiency curve and say so in the README.
+
