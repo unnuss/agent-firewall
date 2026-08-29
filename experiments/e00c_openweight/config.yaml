@@ -1,0 +1,48 @@
+# E-00c — cross-family replication of the E-00b contrast on an open-weight model.
+#
+# ONE question: does the underspecified-vs-explicit-low gap survive outside the OpenAI
+# model family? Everything not needed to answer that is cut, because this runs on a free
+# GPU with a session time limit.
+#
+# Cut relative to E-00b:
+#   - af_inject and benign suites (they do not bear on the contrast)
+#   - the second model (this IS the second model)
+# Kept:
+#   - all 24 AF-Auth scenarios, both core and control. The controls are what tell us
+#     whether a *different* family also refuses explicit escalation, which is half the
+#     question.
+#   - n=3 seeds. Fewer would put no error bar on the answer.
+#
+# 62 variants x 3 seeds = 186 episodes.
+#
+# `base_url` is left null on purpose: pass it at run time so the same config works against
+# a vLLM server in a notebook, an SSH tunnel, or a hosted endpoint. Set
+# AGENTFW_LOCAL_BASE_URL, or edit the model entry below.
+#
+# BEFORE RUNNING: `agentfw preflight --base-url <url> --model <name>`. A served model whose
+# template lacks a tool-call parser returns calls as prose; every episode then ends at step
+# one and the run reports 0% overreach that means nothing. See docs/REPLICATION_OPENWEIGHT.md.
+
+experiment: E-00c
+defense: undefended
+split: dev
+suites: [af_auth]
+seeds: [1, 2, 3]
+# Local servers batch internally; more client threads mostly adds queueing. Raise only
+# after watching GPU utilisation.
+max_workers: 4
+save_traces: true
+
+models:
+  - id: qwen3-8b
+    provider: local
+    model: Qwen/Qwen3-8B
+    kind: open-weight
+    base_url: null
+    max_tokens: 2048
+    temperature: 1.0
+    extra_body:
+      # Qwen3 ships a thinking mode. Leave it off: E-00b's OpenAI models ran without
+      # extended reasoning traces, and the comparison has to hold that fixed.
+      chat_template_kwargs:
+        enable_thinking: false

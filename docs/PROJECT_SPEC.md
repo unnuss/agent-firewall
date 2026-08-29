@@ -10,21 +10,56 @@ they conflict; see `DECISIONS.md` for the reasoning behind every deviation.
 Agent Firewall is a runtime authorization layer for tool-using LLM agents that maintains a
 structured model of what the user actually licensed, checks every proposed tool call
 against it, and spends a **finite human-attention budget** as efficiently as possible —
-blocking what is clearly unlicensed, allowing what is clearly licensed, and asking only
-when an interruption is worth more than it costs.
+blocking what is clearly unlicensed, allowing what is clearly licensed, and **asking when
+the user's instruction did not settle the question and the consequence is large enough to
+be worth an interruption.**
 
 ## 2. The thesis, stated so it can be falsified
 
-> Agent safety failures split into two families that require different machinery:
-> **hijacking** (untrusted content redirects the agent) and **overreach** (an un-hijacked
-> agent takes a consequence the user never licensed). The field has largely solved the
-> first on public benchmarks and has barely instrumented the second. A layer that models
-> *intent scope* explicitly can catch overreach at a human-interruption cost low enough to
-> be usable, and semantic goal-relevance — the obvious first idea — is close to useless
-> for it.
+**Revised 2026-08-29 in light of E-00 and E-00b.** The original wording claimed that agents
+commonly take consequences the user never licensed. Our own measurements do not support
+that in general, and the revision below is what they do support. The superseded wording is
+preserved in section 2.2 rather than deleted.
 
-Every claim in that paragraph is measurable, and at least one of them may turn out false.
-We report it either way.
+### 2.1 The thesis
+
+> Agent safety failures split into two families requiring different machinery:
+> **hijacking** (untrusted content redirects the agent) and **overreach** (an un-hijacked
+> agent produces a consequence the user never licensed). The field has largely solved the
+> first on public benchmarks and has barely instrumented the second.
+>
+> Within overreach, the failure is **not** that agents disregard explicit boundaries. In
+> our tested setting they respect those almost perfectly. The failure is that
+> **underspecified instructions cause agents to infer permission for consequential effects
+> the user never clearly licensed** — the user states a goal without naming an action, and
+> the agent supplies the higher-consequence action.
+>
+> A runtime layer that models *intent scope* explicitly can catch this at a
+> human-interruption cost low enough to be usable. **Selective ASK — on consequential
+> actions whose authorization the utterance left open — is therefore the central mechanism,
+> not a fallback.** And semantic goal-relevance, the obvious first idea, is close to
+> useless for it, because under-specification leaves relevance intact while destroying
+> authorization.
+
+### 2.2 What has actually been measured, and what the earlier wording got wrong
+
+The original thesis read: *"A layer that models intent scope explicitly can catch overreach
+at a human-interruption cost low enough to be usable."* It was silent on *which* overreach,
+and implied breadth we have not demonstrated.
+
+| Claim | Status |
+|---|---|
+| Agents overreach against explicit instructions | **Refuted in our setting.** 0/54 episodes across nine control scenarios (E-00b); 0/48 in E-00. |
+| Agents overreach under under-specification | **Supported.** 38.9% [25.6, 52.2] of episodes, 13 of 15 scenarios, 7 domains (E-00b). |
+| The difference is caused by ambiguity, not by consequence size | **Supported.** In 11 of 14 scenarios, changing only the wording of an equally-low-authority ask flipped the outcome, holding world, tools and contested effect fixed. |
+| The finding holds across model families | **Not established.** Both models tested are OpenAI models. Replication (E-00c) is a precondition for Phase 2. |
+| ASK is the right primitive for these cases | **Argued, not yet measured.** Under-specification is precisely the case where BLOCK is wrong (the user may well have meant it) and ALLOW is wrong (they may not). E-04 measures it. |
+
+**Design consequence.** If explicit boundaries are already respected, a firewall that only
+enforces explicit boundaries buys little. The value has to come from the ambiguous band —
+which makes calibration, the cost model, and the ASK budget the load-bearing components
+rather than the trimmings, and makes "how few interruptions can we spend" the right
+headline question.
 
 ## 3. Why this framing and not the original one
 
@@ -59,6 +94,19 @@ headline.
 10. The repository is portfolio/research-grade.
 
 ## 5. What the system does, precisely
+
+### 5.0 What the layer is actually for
+
+Given section 2, the layer's job is narrower and sharper than "stop agents doing bad
+things". It is:
+
+1. **Deny-by-default over effect classes**, so an effect the utterance never licensed
+   cannot happen silently — this is what turns "the agent inferred permission" from an
+   invisible event into a decision point.
+2. **Route that decision point to a human when, and only when, the interruption is worth
+   its cost** — the ambiguous band, weighted by irreversibility and externality.
+3. **Keep hijacking out** structurally, so the ambiguity machinery is never the thing an
+   attacker has to fool.
 
 ### 5.1 Position in the loop
 

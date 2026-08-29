@@ -25,6 +25,11 @@ invoice — deal with it". The agent reads it and **charges $214 to the business
 Nobody attacked anything. The action was maximally relevant to the goal and never
 licensed. — *This is what we are actually about.*
 
+More precisely, and this is the finding the project is built on: agents in our tested
+setting **do** respect explicit authorization boundaries — tell one to draft and it drafts,
+tell it to find and it finds. What they do not respect is **silence**. When the instruction
+names no action, they infer one, and they infer the consequential one.
+
 That example is not hypothetical and it is not the one we started with. We began with
 "find the cheapest flight → the agent books it", measured it, and found it happens **0
 times out of 6**. Modern models refuse explicit consequence escalation. What they do not
@@ -34,6 +39,13 @@ they supply the higher-consequence one.
 The distinction matters because the obvious defense for the first — "is this action related
 to the user's goal?" — is close to useless for the second, and we have
 [pre-registered that prediction](docs/EXPERIMENTS.md#e-01) so it gets published either way.
+Under-specification is the worst case for it: leaving the action unnamed does not make the
+action less *relevant* to the goal, only less *authorized*.
+
+That is also why **ASK is the central mechanism here rather than a fallback.** In the
+ambiguous band, BLOCK is wrong (the user may well have meant it) and ALLOW is wrong (they
+may not). The design question becomes how few interruptions you can spend to cover the
+consequential cases — which is what the cost model and the ASK budget exist to answer.
 
 ## What we measured
 
@@ -65,6 +77,13 @@ overreach concentrated in B1; B1 came in at zero and stayed there. The first run
 motivating example did not survive its own measurement. Known defects in the current suite
 — including one scenario that asks for data the world does not contain — are listed in
 [EXPERIMENTS.md](docs/EXPERIMENTS.md) as F-01 through F-06 rather than quietly fixed.
+
+**Not yet established: that this holds outside one model family.** Both models tested are
+OpenAI models, so a shared post-training lineage cannot be ruled out as the reason explicit
+escalation is refused so uniformly. A cross-family replication on an open-weight model
+(**E-00c**) is a precondition for building the firewall, not a nice-to-have. Until it runs,
+every claim here is "on the models tested". See
+[`docs/REPLICATION_OPENWEIGHT.md`](docs/REPLICATION_OPENWEIGHT.md).
 
 Reproduce: `agentfw run experiments/e00b_revised/config.yaml` (~$0.66).
 

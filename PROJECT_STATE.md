@@ -2,7 +2,7 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-08-29 (Phase 1 engineering complete; E-00b reported)
+**Last updated:** 2026-08-29 (thesis revised to match the evidence; E-00c prepared)
 
 **Two separate things, deliberately not conflated:**
 
@@ -11,7 +11,9 @@
 | **Phase 1 engineering** | **Complete.** Sandbox, agent, providers, oracles, generator, runner, metrics, CLI. 73 tests, lint clean. Nothing outstanding. |
 | **The E-00 empirical gate** | **Passed on the revised suite (E-00b), under revised validation.** The original E-00 did not clearly clear it. The revised result rests on a dev-only, single-model-family suite with two known defects (F-05, F-06). It is not yet settled evidence. |
 
-**Do not start Phase 2.** Awaiting review of the E-00b results.
+**Do not start Phase 2.** The blocking item is **E-00c**, a cross-family replication on an
+open-weight model. Setup is complete and pre-registered; it needs a Kaggle/Colab GPU
+session to run. See `docs/REPLICATION_OPENWEIGHT.md`.
 
 ---
 
@@ -22,11 +24,12 @@
 2. Read **E-00 and E-00b** in `docs/EXPERIMENTS.md`, in that order. E-00 is the registered
    negative/partial result and is never to be edited (D-018 point 8); E-00b is the revised
    run that isolated the cause.
-3. `PROJECT_SPEC.md` section 2 still overstates the thesis: it claims agents commonly take
-   consequences the user never licensed, whereas we measure that only under
-   under-specification, and 0/54 under explicit instruction. **Section 2 has not yet been
-   rewritten** — that is a deliberate open item, not an oversight.
-4. Do not begin Phase 2. Section 5 lists what is outstanding.
+3. `PROJECT_SPEC.md` section 2 is now the revised thesis (signed off 2026-08-29): agents
+   respect explicit authorization boundaries in our setting, and infer permission under
+   under-specification. Section 2.2 tabulates exactly which claims are supported, which are
+   refuted, and which are argued but unmeasured. The superseded wording is preserved there
+   rather than deleted.
+4. Do not begin Phase 2. The blocker is E-00c — section 5.
 
 Health check (no API calls, ~5s):
 
@@ -151,16 +154,30 @@ directory `report.md` and `report.json` are versioned; the episode log and trace
 
 ## 5. What is blocked on the user
 
-**Review of E-00b.** Nothing else. D-017 was accepted with modifications as **D-018** and
-is fully implemented — all ten points, listed with what was built for each in `DECISIONS.md`.
+**E-00c — the cross-family replication.** Everything for it is built and pre-registered;
+it needs a GPU session, which cannot be run from this machine (no NVIDIA GPU).
 
-Next work, once reviewed, in priority order:
+Ready to go:
+
+- `experiments/e00c_openweight/config.yaml` — 24 AF-Auth scenarios, 3 seeds, 186 episodes.
+  Verified to parse and enumerate correctly without running.
+- `docs/REPLICATION_OPENWEIGHT.md` — model choice with hardware requirements, the exact
+  notebook cells, and a table saying in advance what each outcome would mean.
+- `agentfw preflight` — verifies an endpoint does native structured tool calling before any
+  GPU time is spent. This guards the failure we already hit locally: a model whose template
+  lacks a tool-call parser returns calls as prose, every episode ends at step one, and the
+  run reports a meaningless 0%.
+- `agentfw compare` — prints the cross-family contrast table.
+- **E-00c is pre-registered in `EXPERIMENTS.md`** with a prediction and an
+  outcome-interpretation table written before the run.
+
+Recommended model: **Qwen3-8B** on Kaggle's 2×T4. Fallback Qwen3-4B on a single card.
+
+After E-00c, in priority order:
 
 1. **Fix F-05 and F-06** before any of this is used as a baseline: repair `sam_number`,
    audit the eight low-compliance scenarios, loosen the over-strict benign oracles (F-03).
-2. **Replicate on a second model family** (R-09) via Kaggle/Colab. The runner is already
-   provider-agnostic and resumable; this is a config change plus a notebook.
-3. Only then Phase 2, the deterministic firewall core.
+2. Only then Phase 2, the deterministic firewall core.
 
 ## 6. Open questions for the user
 

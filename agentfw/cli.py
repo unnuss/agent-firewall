@@ -84,6 +84,173 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+PREFLIGHT_TOOL = "email_list"
+NEWLINE = chr(10)
+
+
+def cmd_preflight(args: argparse.Namespace) -> int:
+    """Check an OpenAI-compatible endpoint can really do structured tool calling.
+
+    Worth its own command because the failure it catches is expensive and silent: a served
+    model whose chat template lacks a tool-call parser returns the call as *prose*, the
+    agent loop sees no tool_calls, every episode ends at step 1, and the run reports 0%
+    overreach that means nothing at all. We measured exactly that locally with
+    qwen2.5-coder through Ollama. Run this before spending GPU hours.
+    """
+    from agentfw.agent.providers.base import ProviderError
+    from agentfw.agent.providers.openai_chat import OpenAIChatClient
+    from agentfw.sandbox.registry import get_tools
+
+    load_all()
+    tools = get_tools([PREFLIGHT_TOOL])
+    client = OpenAIChatClient(
+        args.model,
+        base_url=args.base_url,
+        api_key=args.api_key or "local",
+        require_key=False,
+        temperature=None if args.no_temperature else 1.0,
+        max_tokens=args.max_tokens,
+    )
+    print(f"[preflight] {args.model} at {args.base_url}")
+
+    checks: list[tuple[str, bool, str]] = []
+    messages = [
+        {"role": "system", "content": "You are an assistant with tools. Call one when needed."},
+        {"role": "user", "content": "List the messages in my inbox."},
+    ]
+    try:
+        first = client.complete(messages, tools)
+    except ProviderError as exc:
+        print(f"  FAIL  endpoint unreachable: {exc}")
+        return 1
+
+    checks.append(
+        (
+            "returns a structured tool call, not prose",
+            bool(first.tool_calls),
+            f"finish_reason={first.stop_reason!r} text={first.text[:80]!r}",
+        )
+    )
+    name_ok = bool(first.tool_calls) and first.tool_calls[0].name == PREFLIGHT_TOOL
+    checks.append(
+        ("calls the tool it was given", name_ok, str([c.name for c in first.tool_calls]))
+    )
+    args_ok = bool(first.tool_calls) and isinstance(first.tool_calls[0].arguments, dict)
+    args_ok = args_ok and "__unparsed__" not in first.tool_calls[0].arguments
+    checks.append(
+        (
+            "arguments parse as a JSON object",
+            args_ok,
+            str([c.arguments for c in first.tool_calls]),
+        )
+    )
+
+    # Second turn: a template that cannot accept a tool result back breaks the loop even
+    # when the first call looks fine.
+    if first.tool_calls:
+        call = first.tool_calls[0]
+        import json as _json
+
+        messages += [
+            {
+                "role": "assistant",
+                "content": first.text or None,
+                "tool_calls": [
+                    {
+                        "id": call.id,
+                        "type": "function",
+                        "function": {
+                            "name": call.name,
+                            "arguments": _json.dumps(call.arguments),
+                        },
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": call.id,
+                "content": "m-001 | from sam | Q3 numbers",
+            },
+        ]
+        try:
+            second = client.complete(messages, tools)
+            checks.append(
+                (
+                    "accepts a tool result and answers",
+                    bool(second.text or second.tool_calls),
+                    f"text={second.text[:80]!r}",
+                )
+            )
+        except ProviderError as exc:
+            checks.append(("accepts a tool result and answers", False, str(exc)[:200]))
+
+    width = max(len(c[0]) for c in checks)
+    for label, okay, detail in checks:
+        print(f"  {'PASS' if okay else 'FAIL'}  {label.ljust(width)}   {detail}")
+    passed = all(c[1] for c in checks)
+    print(
+        NEWLINE
+        + "[preflight] "
+        + (
+            "READY — this endpoint can run E-00c."
+            if passed
+            else "NOT READY — fix the tool-call parser before spending GPU time."
+        )
+    )
+    if not passed:
+        print("            For vLLM you almost certainly need --enable-auto-tool-choice")
+        print("            together with the right --tool-call-parser for the model family.")
+    return 0 if passed else 1
+
+
+def cmd_compare(args: argparse.Namespace) -> int:
+    """Put two runs side by side on the contrast that matters."""
+    from agentfw.eval import metrics
+    from agentfw.eval.runner import load_results
+
+    rows = []
+    for spec in args.results:
+        label, _, path = spec.partition("=")
+        if not path:
+            label, path = Path(label).parent.name, label
+        eps = metrics.usable(load_results(Path(path) / "episodes.jsonl"))
+        low = metrics.auth_low(eps)
+        cell = {"label": label, "n": len(eps)}
+        for spec_kind in ("underspecified", "explicit"):
+            sel = metrics.by_key(low, "specificity", spec_kind)
+            r = metrics.rate(spec_kind, sel, lambda e: e.contested_occurred, n_boot=4000)
+            inc = metrics.scenario_incidence(sel, lambda e: e.contested_occurred, n_boot=4000)
+            cell[spec_kind] = (r, inc)
+        hi = metrics.auth_high(eps)
+        cell["compliance"] = metrics.rate(
+            "compliance", hi, lambda e: e.contested_occurred, n_boot=4000
+        )
+        rows.append(cell)
+
+    print(
+        "| Run | Episodes | Underspecified OR | Explicit-low OR "
+        "| Gap | Incidence (u/e) | Compliance |"
+    )
+    print("|---|---|---|---|---|---|---|")
+    for c in rows:
+        u, ui = c["underspecified"]
+        e, ei = c["explicit"]
+        gap = (u.value - e.value) * 100
+        print(
+            f"| {c['label']} | {c['n']} | {u.pct()} | {e.pct()} | "
+            f"**{gap:+.1f} pp** | {ui.k}/{ui.n} vs {ei.k}/{ei.n} | {c['compliance'].pct()} |"
+        )
+    print(
+        NEWLINE + "The replication question is whether the gap column stays large "
+        "and positive "
+        "outside the OpenAI family."
+        + NEWLINE
+        + "A low compliance figure means the model was not "
+        "competent enough for its overreach rate to be interpretable."
+    )
+    return 0
+
+
 def cmd_smoke(args: argparse.Namespace) -> int:
     from agentfw.agent.loop import run_episode
     from agentfw.agent.providers.scripted import ScriptedClient, call, say
@@ -143,6 +310,22 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("results")
     rep.add_argument("--title", default="E-00 — undefended baseline")
     rep.set_defaults(fn=cmd_report)
+
+    pf = sub.add_parser("preflight")
+    pf.add_argument("--base-url", default="http://localhost:8000/v1")
+    pf.add_argument("--model", required=True)
+    pf.add_argument("--api-key")
+    pf.add_argument("--max-tokens", type=int, default=256)
+    pf.add_argument(
+        "--no-temperature",
+        action="store_true",
+        help="omit temperature (some servers reject it)",
+    )
+    pf.set_defaults(fn=cmd_preflight)
+
+    cp = sub.add_parser("compare")
+    cp.add_argument("results", nargs="+", help="[label=]path/to/results ...")
+    cp.set_defaults(fn=cmd_compare)
 
     sub.add_parser("smoke").set_defaults(fn=cmd_smoke)
 

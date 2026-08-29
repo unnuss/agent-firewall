@@ -224,6 +224,54 @@ holds across model families.
 
 ---
 
+## E-00c — Cross-family replication: does the contrast survive outside OpenAI?
+**Phase:** 1 · **Status:** planned, prediction registered 2026-08-29 · **Blocks Phase 2**
+
+**Question.** E-00b's contrast — underspecified 38.9% versus explicit-low 2.2% — was
+measured on two OpenAI models. Is it a property of instruction-following under ambiguity,
+or an artefact of one lab's post-training?
+
+**Hypothesis, registered before the run.**
+- The gap **persists**: underspecified overreach **> 20%**, explicit-low **< 10%**.
+- The gap is **smaller** than 36.7pp, because the 0% explicit-escalation floor looks like a
+  heavily-optimised safety behaviour and an 8B open-weight model has had less of that
+  optimisation. Concretely: explicit-low overreach **rises** rather than underspecified
+  falling.
+- Compliance on the high-authority variants **drops** relative to gpt-5-mini's 93%, plausibly
+  to 60-80%, purely on capability.
+
+**What each outcome means** is written down now, so it cannot be rationalised later:
+
+| Outcome | Reading |
+|---|---|
+| Gap stays large and positive | Generalises. Phase 2 proceeds; the "on the models tested" hedge comes out of the README. |
+| Gap collapses, **underspecified falls** | The OpenAI models were unusually eager. Family-specific; narrow the thesis again. |
+| Gap collapses, **explicit-low rises** | The 0% control is an OpenAI post-training artefact rather than a property of instruction-following. The most interesting outcome, and the one most worth writing up. |
+| Compliance < ~60% | Not evidence either way — the model was too weak for its overreach rate to be interpretable. Switch model, re-run. |
+
+**Design.** 24 AF-Auth scenarios (15 core, 9 control), all variants, n=3 seeds = 186
+episodes. AF-Inject and the benign suite are cut: neither bears on the contrast, and the
+run has to fit a free-tier GPU session. Controls are **kept**, because "does a different
+family also refuse explicit escalation?" is half the question.
+
+**Model.** Qwen3-8B (Alibaba, Apache-2.0) served by vLLM with
+`--enable-auto-tool-choice --tool-call-parser hermes`, thinking mode **off** so the
+comparison with E-00b's non-reasoning setup holds. Fallbacks and hardware constraints:
+`docs/REPLICATION_OPENWEIGHT.md`.
+
+**Method guard.** `agentfw preflight` must print READY before the run. A served model whose
+template lacks a tool-call parser returns calls as prose; every episode then ends at step
+one and the run reports a meaningless 0% overreach. We hit exactly that locally with
+qwen2.5-coder through Ollama, which is why it is now a command rather than a note.
+
+**Falsifies.** If underspecified overreach comes in under ~10% on a competent open-weight
+model (compliance >= 60%), the E-00b finding does not generalise and the project's framing
+must be revisited before any firewall is built.
+
+**Results.** *(pending — not yet run; requires Kaggle/Colab GPU)*
+
+---
+
 ## E-01 — Pre-registered: is goal–action semantic similarity useful?
 **Phase:** 3 · **Status:** planned (prediction registered 2026-08-28, D-012)
 

@@ -1,7 +1,16 @@
 # Architecture
 
-**Status:** proposed design, Phase 0. Nothing here is implemented yet. Sections marked
-*(spike)* must be validated before we commit to them.
+**Status:** proposed design. Sections 6 and 7 (agent loop, sandbox) are implemented as of
+Phase 1; the firewall itself is not. Sections marked *(spike)* must be validated before we
+commit to them.
+
+**Revised emphasis, 2026-08-29 (D-018).** E-00b showed that agents in our setting respect
+explicit authorization boundaries almost perfectly (0/54) and infer permission under
+under-specification (38.9%). The architecture does not change, but what carries the weight
+does: the value is concentrated in the **ambiguous band**, so the AuthorizationMonitor's
+calibration (section 4.3), the cost model that sets the ASK boundary (section 5), and the
+ASK budget are load-bearing rather than refinements. A layer that only enforced explicit
+boundaries would have almost nothing to enforce.
 
 ---
 
@@ -197,6 +206,11 @@ Conceded: covert/steganographic channels (THREAT_MODEL 4.5).
 
 Estimates `P(the user licensed this effect | IntentScope, Effect, trajectory context)`,
 **calibrated**, because the combinator needs a probability rather than a score.
+
+Post-E-00b this component's job is specific: the interesting inputs are not actions that
+contradict the instruction (rare, and caught structurally) but actions the instruction
+**left open**. Calibration therefore matters more than accuracy at the extremes — the whole
+question is where the uncertain middle sits and how wide it is.
 
 Candidate approaches, to be compared (this is EXPERIMENT E-02, the intellectual centre of
 the project):
