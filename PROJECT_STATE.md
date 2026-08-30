@@ -43,7 +43,7 @@ effects whose authorization the instruction left open.**
 | **E-00b** | gpt-5-mini, gpt-4.1-mini | 81.2% | **38.9%** [25.6, 52.2] | **2.2%** [0.0, 6.5] | **interpretable** |
 | E-00c | Qwen3-8B | 31.9% | 17.8% | 1.4% | **INCONCLUSIVE** |
 | E-00d | Qwen3-14B-AWQ | 36.1% | — | — | **INCONCLUSIVE** |
-| E-00e att1 | Llama 4 Maverick | 44.4% | 24.4% | 0.0% | **INCONCLUSIVE** |
+| E-00e | Llama 3.3 70B | 44.4% | 24.4% | 0.0% | **INCONCLUSIVE** |
 | **E-00f** | **Claude Sonnet 5** | **91.7%** | **60.0%** [40.0, 80.0] | **0.0%** | **interpretable** |
 
 **Established:** the effect replicates across two vendors on models competent enough to do
@@ -51,7 +51,7 @@ the task, judged by a competency floor fixed in advance (D-019).
 
 **NOT established, and must not be claimed:**
 
-1. **Open-weight generalisation.** E-00c/d/e all failed the 60% floor (31.9 / 36.1 / 44.4%).
+1. **Open-weight generalisation.** E-00c/d/e all failed the 60% floor (Qwen3-8B 31.9%, Qwen3-14B-AWQ 36.1%, Llama 3.3 70B 44.4%; Llama 4 Maverick only ever ran a 3-episode pilot).
    Their direction agreed. That is **not** replication — an agent that often fails to act
    produces low rates everywhere, and the explicit-low arm is exactly where incapability and
    correct restraint are indistinguishable. **Do not lower the floor. Do not reinterpret
@@ -108,7 +108,8 @@ experiments/
   e00b_revised/            E-00b  the OpenAI result
   e00c_openweight/         E-00c  inconclusive (Kaggle; raw log not recovered)
   e00d_openweight_14b/     E-00d  inconclusive (Kaggle; raw log not recovered)
-  e00e_hosted_openweight/  E-00e  inconclusive (Maverick; raw data preserved)
+  e00e_hosted_openweight/  E-00e  inconclusive (Llama 3.3 70B; raw data preserved).
+                           No results/ - it never produced an interpretable run.
   e00f_cross_vendor/       E-00f  THE CROSS-VENDOR RESULT
     results/               canonical, 186/186, 0 errors, sha256 99bd474e…
     provenance/            routing_failed_pilot · rate_limited_partial ·
@@ -123,7 +124,7 @@ experiments/
 | **F-06** | High-authority compliance on the OpenAI side is not trustworthy — 8 scenarios below 4/6, mixed causes | Audit before quoting compliance |
 | **F-03** | Benign BTC understated by over-strict oracles (6 of 11 "failures") | Loosen before quoting BTC |
 | **R-09** | Open-weight generalisation unresolved; also blocks T3 attacks and the saliency spike | Needs a competent open-weight model |
-| **R-13** | Three non-OpenAI models failed the floor — our harness may be harder for them | Investigate if a 4th fails |
+| **R-13** | Three non-OpenAI models (Qwen3-8B, Qwen3-14B-AWQ, Llama 3.3 70B) failed the floor — our harness may be harder for them | Investigate if a 4th fails |
 | **R-14** | **Claude-authored scenarios evaluated a Claude model, and E-00f's gap came in unusually large (+60pp vs +36.7pp).** The qualitative pattern replicates regardless, but the magnitude comparison is not a vendor ranking | Independent authorship in Phase 5 |
 
 ## 6. Phase 2 — exact starting point

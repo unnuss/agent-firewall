@@ -68,8 +68,8 @@ authority from silence.
 
 **What this does and does not establish.** It replicates across two vendors on models
 competent enough to do the task (a pre-registered 60% compliance floor). It is **not**
-established on open-weight models: three attempts — Qwen3-8B, Qwen3-14B-AWQ, Llama 4
-Maverick — all failed that floor at 31.9%, 36.1% and 44.4%. Their results pointed the same
+established on open-weight models: three attempts — Qwen3-8B, Qwen3-14B-AWQ and Llama 3.3
+70B — all failed that floor, at 31.9%, 36.1% and 44.4%. Their results pointed the same
 direction and are **not** counted as replication, because an agent that often fails to act
 produces low rates everywhere.
 

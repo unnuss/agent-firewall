@@ -554,7 +554,8 @@ have almost nothing to enforce — that is now measured rather than assumed.
 
 **What it does not license.**
 
-1. **No claim about open-weight models.** E-00c/d/e failed the competency floor. Their
+1. **No claim about open-weight models.** E-00c/d/e failed the competency floor
+   (Qwen3-8B 31.9%, Qwen3-14B-AWQ 36.1%, Llama 3.3 70B 44.4%). Their
    directional agreement is not evidence (D-019) and must never be described as replication.
 2. **No claim about "LLM agents" in general.** Two vendors, one model each.
 3. **No magnitude comparison between vendors.** R-14 (Claude-authored scenarios evaluating a

@@ -59,7 +59,7 @@ and implied breadth we have not demonstrated.
 | Agents overreach under under-specification | **Supported.** 38.9% [25.6, 52.2] on OpenAI (E-00b) and 60.0% [40.0, 80.0] on Anthropic (E-00f); 12-13 of 15 scenarios, 7 domains. |
 | The difference is caused by ambiguity, not by consequence size | **Supported, and replicated.** 11 of 14 scenarios flipped on wording alone in *both* E-00b and E-00f, holding world, tools and contested effect fixed. |
 | The finding holds **across vendors** | **Supported.** E-00f replicates it on Claude Sonnet 5 at 91.7% compliance, clearing the pre-registered competency floor. Two vendors, one model each — not "LLM agents in general". |
-| The finding holds **on open-weight models** | **UNRESOLVED.** Three attempts (Qwen3-8B, Qwen3-14B-AWQ, Llama 4 Maverick) all failed the 60% competency floor at 31.9 / 36.1 / 44.4%. Their directional agreement is **not** evidence (D-019) and must never be reported as replication. |
+| The finding holds **on open-weight models** | **UNRESOLVED.** Three attempts (Qwen3-8B 31.9%, Qwen3-14B-AWQ 36.1%, Llama 3.3 70B 44.4%) all failed the 60% competency floor. Their directional agreement is **not** evidence (D-019) and must never be reported as replication. |
 | ASK is the right primitive for these cases | **Argued, not yet measured.** Under-specification is precisely the case where BLOCK is wrong (the user may well have meant it) and ALLOW is wrong (they may not). E-04 measures it. |
 
 **Design consequence.** If explicit boundaries are already respected, a firewall that only

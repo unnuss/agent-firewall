@@ -407,7 +407,10 @@ recorded as **D-020, before any E-00e result existed**.
 metrics, and the 60% floor. A test asserts all three replication configs enumerate the
 identical 186 episodes, so scope drift fails CI rather than being noticed afterwards.
 
-**Model.** **Meta Llama 4 Maverick** via OpenRouter, over the OpenAI-compatible wire format.
+**Model (as planned).** **Meta Llama 4 Maverick** via OpenRouter, over the OpenAI-compatible
+wire format. *What was actually executed differed — Maverick ran only a 3-episode pilot and
+the full run used Llama 3.3 70B. See "Sequence, for the record" below. This paragraph is
+left as written so the pre-registration is not retro-fitted to the execution.*
 *`provider: openai` in the config denotes the wire protocol, not the model lineage* — the
 model is Meta's, which is the entire point. Fallback if it does not pass preflight:
 **Llama 3.3 70B Instruct**, whose native function-calling is more thoroughly exercised in
@@ -438,12 +441,22 @@ $0.15–0.25 per million input and $0.60–0.90 per million output, that is roug
 under a dollar. Verify live rates with `agentfw models --grep llama` rather than trusting
 these figures, which are from memory and age badly.
 
-### Results — attempt 1 (Llama 4 Maverick): INCONCLUSIVE
+### Results — Llama 3.3 70B: INCONCLUSIVE
 
-Run via OpenRouter, `meta-llama/llama-4-maverick`. 186/186 episodes, all `stop`, no provider
-or parser failures. Raw data preserved in
-`experiments/e00e_hosted_openweight/results_maverick_attempt1/` — unlike E-00c and E-00d,
-this one is fully reproducible from raw episodes.
+Run via OpenRouter, **`meta-llama/llama-3.3-70b-instruct`**. 186/186 episodes, all `stop`,
+no provider or parser failures. Raw data preserved in
+`experiments/e00e_hosted_openweight/provenance/llama33_70b_full_run/` — unlike E-00c and
+E-00d, this one is fully reproducible from raw episodes.
+
+> **Attribution correction (2026-08-30).** This run was first recorded, in commit `86d9ab1`,
+> as a *Llama 4 Maverick* result. That was wrong. Every row carries `model_id:
+> llama4-maverick` because the config's `id:` field was not updated when the model was
+> switched after the pilot; the `model_name` field — the string actually sent to the
+> provider — says `llama-3.3-70b-instruct`. I read the wrong field. Llama 4 Maverick was in
+> fact only ever run for **3 pilot episodes** (0/1 compliance), preserved in
+> `provenance/maverick_pilot_3ep/`. The raw episode log is left unmodified; correcting a
+> label by rewriting data would be worse than documenting it. **No number changes** —
+> compliance was 44.4% either way and the run is inconclusive either way.
 
 | Metric | Value |
 |---|---|
@@ -467,7 +480,7 @@ estimate is what the rule is written against, and it is 15.6 points short.
 |---|---|---|
 | E-00c | Qwen3-8B | 31.9% |
 | E-00d | Qwen3-14B-AWQ | 36.1% |
-| **E-00e att1** | **Llama 4 Maverick** | **44.4%** |
+| **E-00e** | **Llama 3.3 70B** | **44.4%** |
 | E-00b | gpt-4.1-mini / gpt-5-mini | **81.2%** |
 
 Compliance rises with capability, but a 37-point cliff separates the best non-OpenAI model
@@ -477,17 +490,16 @@ precaution:** our harness may be unusually hard for non-OpenAI models — tool s
 neutral system prompt, or oracle strictness — and that would be a finding about our
 benchmark rather than about the models.
 
-### Attempt 2 — Llama 3.3 70B Instruct (pending)
+### Sequence, for the record
 
-The config was switched to `meta-llama/llama-3.3-70b-instruct`, whose function-calling is
-more thoroughly exercised in the wild. This is a **competency retry**, which D-021
-explicitly exempts from the model-shopping stopping rule: it retries an *uninterpretable*
-run at a model with better-attested tool use, rather than shopping for an answer we prefer.
-It writes to `results/`, leaving attempt 1 untouched.
+1. **Llama 4 Maverick, 3-episode pilot** — variant `b` scored 0/1 and made no
+   `payments_charge` call. The pilot gate flagged it, and the model was switched.
+2. **Llama 3.3 70B, full run** — 186 episodes, 44.4% compliance. Sub-floor. **INCONCLUSIVE.**
 
-**If attempt 2 also lands sub-floor, stop and investigate the harness.** That would be four
-non-OpenAI models failing scenarios gpt-4.1-mini completes at 81.2%, which indicts the
-benchmark. Do not try a fifth model.
+No further open-weight model was tried. D-021 fixed the stopping rule in advance, and
+Phase 1 closed on the cross-vendor result (E-00f, D-022). **Open-weight generalisation is
+therefore unresolved, not refuted** — three models failed a capability gate, which is a fact
+about those models (or about our harness, R-13), not about the phenomenon.
 
 
 
