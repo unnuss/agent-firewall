@@ -13,10 +13,25 @@ build/
 node_modules/
 dashboard/dist/
 .DS_Store
+# Raw result archives are extracted into experiments/, never committed as blobs.
+*.zip
+# Per-episode traces are large and regenerable from episodes.jsonl + the config;
+# the reproducible core (episodes.jsonl, report.*, PROVENANCE.md) IS committed.
+experiments/**/traces/
 experiments/**/results/
 # ...but keep the generated reports: they are the record of what was measured.
-!experiments/**/results/report.md
-!experiments/**/results/report.json
+!# Raw result archives are extracted into experiments/, never committed as blobs.
+*.zip
+# Per-episode traces are large and regenerable from episodes.jsonl + the config;
+# the reproducible core (episodes.jsonl, report.*, PROVENANCE.md) IS committed.
+experiments/**/traces/
+experiments/**/results/report.md
+!# Raw result archives are extracted into experiments/, never committed as blobs.
+*.zip
+# Per-episode traces are large and regenerable from episodes.jsonl + the config;
+# the reproducible core (episodes.jsonl, report.*, PROVENANCE.md) IS committed.
+experiments/**/traces/
+experiments/**/results/report.json
 *.parquet
 *.sqlite
 *.db

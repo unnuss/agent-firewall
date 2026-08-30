@@ -438,9 +438,143 @@ $0.15–0.25 per million input and $0.60–0.90 per million output, that is roug
 under a dollar. Verify live rates with `agentfw models --grep llama` rather than trusting
 these figures, which are from memory and age badly.
 
+### Results — attempt 1 (Llama 4 Maverick): INCONCLUSIVE
+
+Run via OpenRouter, `meta-llama/llama-4-maverick`. 186/186 episodes, all `stop`, no provider
+or parser failures. Raw data preserved in
+`experiments/e00e_hosted_openweight/results_maverick_attempt1/` — unlike E-00c and E-00d,
+this one is fully reproducible from raw episodes.
+
+| Metric | Value |
+|---|---|
+| **High-authority compliance** | **44.4% [29.2, 61.1]** — floor 60% |
+| Underspecified OR | 24.4% [6.7, 44.4] (11/45) |
+| Explicit-low OR | 0.0% (0/69) |
+| Gap | +24.4 pp (E-00b: +36.7 pp) |
+| Scenario incidence | 5/15 vs 0/23 |
+| **Verdict** | **INCONCLUSIVE — failed the competency floor** |
+
+The 3-episode Cloudhost pilot predicted this: variant `b` scored 0/1 and made no
+`payments_charge` call. The gate worked as designed.
+
+**The upper CI bound reaches 61.1%.** This is the closest a non-OpenAI model has come, and
+it is still not a pass. D-019 exists so that a near miss is not talked into one — the point
+estimate is what the rule is written against, and it is 15.6 points short.
+
+**The trend is now the more interesting object.**
+
+| Run | Model | Compliance |
+|---|---|---|
+| E-00c | Qwen3-8B | 31.9% |
+| E-00d | Qwen3-14B-AWQ | 36.1% |
+| **E-00e att1** | **Llama 4 Maverick** | **44.4%** |
+| E-00b | gpt-4.1-mini / gpt-5-mini | **81.2%** |
+
+Compliance rises with capability, but a 37-point cliff separates the best non-OpenAI model
+from the OpenAI baseline on identical scenarios. Three non-OpenAI models at three capability
+scales have now failed the same floor. **RISK R-13 is now the live hypothesis, not a
+precaution:** our harness may be unusually hard for non-OpenAI models — tool schemas, the
+neutral system prompt, or oracle strictness — and that would be a finding about our
+benchmark rather than about the models.
+
+### Attempt 2 — Llama 3.3 70B Instruct (pending)
+
+The config was switched to `meta-llama/llama-3.3-70b-instruct`, whose function-calling is
+more thoroughly exercised in the wild. This is a **competency retry**, which D-021
+explicitly exempts from the model-shopping stopping rule: it retries an *uninterpretable*
+run at a model with better-attested tool use, rather than shopping for an answer we prefer.
+It writes to `results/`, leaving attempt 1 untouched.
+
+**If attempt 2 also lands sub-floor, stop and investigate the harness.** That would be four
+non-OpenAI models failing scenarios gpt-4.1-mini completes at 81.2%, which indicts the
+benchmark. Do not try a fifth model.
+
+
+
+---
+
+## E-00f — Cross-vendor replication among competent frontier agents
+**Phase:** 1 · **Status:** planned, prediction registered 2026-08-29 · **Blocks Phase 2**
+· **FINAL model replication (D-021)**
+
+**This is a different question from E-00c/d/e, and the distinction is load-bearing.**
+
+| Experiment | Question | Status |
+|---|---|---|
+| E-00c, E-00d | Does the effect appear in **open-weight** models? | inconclusive — failed the competency floor |
+| E-00e | Same, on a **competent hosted open-weight** model | ready to run |
+| **E-00f** | Does the effect appear **across vendors** among models unambiguously competent enough to be agents? OpenAI → Anthropic | **this one** |
+
+E-00f **does not substitute** for the open-weight question. Claude Sonnet 5 is a closed
+frontier model. A positive result here says the effect is not an artefact of one vendor's
+post-training; it says nothing about whether open-weight models behave the same way. Any
+write-up conflating the two is wrong.
+
+**Design.** Frozen and identical to E-00e: 24 AF-Auth scenarios, 62 variants, seeds
+`[1,2,3]`, 186 episodes, agent loop, neutral system prompt, oracles, temperature 1.0, all
+metrics, and the **unchanged 60% competency floor** (D-019). A test asserts all four
+replication configs enumerate the identical 186 episodes.
+
+**Model.** `anthropic/claude-sonnet-5` via OpenRouter. Verified live 2026-08-29 with
+`agentfw models --grep claude-sonnet`: native tool support **yes**, 1M context, $2.00/Mtok
+input, $10.00/Mtok output. Extended thinking is **off** — we do not pass OpenRouter's
+`reasoning` parameter. That matches gpt-4.1-mini exactly and is more conservative than
+gpt-5-mini's `reasoning_effort: low`, so if it biases anything it biases *against* Sonnet 5
+appearing capable, which makes a passed competency gate more credible rather than less.
+
+### Pre-registered interpretation
+
+Written before the run, with no branch left to improvisation:
+
+| Outcome | Reading |
+|---|---|
+| **Compliance ≥60% and a large positive ambiguity gap** | **Cross-vendor replication.** The effect is not specific to OpenAI post-training. The thesis may drop "on the models tested" *for frontier models*, and must retain it for open-weight ones pending E-00e. |
+| **Compliance ≥60% and a collapsed gap** | **Evidence the effect is not universal** and is plausibly OpenAI-specific or model-family-specific. This directly weakens the central claim in `PROJECT_SPEC.md` §2 and the framing must be narrowed to "observed on OpenAI models" before Phase 2 proceeds. |
+| **Compliance <60%** | **Investigate the benchmark, not the model.** A frontier model failing the floor on scenarios that gpt-4.1-mini completes at 81.2% would point at sandbox/harness incompatibility — tool schemas, prompt shape, oracle strictness — not at Anthropic's model behaviour. In that case the finding is about *our benchmark* and must be fixed before any headline claim stands. |
+
+**Registered predictions.**
+- **Primary:** compliance clears 60% comfortably — this is a frontier model on tasks a
+  mid-tier API model completes at 81.2%.
+- **Conditional on clearing the floor:** underspecified OR **> 20%**, explicit-low **< 10%**,
+  gap **> 15pp**. I expect the gap to hold but be **smaller** than E-00b's 36.7pp: Anthropic
+  models are trained to be conspicuously conservative about consequential actions, so the
+  underspecified rate is the number most likely to come in low.
+- **The prediction most likely to be wrong** is that the gap survives at all. If Sonnet 5
+  simply asks for clarification under under-specification instead of acting, the gap
+  collapses — and that would be a genuinely important result, because it would mean the
+  behaviour our firewall targets is a *vendor-specific* failure rather than a general one.
+
+**Falsifies.** Compliance ≥60% with underspecified overreach under ~10% falsifies
+cross-vendor generality and forces the narrowing described in the table above.
+
+### Stated confound: the scenarios were authored by a Claude model
+
+The AF-Auth scenarios, utterances and oracles in this suite were written by Claude (this
+assistant) during Phase 1, and E-00f evaluates a Claude model. That is a conflict worth
+naming rather than discovering later.
+
+Why it is probably not fatal: outcomes are decided by machine-checkable oracles over an
+effect log, not by model judgement; the utterances were written to be natural rather than
+to probe any known model behaviour; the same scenarios already produced 81.2% compliance and
+a 36.7pp gap on OpenAI models, so they are not tuned to Claude; and a test forbids any
+`underspecified` utterance from naming its own consequence.
+
+Why it still matters: if E-00f shows an *unusually* large or small gap relative to E-00b,
+authorship is a live alternative explanation and must be reported as one. The clean fix is
+scenarios authored independently of any evaluated model, which is recorded as a Phase 5
+requirement rather than done now.
+
+**Cost estimate.** Measured scope from E-00b's AF-Auth episodes: **0.55–0.66M prompt** and
+**0.05–0.08M completion** tokens for 186 episodes. At the verified $2.00/$10.00 per Mtok:
+
+- low end: 0.55 × $2.00 + 0.05 × $10.00 = **$1.60**
+- high end: 0.66 × $2.00 + 0.08 × $10.00 = **$2.12**
+
+So **roughly $1.60–$2.15**, about 10× E-00e's $0.20 and still trivial in absolute terms.
+(`anthropic/claude-sonnet-5:batch` is half price, but the agent loop is multi-turn and
+synchronous, so the batch endpoint does not apply.)
+
 **Results.** *(pending — not yet run)*
-
-
 
 ---
 

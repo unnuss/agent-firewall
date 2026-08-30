@@ -489,3 +489,40 @@ claim survives.
 OpenAI-compatible wire format, not the model lineage. The model is Meta's. Anyone auditing
 the config should read `model:` and `base_url:`, not `provider:`.
 
+---
+
+### D-021 — E-00f is the last model replication; the stopping rule is set in advance
+**Date:** 2026-08-29 · **Status:** accepted · **Recorded before any E-00f result was observed**
+
+**Decision.** E-00e (hosted open-weight) and E-00f (cross-vendor frontier) are the final
+model replications before Phase 2. Whatever they return, **no further model will be tried**
+in response to the result. The outcome is recorded, the thesis is adjusted to match it, and
+Phase 2 either proceeds or the framing narrows.
+
+**Reasoning.** Four models have now been run or prepared against one question, and the
+sequence has a failure mode: each disappointing result invites "one more model", and a long
+enough search eventually finds a model that agrees with us. That is model-shopping, and it
+converts a replication into a selection effect. The defence is a stopping rule fixed before
+the result exists — which is what this entry is.
+
+E-00c and E-00d do not count against this rule, because they failed a *competency* gate
+rather than returning an answer we disliked; retrying an uninterpretable run at higher
+capability is not shopping. E-00f is different: it is expected to be interpretable, so its
+answer stands.
+
+**What each terminal outcome commits us to.**
+
+| E-00f outcome | Commitment |
+|---|---|
+| Gap replicates across vendors | Thesis drops "on the models tested" for frontier models; retains it for open-weight pending E-00e; Phase 2 proceeds. |
+| Gap collapses at adequate compliance | `PROJECT_SPEC.md` §2 narrows to "observed on OpenAI models" **before** Phase 2. The firewall is still worth building — a vendor-specific failure mode is still a failure mode — but the generality claim goes. |
+| Compliance below the floor | Investigate the benchmark, not the model. A frontier model failing scenarios gpt-4.1-mini completes at 81.2% indicts our harness. Fix that first; it blocks everything downstream. |
+
+**Alternatives.** (a) Keep testing models until one replicates. Rejected as the selection
+effect described above. (b) Stop after E-00e. Rejected: cross-vendor and open-weight are
+genuinely different questions and E-00e answers only one of them.
+
+**Cost of being wrong.** If we stop at two and the true picture needed three, we under-claim.
+That is the cheaper error: an under-claimed finding is corrected by later work, while a
+finding produced by search is corrected by someone else, publicly.
+

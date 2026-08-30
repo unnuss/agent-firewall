@@ -41,9 +41,9 @@ max_workers: 6
 save_traces: true
 
 models:
-  - id: llama4-maverick
+  - id: llama-3.3-70b
     provider: openai          # OpenAI-compatible wire format, NOT an OpenAI model
-    model: meta-llama/llama-4-maverick
+    model: meta-llama/llama-3.3-70b-instruct
     kind: open-weight-hosted
     base_url: https://openrouter.ai/api/v1
     api_key_env: OPENROUTER_API_KEY

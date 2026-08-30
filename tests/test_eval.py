@@ -528,7 +528,12 @@ def test_e00e_changes_only_model_provider_and_concurrency() -> None:
 
 
 def test_all_replication_runs_share_the_frozen_scenario_scope() -> None:
-    """E-00c, E-00d and E-00e must enumerate the identical 186 episodes."""
+    """Every replication must enumerate the identical 186 episodes.
+
+    Four runs now hang off one frozen scope. If any of them silently drifts - a changed
+    seed list, a suite added - the runs stop being comparable and the whole replication
+    programme is worthless. Cheaper to fail here.
+    """
     from agentfw.eval.runner import RunConfig, build_jobs
 
     counts = {}
@@ -536,9 +541,55 @@ def test_all_replication_runs_share_the_frozen_scenario_scope() -> None:
         "e00c_openweight",
         "e00d_openweight_14b",
         "e00e_hosted_openweight",
+        "e00f_cross_vendor",
     ):
         cfg = RunConfig.from_yaml(pathlib.Path(f"experiments/{name}/config.yaml"))
         scenarios = [s for suite in cfg.suites for s in load_suite(suite, split=cfg.split)]
         counts[cfg.experiment] = (len(scenarios), len(build_jobs(cfg, scenarios)))
     assert len(set(counts.values())) == 1, f"replication scope drifted: {counts}"
     assert next(iter(counts.values())) == (24, 186)
+
+
+def test_replication_configs_declare_distinct_models_with_matching_ids() -> None:
+    """A stale `id` mislabels every episode row in the results file.
+
+    This is not hypothetical: E-00e was switched from Llama 4 Maverick to Llama 3.3 70B
+    and the id was left behind, which would have attributed 186 episodes to a model that
+    never ran.
+    """
+    import yaml
+
+    seen: dict[str, str] = {}
+    for name in (
+        "e00c_openweight",
+        "e00d_openweight_14b",
+        "e00e_hosted_openweight",
+        "e00f_cross_vendor",
+    ):
+        cfg = yaml.safe_load(
+            pathlib.Path(f"experiments/{name}/config.yaml").read_text(encoding="utf-8")
+        )
+        model = cfg["models"][0]
+        mid, real = model["id"], model["model"]
+        assert mid not in seen or seen[mid] == real, (
+            f"id {mid!r} is reused for two different models: {seen.get(mid)} and {real}"
+        )
+        seen[mid] = real
+        # the id must be recognisable as the model it labels
+        stem = real.split("/")[-1].lower().replace("-instruct", "")
+        head = mid.lower().split("-")[0]
+        assert head in stem, f"{name}: id {mid!r} does not identify model {real!r}"
+
+
+def test_e00f_is_a_different_vendor_from_e00b() -> None:
+    """E-00f exists to cross a vendor boundary; assert it actually does."""
+    import yaml
+
+    cfg = yaml.safe_load(
+        pathlib.Path("experiments/e00f_cross_vendor/config.yaml").read_text(encoding="utf-8")
+    )
+    model = cfg["models"][0]["model"]
+    assert model.startswith("anthropic/"), f"E-00f must run an Anthropic model, got {model}"
+    assert not model.startswith(("openai/", "gpt-"))
+    # and it must not quietly enable extended thinking, which would confound capability
+    assert "reasoning" not in (cfg["models"][0].get("extra_body") or {})

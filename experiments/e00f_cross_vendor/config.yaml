@@ -1,0 +1,79 @@
+# E-00f - CROSS-VENDOR replication among competent frontier agents.
+#
+# THIS IS A DIFFERENT QUESTION FROM E-00c/d/e. Read this before interpreting anything.
+#
+#   E-00c, E-00d, E-00e ask: does the effect appear in OPEN-WEIGHT models?
+#                            (c and d are inconclusive - they failed the competency floor)
+#   E-00f asks:              does the effect appear across VENDORS among models that are
+#                            unambiguously competent enough to be agents? OpenAI -> Anthropic.
+#
+# E-00f does NOT substitute for the open-weight question and must never be described as
+# doing so. Claude Sonnet 5 is a closed frontier model. A positive E-00f result would say
+# the effect is not an artefact of one vendor's post-training; it would say nothing about
+# whether open-weight models behave the same way.
+#
+# THE ONLY INTENDED SUBSTANTIVE CHANGE FROM E-00e IS THE MODEL. Same 24 frozen AF-Auth
+# scenarios, 62 variants, seeds [1,2,3], 186 episodes, agent loop, neutral system prompt,
+# oracles, temperature 1.0, metrics, and the unchanged 60% competency floor (D-019). Verify:
+#
+#     diff experiments/e00e_hosted_openweight/config.yaml \
+#          experiments/e00f_cross_vendor/config.yaml
+#
+# `provider: openai` denotes the OpenAI-compatible WIRE FORMAT. The model is Anthropic's.
+# Audit `model:` and `base_url:`, never `provider:`.
+#
+# THIS IS THE FINAL MODEL REPLICATION BEFORE PHASE 2 (D-021). Whatever it returns, no
+# further model is to be tried. The stopping rule is recorded before the result exists.
+#
+# Verified live 2026-08-29 via `agentfw models --grep claude-sonnet`:
+#   anthropic/claude-sonnet-5   tools: yes   ctx 1,000,000   $2.00/Mtok in   $10.00/Mtok out
+#
+# BEFORE RUNNING:
+#   agentfw models --grep claude-sonnet     # re-confirm id, tool support and live price
+#   agentfw preflight --base-url https://openrouter.ai/api/v1 \
+#                     --model anthropic/claude-sonnet-5
+# See docs/REPLICATION_HOSTED.md section "E-00f".
+
+experiment: E-00f
+defense: undefended
+split: dev
+suites: [af_auth]
+seeds: [1, 2, 3]
+# Local servers batch internally; more client threads mostly adds queueing. Raise only
+# after watching GPU utilisation.
+# Raised from 4 (E-00c/d) purely because a hosted API tolerates more concurrency than one
+# GPU. This is an execution knob: it changes wall-clock time, not any measured quantity.
+# Called out here so it does not look like an undeclared change.
+max_workers: 6
+save_traces: true
+
+models:
+  - id: claude-sonnet-5
+    provider: openai          # OpenAI-compatible wire format, NOT an OpenAI model
+    model: anthropic/claude-sonnet-5
+    kind: frontier-closed
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    extra_headers:
+      HTTP-Referer: https://github.com/agent-firewall
+      X-Title: Agent Firewall E-00f
+    max_tokens: 2048
+    temperature: 1.0
+    extra_body:
+      # Pin OpenRouter to upstream providers that actually implement native tool calling,
+      # and forbid silent fallback to one that does not. A run that quietly lands on a
+      # provider without tool support would look like a competency failure and would not
+      # be one.
+      provider:
+        require_parameters: true
+        allow_fallbacks: true
+      # NO EXTENDED THINKING. Sonnet 5 is reasoning-capable, unlike Llama 4 Maverick, so
+      # this is a live choice rather than a default. We do not pass OpenRouter's `reasoning`
+      # parameter, which leaves extended thinking off. That matches gpt-4.1-mini exactly and
+      # is more conservative than gpt-5-mini's `reasoning_effort: low` in E-00b, so if this
+      # biases anything it biases against Sonnet 5 looking capable - the direction that
+      # makes a passed competency gate more credible, not less.
+      #
+      # If preflight ever shows thinking traces appearing, stop and re-check: comparing a
+      # thinking model against non-thinking ones would confound capability with the
+      # measurement.
