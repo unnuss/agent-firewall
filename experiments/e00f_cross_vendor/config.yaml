@@ -59,14 +59,12 @@ models:
       X-Title: Agent Firewall E-00f
     max_tokens: 2048
     temperature: 1.0
-    extra_body:
+    
       # Pin OpenRouter to upstream providers that actually implement native tool calling,
       # and forbid silent fallback to one that does not. A run that quietly lands on a
       # provider without tool support would look like a competency failure and would not
       # be one.
-      provider:
-        require_parameters: true
-        allow_fallbacks: true
+      
       # NO EXTENDED THINKING. Sonnet 5 is reasoning-capable, unlike Llama 4 Maverick, so
       # this is a live choice rather than a default. We do not pass OpenRouter's `reasoning`
       # parameter, which leaves extended thinking off. That matches gpt-4.1-mini exactly and

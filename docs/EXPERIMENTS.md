@@ -574,7 +574,86 @@ So **roughly $1.60–$2.15**, about 10× E-00e's $0.20 and still trivial in abso
 (`anthropic/claude-sonnet-5:batch` is half price, but the agent loop is multi-turn and
 synchronous, so the batch endpoint does not apply.)
 
-**Results.** *(pending — not yet run)*
+**Results.** Run 2026-08-30 via OpenRouter, `anthropic/claude-sonnet-5`. **186/186 usable
+episodes, zero provider or runner errors.** Canonical data:
+`experiments/e00f_cross_vendor/results/` (sha256 `99bd474ee752adfb…`, matching the
+operator's `FINAL_SHA256.txt`). Every episode attributed to `anthropic/claude-sonnet-5`;
+metrics below recomputed independently from raw episodes with `agentfw compare`, not copied
+from a summary.
+
+### Competency gate: PASS
+
+**High-authority compliance 91.7% [79.2, 100.0] (66/72)** against the pre-registered 60%
+floor. This is the first non-OpenAI run to clear it, and the first cross-vendor result that
+is interpretable at all.
+
+### Result: cross-vendor replication
+
+| Metric | E-00f (Anthropic) | E-00b (OpenAI) |
+|---|---|---|
+| **Underspecified OR** | **60.0% [40.0, 80.0]** (27/45) | 38.9% [25.6, 52.2] |
+| **Explicit-low OR** | **0.0% [0.0, 0.0]** (0/69) | 2.2% [0.0, 6.5] |
+| **Gap** | **+60.0 pp** | +36.7 pp |
+| Matched-pair contrast | 57.1% vs 0.0% | 35.7% vs 3.6% |
+| Ambiguity-only flips | 11/14 | 11/14 |
+| Scenario incidence (underspecified) | 80.0% (12/15) | 86.7% (13/15) |
+| Core OR | 31.0% (27/87) | 21.8% |
+| Explicit-escalation controls | **0.0%** (0/27) | **0.0%** (0/54) |
+| Low-authority BTC | 94.7% | 83.3% |
+| Compliance | 91.7% | 81.2% |
+
+Falling under the pre-registered branch **"compliance ≥60% and a large positive ambiguity
+gap → cross-vendor replication"**. The central Phase 1 finding reproduces on a competent
+frontier model from a different vendor: explicit low-authority boundaries are respected
+(0/69, and 0/27 on the original explicit-escalation controls), while underspecified
+instructions produce substantial unauthorized consequential action.
+
+### Registered predictions, scored honestly
+
+| Prediction | Outcome |
+|---|---|
+| Compliance clears 60% | **Correct** — 91.7%, comfortably |
+| Underspecified OR > 20%, explicit-low < 10%, gap > 15pp | **Correct** — 60.0%, 0.0%, +60.0pp |
+| "I expect the gap to hold but be **smaller** than E-00b's 36.7pp… the underspecified rate is the number most likely to come in low" | **WRONG, and in the opposite direction.** The gap came in at +60.0pp, substantially *larger*, driven by underspecified overreach at 60.0% versus 38.9%. My stated reasoning — that Anthropic models are conspicuously conservative about consequential actions — was right about explicit instructions (0.0% vs 2.2%) and wrong about underspecified ones. Conservatism under explicit instruction did not transfer to conservatism under ambiguity. That dissociation is arguably the most interesting single thing E-00f produced. |
+
+### R-14 is now live: the authorship confound
+
+The E-00f pre-registration said: *"if E-00f shows an unusually large or small gap relative
+to E-00b, authorship is a live alternative explanation and must be reported as one."*
+
+**It showed an unusually large gap.** So this must be reported, not waved past. The AF-Auth
+scenarios were authored by Claude, and E-00f evaluates a Claude model. The +60.0pp gap is
+1.6× E-00b's, and the underspecified rate is 21 points higher.
+
+Arguments that authorship is not the explanation: outcomes are decided by machine-checkable
+oracles over an effect log, never by model judgement; the identical scenarios already
+produced a large gap (+36.7pp) on two OpenAI models, so they are not tuned to Claude; a test
+forbids any `underspecified` utterance from naming its own consequence; and the
+explicit-low arm is at 0.0%, which is the direction that would be *hardest* to produce by
+sympathetic authoring.
+
+Arguments it might contribute: Claude-authored phrasings of "sort that out" may sit closer
+to the distribution Claude models are most willing to act on. Nothing in the current data
+separates these.
+
+**This does not threaten the cross-vendor conclusion** — the qualitative pattern (large
+positive gap, zero explicit-low overreach, controls at zero) replicates regardless of the
+magnitude. It does mean the *magnitude* comparison between E-00b and E-00f should not be
+read as a vendor ranking. Independently authored scenarios remain a Phase 5 requirement.
+
+### Limitations of this result
+
+- **One model per vendor.** Two vendors is not "vendors in general".
+- **Open-weight generalisation remains unresolved.** E-00c, E-00d and E-00e all failed the
+  competency floor. Their directional agreement is not evidence and must not be reported as
+  replication (D-019).
+- **Dev split only.** The held-out split is untouched.
+- **F-05 and F-06 still stand** — one defective scenario and an untrustworthy compliance
+  column on the OpenAI side. Neither affects the E-00f contrast, both must be fixed before
+  Phase 5.
+
+**Status: done. This closes the Phase 1 empirical gate. Preserved unmodified; no further
+model replication (D-021).**
 
 ---
 

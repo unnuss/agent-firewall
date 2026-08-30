@@ -1,0 +1,52 @@
+E-00f CROSS-VENDOR REPLICATION — FINAL
+
+Model:
+anthropic/claude-sonnet-5 via OpenRouter
+
+Dataset:
+186 / 186 usable episodes
+24 scenarios
+Seeds: 1, 2, 3
+Provider errors in final dataset: 0
+
+Competency gate:
+High-authority compliance = 91.7% [79.2, 100.0] (66/72)
+Preregistered competency floor = 60%
+Status = PASS / INTERPRETABLE
+
+Authorization results:
+Overall low-authority OR = 23.7% (27/114)
+Underspecified OR = 60.0% [40.0, 80.0] (27/45)
+Explicit-low OR = 0.0% (0/69)
+
+Matched ambiguity contrast:
+Underspecified = 57.1%
+Explicit-low = 0.0%
+Ambiguity-only scenario flips = 11 / 14
+
+Scenario-level underspecified incidence:
+80.0% (12/15)
+
+Core vs control:
+Core OR = 31.0% (27/87)
+Explicit-escalation controls = 0.0% (0/27)
+
+BTC:
+Low-authority = 94.7% (108/114)
+High-authority = 91.7% (66/72)
+
+Conclusion:
+E-00f satisfies the preregistered branch for cross-vendor replication
+among competent frontier agents.
+
+Open-weight generalization remains unresolved because prior tested
+Qwen/Llama-family models failed the preregistered competency gate.
+
+Infrastructure history:
+- initial OpenRouter provider-routing incompatibility
+- new-account 20 RPM rate limiting
+- credit exhaustion during first full attempt
+- failed billing episodes were removed and rerun with identical config
+- final canonical dataset contains 186/186 usable episodes and zero provider errors
+
+No further model replication should be performed before Phase 2.

@@ -16,10 +16,11 @@ be worth an interruption.**
 
 ## 2. The thesis, stated so it can be falsified
 
-**Revised 2026-08-29 in light of E-00 and E-00b.** The original wording claimed that agents
-commonly take consequences the user never licensed. Our own measurements do not support
-that in general, and the revision below is what they do support. The superseded wording is
-preserved in section 2.2 rather than deleted.
+**Revised 2026-08-29 in light of E-00 and E-00b; confirmed 2026-08-30 by E-00f.** The
+original wording claimed that agents commonly take consequences the user never licensed.
+Our own measurements do not support that in general, and the revision below is what they do
+support. The superseded wording is preserved in section 2.2 rather than deleted. Phase 1 is
+closed; the operative scope of the claim is fixed by **D-022**.
 
 ### 2.1 The thesis
 
@@ -33,6 +34,11 @@ preserved in section 2.2 rather than deleted.
 > **underspecified instructions cause agents to infer permission for consequential effects
 > the user never clearly licensed** — the user states a goal without naming an action, and
 > the agent supplies the higher-consequence action.
+>
+> This replicates across vendors: measured at 38.9% on OpenAI models and 60.0% on
+> Anthropic's Claude Sonnet 5, with explicit low-authority boundaries respected in both
+> (2.2% and 0.0%). It is **not** established for open-weight models, where three attempts
+> failed a pre-registered competency floor.
 >
 > A runtime layer that models *intent scope* explicitly can catch this at a
 > human-interruption cost low enough to be usable. **Selective ASK — on consequential
@@ -49,10 +55,11 @@ and implied breadth we have not demonstrated.
 
 | Claim | Status |
 |---|---|
-| Agents overreach against explicit instructions | **Refuted in our setting.** 0/54 episodes across nine control scenarios (E-00b); 0/48 in E-00. |
-| Agents overreach under under-specification | **Supported.** 38.9% [25.6, 52.2] of episodes, 13 of 15 scenarios, 7 domains (E-00b). |
-| The difference is caused by ambiguity, not by consequence size | **Supported.** In 11 of 14 scenarios, changing only the wording of an equally-low-authority ask flipped the outcome, holding world, tools and contested effect fixed. |
-| The finding holds across model families | **Not established.** Both models tested are OpenAI models. Replication (E-00c) is a precondition for Phase 2. |
+| Agents overreach against explicit instructions | **Refuted in our setting.** OpenAI: 0/54 controls (E-00b), 0/48 (E-00). Anthropic: 0/69 explicit-low and 0/27 controls (E-00f). |
+| Agents overreach under under-specification | **Supported.** 38.9% [25.6, 52.2] on OpenAI (E-00b) and 60.0% [40.0, 80.0] on Anthropic (E-00f); 12-13 of 15 scenarios, 7 domains. |
+| The difference is caused by ambiguity, not by consequence size | **Supported, and replicated.** 11 of 14 scenarios flipped on wording alone in *both* E-00b and E-00f, holding world, tools and contested effect fixed. |
+| The finding holds **across vendors** | **Supported.** E-00f replicates it on Claude Sonnet 5 at 91.7% compliance, clearing the pre-registered competency floor. Two vendors, one model each — not "LLM agents in general". |
+| The finding holds **on open-weight models** | **UNRESOLVED.** Three attempts (Qwen3-8B, Qwen3-14B-AWQ, Llama 4 Maverick) all failed the 60% competency floor at 31.9 / 36.1 / 44.4%. Their directional agreement is **not** evidence (D-019) and must never be reported as replication. |
 | ASK is the right primitive for these cases | **Argued, not yet measured.** Under-specification is precisely the case where BLOCK is wrong (the user may well have meant it) and ALLOW is wrong (they may not). E-04 measures it. |
 
 **Design consequence.** If explicit boundaries are already respected, a firewall that only

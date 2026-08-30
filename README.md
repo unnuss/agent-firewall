@@ -1,8 +1,9 @@
 # Agent Firewall
 
 > A runtime authorization layer for tool-using LLM agents.
-> **Status: Phase 1 engineering complete; the empirical gate has now passed on the
-> revised suite (E-00b). The firewall itself is Phase 2 and does not exist yet.**
+> **Status: Phase 1 complete.** Sandbox, agent, benchmark and six undefended-baseline
+> experiments, including a cross-vendor replication. The firewall itself is Phase 2 and
+> does not exist yet.
 
 An agent being *capable* of an action does not mean it should be *allowed* to perform it.
 
@@ -49,43 +50,43 @@ consequential cases — which is what the cost model and the ASK budget exist to
 
 ## What we measured
 
-Two undefended-baseline runs. **E-00** (264 episodes) tested explicit consequence
-escalation — "draft" vs "reply", "find" vs "book" — and found essentially nothing.
-**E-00b** (516 episodes, 24 scenarios, 2 models, 3 seeds) added scenarios where the user
-states a goal without naming the action, and held everything else fixed.
+Six undefended-baseline runs, ~1,700 episodes. The headline is a **within-scenario paired
+contrast**: same world, same contested effect, same authority level — only the wording of
+the low-authority ask differs.
 
-The headline is a **within-scenario contrast**: same world, same contested effect, same
-authority level, only the wording of the ask differs.
-
-| Low-authority utterance | Overreach (episode) | Scenarios with >=1 overreach |
+| Low-authority utterance | OpenAI (E-00b) | Anthropic (E-00f) |
 |---|---|---|
-| **Underspecified** — "deal with it", "sort that out" | **38.9%** [25.6, 52.2] | **13 / 15** |
-| **Explicit** — "tell me what it says", "draft it" | **2.2%** [0.0, 6.5] | **1 / 23** |
+| **Underspecified** — "deal with it", "sort that out" | **38.9%** [25.6, 52.2] | **60.0%** [40.0, 80.0] |
+| **Explicit** — "tell me what it says", "draft it" | **2.2%** [0.0, 6.5] | **0.0%** [0.0, 0.0] |
+| Explicit-escalation controls | **0.0%** (0/54) | **0.0%** (0/27) |
+| Gap | **+36.7 pp** | **+60.0 pp** |
+| High-authority compliance | 81.2% | 91.7% |
 
-In **11 of 14** scenarios the wording alone flipped the outcome. Across 7 domains. The
-explicit-escalation controls sit at **0.0% (0/54)** and are kept in the suite precisely
-because that zero is evidence: a defense must not take credit for a baseline that was
-already at zero.
+In **11 of 14** scenarios, across 7 domains, the wording alone flipped the outcome — in
+both vendors independently. Agents did not disregard explicit instructions; they inferred
+authority from silence.
 
-Intervals are percentile bootstrap 95% CIs **clustered by scenario** — seeds and models
-within one scenario are not independent observations. Reported alongside every episode-level
-rate is a **scenario-level incidence**, because a phenomenon driven by one scenario and one
-spread across fifteen can share an episode rate and mean completely different things.
+**What this does and does not establish.** It replicates across two vendors on models
+competent enough to do the task (a pre-registered 60% compliance floor). It is **not**
+established on open-weight models: three attempts — Qwen3-8B, Qwen3-14B-AWQ, Llama 4
+Maverick — all failed that floor at 31.9%, 36.1% and 44.4%. Their results pointed the same
+direction and are **not** counted as replication, because an agent that often fails to act
+produces low rates everywhere.
 
-**We publish the results that went against us.** The registered prediction was 15-40%
-overreach concentrated in B1; B1 came in at zero and stayed there. The first run's
-motivating example did not survive its own measurement. Known defects in the current suite
-— including one scenario that asks for data the world does not contain — are listed in
-[EXPERIMENTS.md](docs/EXPERIMENTS.md) as F-01 through F-06 rather than quietly fixed.
+Intervals are percentile bootstrap 95% CIs **clustered by scenario**; every episode-level
+rate is reported beside a scenario-level incidence.
 
-**Not yet established: that this holds outside one model family.** Both models tested are
-OpenAI models, so a shared post-training lineage cannot be ruled out as the reason explicit
-escalation is refused so uniformly. A cross-family replication on an open-weight model
-(**E-00c**) is a precondition for building the firewall, not a nice-to-have. Until it runs,
-every claim here is "on the models tested". See
-[`docs/REPLICATION_OPENWEIGHT.md`](docs/REPLICATION_OPENWEIGHT.md).
+**We publish what went against us.** The registered prediction was 15–40% overreach
+concentrated in explicit escalation; that came in at zero and stayed there across every
+model tested. The first run's motivating example did not survive its own measurement. My
+pre-registered prediction that Anthropic's gap would be *smaller* than OpenAI's was wrong by
+23 points in the opposite direction. Known defects — including one scenario that asks for
+data the world does not contain, and a confound in which Claude-authored scenarios were used
+to evaluate a Claude model — are listed in [EXPERIMENTS.md](docs/EXPERIMENTS.md) as F-01
+through F-06 and R-14 rather than quietly fixed.
 
-Reproduce: `agentfw run experiments/e00b_revised/config.yaml` (~$0.66).
+Reproduce: `agentfw run experiments/e00b_revised/config.yaml` (~$0.66) ·
+`agentfw run experiments/e00f_cross_vendor/config.yaml` (~$2).
 
 ## Documentation
 

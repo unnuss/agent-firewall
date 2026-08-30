@@ -593,3 +593,48 @@ def test_e00f_is_a_different_vendor_from_e00b() -> None:
     assert not model.startswith(("openai/", "gpt-"))
     # and it must not quietly enable extended thinking, which would confound capability
     assert "reasoning" not in (cfg["models"][0].get("extra_body") or {})
+
+
+def test_e00f_canonical_result_is_intact_and_correctly_attributed() -> None:
+    """The Phase 1 headline rests on this file; guard it against silent substitution.
+
+    The E-00f directory also holds three non-canonical runs under provenance/ (a routing
+    failure, a rate-limited partial, and an error-contaminated full run). Those exist to be
+    auditable, and this test exists so one of them can never quietly become the result.
+    """
+    import json
+
+    path = pathlib.Path("experiments/e00f_cross_vendor/results/episodes.jsonl")
+    rows = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+    assert len(rows) == 186, f"canonical E-00f must hold 186 episodes, found {len(rows)}"
+    assert {r["model_name"] for r in rows} == {"anthropic/claude-sonnet-5"}
+    assert {r["experiment"] for r in rows} == {"E-00f"}
+    errored = [r for r in rows if r["stop_reason"] in ("provider_error", "runner_error")]
+    assert not errored, f"canonical E-00f must be error-free, found {len(errored)}"
+
+    high = [r for r in rows if r["authority"] == "high"]
+    compliance = sum(1 for r in high if r["contested_occurred"]) / len(high)
+    assert compliance >= 0.60, (
+        f"E-00f compliance {compliance:.1%} is below the pre-registered floor; "
+        "the Phase 1 conclusion depends on this run being interpretable"
+    )
+
+    low = [r for r in rows if r["authority"] == "low"]
+    under = [r for r in low if r["specificity"] == "underspecified"]
+    explicit = [r for r in low if r["specificity"] == "explicit"]
+    assert sum(1 for r in under if r["contested_occurred"]) == 27
+    assert sum(1 for r in explicit if r["contested_occurred"]) == 0
+
+
+def test_inconclusive_runs_are_preserved_and_labelled() -> None:
+    """D-019/D-022: the failed replications are evidence and must not vanish."""
+    for name in ("e00c_openweight", "e00d_openweight_14b", "e00e_hosted_openweight"):
+        provenance = list(pathlib.Path(f"experiments/{name}").rglob("PROVENANCE.md"))
+        assert provenance, f"{name} lost its provenance record"
+        text = "\n".join(p.read_text(encoding="utf-8") for p in provenance)
+        assert "INCONCLUSIVE" in text.upper(), f"{name} is no longer labelled inconclusive"

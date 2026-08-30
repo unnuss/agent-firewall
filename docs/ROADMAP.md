@@ -21,7 +21,16 @@ Delivered: `RELATED_WORK.md`, `PROJECT_SPEC.md`, `THREAT_MODEL.md`, `ARCHITECTUR
 
 ---
 
-## Phase 1 — Sandbox, agent, and the "does the problem exist?" experiment
+## Phase 1 — Sandbox, agent, and the "does the problem exist?" experiment ✅ complete (2026-08-30)
+
+**Outcome.** All five deliverables shipped. The go/no-go gate was answered in a way that
+**changed the project's thesis**: undefended overreach against *explicit* instructions is
+~0%, and the real failure is authority inference under *underspecified* intent (38.9% on
+OpenAI, 60.0% on Anthropic). Six experiments, ~1,700 episodes, three of them inconclusive
+by a pre-registered competency floor and preserved as such. See D-018, D-019, D-021, D-022.
+
+Original plan follows.
+
 
 **Goal:** a real tool-using agent in a deterministic world, plus the first honest number.
 

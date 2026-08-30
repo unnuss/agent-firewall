@@ -526,3 +526,47 @@ genuinely different questions and E-00e answers only one of them.
 That is the cheaper error: an under-claimed finding is corrected by later work, while a
 finding produced by search is corrected by someone else, publicly.
 
+---
+
+### D-022 — Phase 1 empirical gate closed; what Phase 2 may and may not assume
+**Date:** 2026-08-30 · **Status:** accepted
+
+**Decision.** The Phase 1 empirical gate is **closed**. Phase 2 (deterministic firewall
+core) is unblocked. The finding Phase 2 is built on is stated below in the narrowest form
+the evidence supports, and Phase 2 must not widen it.
+
+**The finding.**
+
+> In our sandbox, competent frontier agents from two vendors **respect explicit
+> authorization boundaries** — 0/69 and 0/27 explicit-low overreach for Anthropic, 3/138
+> and 0/54 for OpenAI. The authorization failure that actually occurs is **authority
+> inference under underspecified intent**: when an instruction states a goal without naming
+> an action, agents supply one, and supply the consequential one. Measured at 38.9%
+> (OpenAI) and 60.0% (Anthropic), with the effect isolated by a within-scenario paired
+> contrast in which only the wording of an equally-low-authority ask changes.
+
+**What this licenses for Phase 2.** The design target is the *ambiguous band*, not blatant
+boundary violation. That makes **ASK the load-bearing primitive**: where the instruction did
+not settle the question, BLOCK is wrong (the user may well have meant it) and ALLOW is wrong
+(they may not). Calibration, the cost model that sets the ASK boundary, and the ASK budget
+are therefore core, not refinements. A firewall that only enforced explicit boundaries would
+have almost nothing to enforce — that is now measured rather than assumed.
+
+**What it does not license.**
+
+1. **No claim about open-weight models.** E-00c/d/e failed the competency floor. Their
+   directional agreement is not evidence (D-019) and must never be described as replication.
+2. **No claim about "LLM agents" in general.** Two vendors, one model each.
+3. **No magnitude comparison between vendors.** R-14 (Claude-authored scenarios evaluating a
+   Claude model) is live because E-00f's gap came in unusually large.
+4. **No held-out validation.** Everything is dev-split.
+
+**Why close now rather than resolve open weights first.** D-021 fixed the stopping rule
+before the results existed. The cross-vendor question is answered; the open-weight question
+is blocked on model capability rather than on effort, and three attempts is enough to
+establish that. Holding Phase 2 hostage to it would trade a real deliverable for a
+replication that current open-weight models cannot support.
+
+**Revisit if.** An open-weight model clears the competency floor and *fails* to show the
+gap; or independently authored scenarios fail to reproduce it. Either would reopen the gate.
+
