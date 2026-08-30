@@ -1,8 +1,25 @@
 # Architecture
 
-**Status:** proposed design. Sections 6 and 7 (agent loop, sandbox) are implemented as of
-Phase 1; the firewall itself is not. Sections marked *(spike)* must be validated before we
-commit to them.
+**Status:** partly implemented. Sections 6 and 7 (agent loop, sandbox) landed in Phase 1.
+Phase 2 implemented the deterministic half: sections 3 (data model), 4.1 (IntegrityMonitor,
+structural mechanism only), the deterministic part of 4.2 (FlowMonitor), the structural
+gates of section 5, and section 8 (audit and replay). Still design-only: 4.1 mechanism 2
+(the dependency screener), 4.3 (the AuthorizationMonitor), the cost model in section 5, and
+the dashboard. Sections marked *(spike)* must be validated before we commit to them.
+
+**Two corrections Phase 2 made to what is written below, both from building it.**
+
+*Section 4.1 overstates what the structural rule can do.* "Does executing this effect
+require authority that only untrusted content supplied?" is not decidable from labels. A
+legitimate reply to correspondence the user asked about, and an exfiltration to an address
+found in an injected page, produce identical label traces. The implemented rule is narrowed
+to out-of-scope effects reaching a *public* destination; everything else escalates. That
+narrowing is finding F-07 and it is the concrete reason mechanism 2 exists.
+
+*Section 5's ASK band is not the only thing that decides whether a human is asked.* A
+refused ASK is remembered for the episode (D-024), because per-action granularity otherwise
+lets one repetitive task spend the whole interruption budget on a question already
+answered.
 
 **Revised emphasis, 2026-08-29 (D-018).** E-00b showed that agents in our setting respect
 explicit authorization boundaries almost perfectly (0/54) and infer permission under

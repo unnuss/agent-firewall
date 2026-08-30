@@ -25,6 +25,18 @@
   do not patch it with a special case that will be indistinguishable from hardcoded demo
   logic later.
 
+## Invariants added in Phase 2 — do not weaken these
+
+- **No ML component may emit `Signal(structural=True)`.** The combinator ignores
+  non-structural signals when deciding to BLOCK, and a test asserts it. This is D-006 as a
+  type rather than a paragraph.
+- **`ToolRouter.declare` must never be used to authorize.** It returns `[]` on failure,
+  which under deny-by-default authorizes vacuously. Authorization uses `declare_for`, which
+  raises, and gate G0 turns any failure into a BLOCK.
+- **An audit event records `policy_verdict` and `verdict` separately.** The first replays
+  from the recorded inputs; the second depends on what a human answered and does not.
+- **Gold scopes are labels, not logic.** Nothing in `agentfw/core/` may read a scenario id.
+
 ## Code conventions (from Phase 1 onward)
 
 - Python 3.12, `uv` for environments, pydantic v2 for all core types, pytest + hypothesis,

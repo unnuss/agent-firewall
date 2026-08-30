@@ -10,29 +10,31 @@ build/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.hypothesis/
 node_modules/
 dashboard/dist/
 .DS_Store
-# Raw result archives are extracted into experiments/, never committed as blobs.
-*.zip
-# Per-episode traces are large and regenerable from episodes.jsonl + the config;
-# the reproducible core (episodes.jsonl, report.*, PROVENANCE.md) IS committed.
-experiments/**/traces/
-experiments/**/results/
-# ...but keep the generated reports: they are the record of what was measured.
-!# Raw result archives are extracted into experiments/, never committed as blobs.
-*.zip
-# Per-episode traces are large and regenerable from episodes.jsonl + the config;
-# the reproducible core (episodes.jsonl, report.*, PROVENANCE.md) IS committed.
-experiments/**/traces/
-experiments/**/results/report.md
-!# Raw result archives are extracted into experiments/, never committed as blobs.
-*.zip
-# Per-episode traces are large and regenerable from episodes.jsonl + the config;
-# the reproducible core (episodes.jsonl, report.*, PROVENANCE.md) IS committed.
-experiments/**/traces/
-experiments/**/results/report.json
 *.parquet
 *.sqlite
 *.db
 .ipynb_checkpoints/
+
+# Raw result archives are extracted into experiments/, never committed as blobs.
+*.zip
+
+# Experiment results. The reproducible core IS committed — episodes.jsonl is the raw data
+# every table recomputes from, and report.json/report.md are the record of what was
+# measured. Only the per-episode traces are excluded: they are large and regenerable from
+# episodes.jsonl plus the config.
+#
+# This file was previously mangled by a bad append, which blanket-ignored
+# experiments/**/results/ and left E-00's raw episodes.jsonl uncommitted while
+# PROJECT_STATE claimed it was in the repository. Keep the rule as a single explicit
+# exclusion rather than an ignore-plus-negation pair; the negation form is what broke.
+experiments/**/traces/
+
+# E-01a's per-policy replay output. Unlike a model run, this is *derived* data: it is a
+# pure function of committed inputs (the E-00b/E-00f episodes, the gold scopes, the config)
+# and regenerates in seconds with no API access, so committing 5 MB of it would buy
+# nothing. The reports it produces ARE committed.
+experiments/e01a_deterministic/results/*.jsonl

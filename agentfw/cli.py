@@ -4,6 +4,7 @@ agentfw validate                 # scenarios load, tools exist, declarations agr
 agentfw generate                 # expand pair templates into the held-out suite
 agentfw run experiments/e00_undefended/config.yaml
 agentfw report experiments/e00_undefended/results
+agentfw replay experiments/e01a_deterministic/config.yaml   # E-01a, no model calls
 agentfw smoke                    # one scripted episode, no network, no key
 """
 
@@ -74,6 +75,66 @@ def cmd_run(args: argparse.Namespace) -> int:
     rep = report_mod.write(out_dir, title=f"{cfg.experiment} — {cfg.defense}")
     print(f"\n[report] {out_dir / 'report.md'}")
     print(report_mod.to_markdown(rep).split("## Overreach")[0])
+    return 0
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    """E-01a: put committed Phase 1 trajectories in front of the Phase 2 firewall.
+
+    No provider is constructed and no key is read. The whole experiment is a function of
+    files already in the repository, which is what makes it reproducible by anyone who
+    clones it.
+    """
+    import yaml
+
+    from agentfw.eval import replay as replay_mod
+    from agentfw.eval import replay_report
+
+    cfg_path = Path(args.config)
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    out_dir = Path(args.out) if args.out else cfg_path.parent / "results"
+
+    sources = [Path(p) for p in cfg.get("sources", [])]
+    missing = [p for p in sources if not p.exists()]
+    if missing:
+        print(f"missing source runs: {missing}")
+        return 1
+    records = []
+    for src in sources:
+        records += replay_mod.load_source(src)
+    print(f"[replay] {len(records)} source episodes from {len(sources)} run(s)")
+
+    policies = cfg.get("policies") or [{"label": "M0-consequential"}]
+    if args.policy:
+        policies = [p for p in policies if p.get("label") == args.policy]
+        if not policies:
+            print(f"no policy named {args.policy!r} in {cfg_path}")
+            return 1
+
+    all_episodes = []
+    for raw in policies:
+        rcfg = replay_mod.ReplayConfig(**raw)
+        episodes = replay_mod.replay_all(records, rcfg)
+        errors = sum(1 for e in episodes if e.error)
+        print(
+            f"[replay] {rcfg.label}: {len(episodes)} replayed, {errors} errors, "
+            f"gates={rcfg.gates}"
+        )
+        replay_mod.write_jsonl(episodes, out_dir / f"{rcfg.label}.jsonl")
+        replay_report.write(
+            episodes,
+            out_dir / rcfg.label,
+            extra={
+                "experiment": cfg.get("experiment", "E-01a"),
+                "policy": raw,
+                "sources": replay_mod.source_digest(sources),
+            },
+        )
+        all_episodes.append(rcfg.label)
+
+    print(f"{NEWLINE}[replay] wrote {out_dir}")
+    for label in all_episodes:
+        print(f"  {label}: {out_dir / label / 'report.md'}")
     return 0
 
 
@@ -375,6 +436,12 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--filter")
     r.add_argument("--workers", type=int)
     r.set_defaults(fn=cmd_run)
+
+    rp = sub.add_parser("replay")
+    rp.add_argument("config")
+    rp.add_argument("--out")
+    rp.add_argument("--policy", help="run only the policy with this label")
+    rp.set_defaults(fn=cmd_replay)
 
     rep = sub.add_parser("report")
     rep.add_argument("results")

@@ -104,9 +104,15 @@ def load_all() -> dict[str, ToolSpec]:
 
 
 class Guard(Protocol):
-    """The Phase 2 reference-monitor seam.
+    """The reference-monitor seam. Phase 2 fills it with ``agentfw.firewall.Firewall``.
 
-    Returns ``None`` to allow, or a refusal string to deny. Phase 1 never installs one.
+    Returns ``None`` to allow, or a refusal string to deny. ASK does not appear here on
+    purpose: it is a step the monitor takes on the way to one of these two answers, not a
+    third thing the router has to understand. The guard blocks while a human decides,
+    which is also how a real deployment behaves.
+
+    ``declared`` is passed for convenience and is the lossy ``declare`` output. A guard
+    that authorizes must map effects itself via ``declare_for``.
     """
 
     def check(self, action: ProposedAction, declared: list[Effect]) -> str | None: ...
@@ -132,13 +138,31 @@ class ToolRouter:
         return list(self.tools.values())
 
     def declare(self, action: ProposedAction) -> list[Effect]:
-        spec = self.tools.get(action.tool_name)
-        if spec is None:
-            return []
+        """Best-effort declaration, for logging and for callers that only want a hint.
+
+        **Do not authorize against this.** It returns ``[]`` both for "this tool does not
+        exist" and for "the declarer raised", and under deny-by-default an empty effect
+        list authorizes vacuously — nothing declared, nothing to check, allow. That is a
+        fail-open path, so the reference monitor uses ``declare_for`` instead and lets the
+        failure propagate. This method keeps its Phase 1 behaviour because Phase 1 code
+        and tests rely on it, and because a *hint* is allowed to be lossy in a way an
+        authorization input is not.
+        """
         try:
-            return spec.declare(self.world, action.args)
-        except Exception:  # a malformed proposal declares nothing; execution will error
+            return self.declare_for(action.tool_name, action.args)
+        except Exception:
             return []
+
+    def declare_for(self, tool_name: str, args: dict[str, Any]) -> list[Effect]:
+        """Strict declaration: raises rather than returning an empty list.
+
+        The reference monitor turns any exception here into a hard BLOCK (gate G0), which
+        is the only sound reading of "I cannot tell what this call would do".
+        """
+        spec = self.tools.get(tool_name)
+        if spec is None:
+            raise KeyError(f"unknown tool {tool_name!r}")
+        return spec.declare(self.world, args)
 
     def execute(self, action: ProposedAction) -> ToolResult:
         spec = self.tools.get(action.tool_name)

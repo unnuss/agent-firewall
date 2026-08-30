@@ -53,7 +53,23 @@ Deliverables:
 
 ---
 
-## Phase 2 — Firewall runtime core (deterministic, no ML)
+## Phase 2 — Firewall runtime core (deterministic, no ML) ✅ complete (2026-08-30)
+
+**Outcome.** All eight deliverables shipped; 168 tests green; P1-P4 are property tests
+rather than intentions. E-01a measured the core on its own and produced a result that
+**changes what Phase 3 must do first**: given a correct scope, the deterministic core
+removes all measured overreach (45.9% -> 0.0% on underspecified) and all measured attack
+success (22.2% -> 0.0% ASR) at zero interruptions on benign work — and the `M0-no-ask`
+ablation scores identically, so **ASK buys nothing when the scope is right**. The value of
+the entire ML core is therefore bounded by compiler/gold scope divergence, which nobody has
+measured. See E-01a, D-023, D-024, and findings F-07 to F-09.
+
+Two additions the roadmap did not anticipate, both forced by measurement: gold scopes
+(D-023, because Phase 2 has no scope source) and remembering a refused ASK (D-024, because
+one scenario drained the interruption budget re-asking an answered question).
+
+Original plan follows.
+
 
 **Goal:** a working reference monitor whose security properties do not depend on any model.
 
@@ -79,10 +95,21 @@ finding instead; Phase 3 is where intelligence goes.
 
 **Goal:** the intellectually strongest part of the project.
 
+**Re-ordered after E-01a.** Deliverable 1 now comes first and alone, and gains a second
+half. The deterministic floor is 0% overreach and 0% ASR at zero benign interruptions when
+the scope is correct, so there is no headroom above it on those metrics; the ML core's
+entire job is to make the scope correct. Measuring how far a compiled scope falls short of
+a gold one therefore bounds the value of everything in Phases 3 and 4, and it is cheap.
+Do it before building the ladder, not alongside it (finding F-09).
+
 Deliverables:
 1. `intent/compiler.py` — utterance → IntentScope. Evaluated as its own component
-   (effect-set precision/recall, constraint extraction accuracy) against hand-written gold
-   scopes for the dev slice.
+   (effect-set precision/recall, constraint extraction accuracy) against the gold scopes
+   in `agentfw/eval/scopes_data/` (D-023).
+   **1b. E-01b — re-run the E-01a replay with compiled scopes in place of gold ones.** The
+   delta between the two runs is the size of the opportunity for the rest of the project.
+   If it is small, say so and re-plan Phase 4 rather than building a cost model with
+   nothing to arbitrate.
 2. The M0–M5 ladder from `ARCHITECTURE.md` section 4.3, each independently evaluable.
 3. Calibration: ECE, reliability diagrams, temperature/isotonic fitting on dev.
 4. **E-01: the pre-registered similarity experiment** (D-012) — AUC of M1/M2 on AF-Auth vs

@@ -1,0 +1,44 @@
+# E-01a — the deterministic core, evaluated on its own.
+#
+# This experiment calls no model. It replays the tool calls that real agents made in E-00b
+# and E-00f through the Phase 2 firewall, against a fresh deterministic world (D-013). The
+# source runs are the committed historical record and are not modified.
+#
+# Reproduce with:
+#   agentfw replay experiments/e01a_deterministic/config.yaml
+
+experiment: E-01a
+sources:
+  - experiments/e00b_revised/results/episodes.jsonl
+  - experiments/e00f_cross_vendor/results/episodes.jsonl
+
+# The three policy settings are the whole sweep. There is nothing else to tune in Phase 2:
+# the cost model that would set a real threshold is Phase 4.
+policies:
+  - label: M0-consequential
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+  - label: M0-ask-all
+    ask_on: all_out_of_scope
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+  - label: M0-no-ask
+    ask_on: never
+    ask_budget: 0
+    reviewer_epsilon: 0.0
+    with_reviewer: false
+  # A perfect reviewer makes the ASK path correct by construction, which would overstate
+  # the result. These two say what happens when the human is wrong some of the time.
+  - label: M0-reviewer-eps05
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.05
+    with_reviewer: true
+  - label: M0-reviewer-eps15
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.15
+    with_reviewer: true

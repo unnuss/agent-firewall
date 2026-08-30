@@ -74,8 +74,12 @@ def run_episode(
     seed: int = 0,
     max_steps: int = 12,
     system_prompt: str = SYSTEM_PROMPT,
+    trace: Trace | None = None,
 ) -> Episode:
-    trace = Trace()
+    # The caller may supply the trace so that a firewall installed in the router reads the
+    # *same* spans the loop is writing. Provenance the monitor cannot see is provenance it
+    # cannot act on, and a second trace would silently be empty.
+    trace = trace if trace is not None else Trace()
     system = system_prompt.format(
         user_name=world.spec.user_name,
         user_email=world.spec.user_email,

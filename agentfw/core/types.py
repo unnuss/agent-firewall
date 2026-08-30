@@ -1,9 +1,13 @@
 """Core data types.
 
-Phase 1 defines only what the sandbox, the agent loop and the evaluation harness need:
-the effect ontology, the label lattices, trace spans, proposed actions and tool results.
-The firewall's own types (IntentScope, Verdict, AuditEvent) and the full label algebra
-arrive in Phase 2 (core/labels.py, core/scope.py, core/audit.py).
+Phase 1 defined what the sandbox, the agent loop and the evaluation harness need: the
+effect ontology, the label lattices, trace spans, proposed actions and tool results.
+Phase 2 adds ``Verdict`` here, because every layer above mentions it, and puts the rest of
+the firewall's types where their invariants live: the label algebra in ``core/labels.py``,
+``IntentScope`` in ``core/scope.py``, ``AuditEvent`` alongside its hash chain in
+``core/audit.py``. PROJECT_SPEC section 6 listed all of them under this module; splitting
+them keeps each invariant next to the code that enforces it, which matters more than the
+file layout in a spec written before the code existed.
 
 Everything here is deterministic, dependency-free and side-effect-free: this module is TCB
 code by ARCHITECTURE.md section 2, so it must stay that way.
@@ -121,6 +125,40 @@ def meet_all(labels: list[Label]) -> Label:
     for lab in labels[1:]:
         out = out.meet(lab)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Verdicts
+# ---------------------------------------------------------------------------
+
+
+class Verdict(StrEnum):
+    """The reference monitor's three-valued decision on one proposed action.
+
+    ASK is a first-class outcome rather than a fallback. D-022 fixed why: explicit
+    authorization boundaries are already respected, so the decisions worth making are the
+    ones the instruction left open, where BLOCK is wrong (the user may well have meant it)
+    and ALLOW is wrong (they may not).
+    """
+
+    ALLOW = "ALLOW"
+    ASK = "ASK"
+    BLOCK = "BLOCK"
+
+    def rank(self) -> int:
+        """Restrictiveness order. Combining decisions takes the maximum."""
+        return {"ALLOW": 0, "ASK": 1, "BLOCK": 2}[self.value]
+
+
+def most_restrictive(verdicts: list[Verdict]) -> Verdict:
+    """An action producing several effects is decided by its worst one.
+
+    ``files_delete`` on a glob declares one effect per matched file; if any single one of
+    them is unauthorized, the call is not partially allowed.
+    """
+    if not verdicts:
+        return Verdict.BLOCK
+    return max(verdicts, key=lambda v: v.rank())
 
 
 # ---------------------------------------------------------------------------
