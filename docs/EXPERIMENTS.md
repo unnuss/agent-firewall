@@ -365,7 +365,81 @@ not leave workable KV cache across two 16 GB cards. The honest resolution is an
 **unquantized** cross-family run when better hardware exists; until then no E-00d result may
 be described as a clean cross-family comparison. Recorded as **RISK R-12**.
 
-**Results.** *(pending — not yet run; requires Kaggle GPU)*
+**Results.** Run 2026-08-29 on Kaggle 2×T4, `Qwen/Qwen3-14B-AWQ` via vLLM.
+
+**High-authority compliance: 36.1%.** Against the 60% floor — **INCONCLUSIVE**, exactly as
+E-00c was. Preserved untouched as a historical competency failure.
+
+The retry moved compliance from 31.9% to 36.1%: a 4.2-point gain from nearly doubling
+parameters. That is the informative part. Two models, two sizes, two precisions, both far
+short of the floor, and the gap did not close appreciably. The limiting factor is the
+capability envelope of what fits on free-tier hardware, not a missing model family — which
+is what motivated the change of strategy recorded as **D-020**, made before E-00e was
+observed.
+
+The AWQ confound (R-12) resolved in the uninformative direction predicted in advance: a
+sub-floor result leaves "family-specific", "too weak" and "quantization broke
+instruction-following" inseparable. E-00d therefore says nothing about cross-family
+generalisation. Recording that is the point of having written the prediction down.
+
+**Registered prediction, scored honestly.** The primary prediction was that 14B at 4-bit
+would clear 60%. It did not. This was flagged in advance as the prediction most likely to be
+wrong, and it was.
+
+---
+
+## E-00e — Cross-family replication on a hosted open-weight model
+**Phase:** 1 · **Status:** planned, prediction registered 2026-08-29 · **Blocks Phase 2**
+
+**Question.** Unchanged from E-00c and E-00d: does the underspecified-vs-explicit-low gap
+appear outside the OpenAI model family? Neither prior attempt could answer it, because
+neither model was competent enough for its overreach rate to mean anything.
+
+**What changed, and why it is not moving the goalposts.** E-00c and E-00d failed on
+*capability*, not on the standard of evidence. The 60% competency floor is **unchanged**
+(D-019) and must not be adjusted after E-00e is observed. What is being removed is the GPU
+memory constraint: hosted inference lets us run a model good enough to be an agent at all,
+which is a precondition for the measurement rather than a thumb on the scale. Decision
+recorded as **D-020, before any E-00e result existed**.
+
+**Design.** Frozen and identical to E-00c/E-00d: 24 AF-Auth scenarios, 62 variants, seeds
+`[1,2,3]`, 186 episodes, agent loop, neutral system prompt, oracles, temperature 1.0, all
+metrics, and the 60% floor. A test asserts all three replication configs enumerate the
+identical 186 episodes, so scope drift fails CI rather than being noticed afterwards.
+
+**Model.** **Meta Llama 4 Maverick** via OpenRouter, over the OpenAI-compatible wire format.
+*`provider: openai` in the config denotes the wire protocol, not the model lineage* — the
+model is Meta's, which is the entire point. Fallback if it does not pass preflight:
+**Llama 3.3 70B Instruct**, whose native function-calling is more thoroughly exercised in
+the wild. The choice is settled by `agentfw preflight`, not by argument.
+
+**Registered predictions.**
+- **Primary:** compliance **clears 60%**. Unlike E-00d, this is a prediction I expect to
+  hold — a frontier-scale open-weight model is a genuinely different capability class from
+  an 8–14B one, and E-00b showed these scenarios are completable at 81.2% by mid-tier API
+  models.
+- **Conditional on clearing the floor:** underspecified OR **> 20%**, explicit-low **< 10%**,
+  gap **> 15pp**. Smaller than E-00b's 36.7pp, because the 0% explicit-escalation floor
+  looks like heavily-optimised safety behaviour that open-weight post-training has less of.
+- **If compliance lands 45–60%:** still inconclusive. Do not reinterpret. Move to Llama 3.3
+  70B, then stop and reconsider whether the sandbox itself is unusually hard for non-OpenAI
+  models — which would be a finding about our benchmark, not about the models.
+
+**Falsifies.** If compliance clears 60% and underspecified overreach comes in under ~10%,
+the E-00b finding does not generalise across model families, and the project's framing must
+be revisited before any firewall is built.
+
+**Cost estimate, from measured token counts.** E-00b's AF-Auth episodes — the exact scope
+E-00e runs — used 2,406 prompt + 142 completion tokens per episode (gpt-4.1-mini) and 3,556
++ 438 (gpt-5-mini). Taking the more verbose figure as the worst case, 186 episodes is
+**~0.66M prompt + ~0.08M completion tokens**. At hosted open-weight rates in the region of
+$0.15–0.25 per million input and $0.60–0.90 per million output, that is roughly
+**$0.15–0.25**, and under **$0.15** for Llama 3.3 70B. Even a 3x miss on tokens keeps this
+under a dollar. Verify live rates with `agentfw models --grep llama` rather than trusting
+these figures, which are from memory and age badly.
+
+**Results.** *(pending — not yet run)*
+
 
 
 ---

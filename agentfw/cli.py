@@ -103,10 +103,13 @@ def cmd_preflight(args: argparse.Namespace) -> int:
 
     load_all()
     tools = get_tools([PREFLIGHT_TOOL])
+    import os
+
+    key = args.api_key or (os.environ.get(args.api_key_env) if args.api_key_env else None)
     client = OpenAIChatClient(
         args.model,
         base_url=args.base_url,
-        api_key=args.api_key or "local",
+        api_key=key or "local",
         require_key=False,
         temperature=None if args.no_temperature else 1.0,
         max_tokens=args.max_tokens,
@@ -201,6 +204,68 @@ def cmd_preflight(args: argparse.Namespace) -> int:
         print("            For vLLM you almost certainly need --enable-auto-tool-choice")
         print("            together with the right --tool-call-parser for the model family.")
     return 0 if passed else 1
+
+
+def _per_million(pricing: dict, key: str) -> str:
+    """OpenRouter quotes price per token; humans reason in dollars per million."""
+    try:
+        return f"${float(pricing.get(key, 0)) * 1e6:,.2f}"
+    except (TypeError, ValueError):
+        return "?"
+
+
+def cmd_models(args: argparse.Namespace) -> int:
+    """List candidate models from an OpenAI-compatible catalogue, with tool support.
+
+    Exists so model ids, native tool-calling support and price are read from the provider
+    at the moment of use rather than from documentation that ages. OpenRouter advertises
+    `supported_parameters`; a model that does not list `tools` cannot run this benchmark,
+    and finding that out here costs nothing.
+    """
+    import json
+    import os
+    import urllib.request
+
+    key = os.environ.get(args.api_key_env, "")
+    req = urllib.request.Request(f"{args.base_url.rstrip('/')}/models")
+    if key:
+        req.add_header("Authorization", f"Bearer {key}")
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+
+    rows = []
+    for m in data.get("data", []):
+        mid = str(m.get("id", ""))
+        if args.grep and args.grep.lower() not in mid.lower():
+            continue
+        params = m.get("supported_parameters") or []
+        pricing = m.get("pricing") or {}
+        rows.append(
+            (
+                mid,
+                "tools" in params,
+                m.get("context_length"),
+                _per_million(pricing, "prompt"),
+                _per_million(pricing, "completion"),
+            )
+        )
+    if not rows:
+        print("no models matched")
+        return 1
+    rows.sort(key=lambda r: (not r[1], r[0]))
+    width = min(max(len(r[0]) for r in rows), 60)
+    print(f"{'model'.ljust(width)}  tools  ctx      $/Mtok in   $/Mtok out")
+    for mid, tools, ctx, pin, pout in rows[: args.limit]:
+        flag = "yes  " if tools else "NO   "
+        print(
+            f"{mid[:width].ljust(width)}  {flag}  {str(ctx or '?').ljust(7)}  "
+            f"{pin.rjust(9)}   {pout.rjust(10)}"
+        )
+    print(
+        f"{NEWLINE}Models marked NO cannot run this benchmark: without native structured "
+        f"tool calling every episode ends at step one."
+    )
+    return 0
 
 
 def cmd_compare(args: argparse.Namespace) -> int:
@@ -320,6 +385,9 @@ def main(argv: list[str] | None = None) -> int:
     pf.add_argument("--base-url", default="http://localhost:8000/v1")
     pf.add_argument("--model", required=True)
     pf.add_argument("--api-key")
+    pf.add_argument(
+        "--api-key-env", default="OPENROUTER_API_KEY", help="env var holding the credential"
+    )
     pf.add_argument("--max-tokens", type=int, default=256)
     pf.add_argument(
         "--no-temperature",
@@ -327,6 +395,13 @@ def main(argv: list[str] | None = None) -> int:
         help="omit temperature (some servers reject it)",
     )
     pf.set_defaults(fn=cmd_preflight)
+
+    ml = sub.add_parser("models")
+    ml.add_argument("--base-url", default="https://openrouter.ai/api/v1")
+    ml.add_argument("--api-key-env", default="OPENROUTER_API_KEY")
+    ml.add_argument("--grep", help="substring filter on the model id, e.g. 'llama'")
+    ml.add_argument("--limit", type=int, default=40)
+    ml.set_defaults(fn=cmd_models)
 
     cp = sub.add_parser("compare")
     cp.add_argument("results", nargs="+", help="[label=]path/to/results ...")

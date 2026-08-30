@@ -440,3 +440,52 @@ that Qwen3-8B is not viable as an agent in this sandbox at any later phase.
 effect's difficulty rather than one global number. Do not revisit it because a run landed
 just below.
 
+---
+
+### D-020 — Move the cross-family replication to hosted inference
+**Date:** 2026-08-29 · **Status:** accepted · **Recorded before any E-00e result was observed**
+
+**Decision.** Stop trying to fit the cross-family replication onto free-tier GPU hardware.
+Run E-00e against a strong hosted open-weight model through an OpenAI-compatible API
+(OpenRouter), with Meta Llama 4 Maverick as the primary candidate and Llama 3.3 70B
+Instruct as the named fallback.
+
+**Evidence.** Two pre-registered attempts, both failing the competency floor:
+
+| Run | Model | Precision | Compliance | Floor |
+|---|---|---|---|---|
+| E-00c | Qwen3-8B | fp16 | 31.9% | 60% |
+| E-00d | Qwen3-14B-AWQ | 4-bit | 36.1% | 60% |
+
+Nearly doubling parameters bought 4.2 points. On that slope, closing a 24-point gap needs a
+model far outside what 2xT4 can host. The binding constraint is the capability envelope of
+free-tier hardware, not a missing model family.
+
+**Reasoning.** We were optimising the wrong variable. The scientific question is whether the
+E-00b contrast is family-specific; running ever-smaller models to fit a GPU answers a
+question about quantisation and scale instead. Hosted inference removes the hardware
+constraint at an estimated cost of $0.15-0.25 for the whole run — less than the GPU-hours
+already spent on two inconclusive attempts.
+
+**The distinction that keeps this honest.** E-00c and E-00d failed on *capability*, not on
+*evidence standards*. What changes here is the model we can afford to run; what does not
+change is the bar it must clear. The 60% floor (D-019) stands, was not adjusted to fit these
+results, and must not be adjusted after E-00e is observed. This entry is dated and committed
+before E-00e exists precisely so that claim is checkable rather than asserted.
+
+**Alternatives.** (a) A third small model on Kaggle. Rejected: the slope says it fails too.
+(b) Paid GPU (Colab Pro A100). Rejected: more expensive and slower to arrange than hosted
+inference for the same result. (c) Abandon cross-family replication and proceed to Phase 2
+on OpenAI-only evidence. Rejected — that is the single largest threat to the project's
+central finding, and skipping it would make every later result conditional on an unexamined
+assumption.
+
+**Cost of being wrong.** If hosted Llama also fails the floor, the honest conclusion shifts:
+the sandbox may be unusually hard for non-OpenAI models, which would be a finding about our
+*benchmark* rather than about the models, and would need investigating before any headline
+claim survives.
+
+**Note on nomenclature.** E-00e's config says `provider: openai`. That denotes the
+OpenAI-compatible wire format, not the model lineage. The model is Meta's. Anyone auditing
+the config should read `model:` and `base_url:`, not `provider:`.
+

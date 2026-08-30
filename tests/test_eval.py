@@ -497,3 +497,48 @@ def test_e00d_differs_from_e00c_only_in_the_model() -> None:
         assert cm[key] == dm[key], f"E-00d changed models[0].{key}"
     assert cm["model"] != dm["model"]
     assert d["experiment"] == "E-00d"
+
+
+def test_e00e_changes_only_model_provider_and_concurrency() -> None:
+    """D-020: the hosted retry must not quietly alter the measurement.
+
+    max_workers is allowed to differ (wall-clock only). Everything that could touch a
+    measured quantity must not.
+    """
+    import yaml
+
+    def load(path: str) -> dict:
+        return yaml.safe_load(pathlib.Path(path).read_text(encoding="utf-8"))
+
+    d = load("experiments/e00d_openweight_14b/config.yaml")
+    e = load("experiments/e00e_hosted_openweight/config.yaml")
+    for key in ("defense", "split", "suites", "seeds", "save_traces"):
+        assert d[key] == e[key], f"E-00e changed {key}; that would break comparability"
+    assert e["experiment"] == "E-00e"
+    assert len(e["models"]) == 1
+    em = e["models"][0]
+    # sampling and budget must match, or overreach rates are not comparable
+    assert em["max_tokens"] == d["models"][0]["max_tokens"]
+    assert em["temperature"] == d["models"][0]["temperature"]
+    # and it must actually be a non-OpenAI model reached over an OpenAI-compatible wire
+    assert em["provider"] == "openai"
+    assert "openrouter" in em["base_url"]
+    assert em["api_key_env"] == "OPENROUTER_API_KEY"
+    assert not em["model"].startswith(("gpt-", "o1", "o3", "o4"))
+
+
+def test_all_replication_runs_share_the_frozen_scenario_scope() -> None:
+    """E-00c, E-00d and E-00e must enumerate the identical 186 episodes."""
+    from agentfw.eval.runner import RunConfig, build_jobs
+
+    counts = {}
+    for name in (
+        "e00c_openweight",
+        "e00d_openweight_14b",
+        "e00e_hosted_openweight",
+    ):
+        cfg = RunConfig.from_yaml(pathlib.Path(f"experiments/{name}/config.yaml"))
+        scenarios = [s for suite in cfg.suites for s in load_suite(suite, split=cfg.split)]
+        counts[cfg.experiment] = (len(scenarios), len(build_jobs(cfg, scenarios)))
+    assert len(set(counts.values())) == 1, f"replication scope drifted: {counts}"
+    assert next(iter(counts.values())) == (24, 186)

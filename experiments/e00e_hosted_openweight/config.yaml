@@ -1,0 +1,67 @@
+# E-00e - cross-family replication on a HOSTED open-weight model.
+#
+# WHY THE STRATEGY CHANGED, recorded before any E-00e result was observed (D-020):
+# E-00c (Qwen3-8B, fp16) and E-00d (Qwen3-14B-AWQ) both FAILED the pre-registered 60%
+# competency floor - 31.9% and 36.1% high-authority compliance. Two failures at two sizes
+# and two precisions point at the free-tier hardware envelope, not at a missing model
+# family. Continuing to shrink models to fit 2xT4 was optimising the wrong variable, so
+# the constraint being removed here is GPU memory, not the standard of evidence.
+#
+# THE COMPETENCY FLOOR IS UNCHANGED AT 60% (D-019). It was not moved to fit these results
+# and must not be moved after E-00e is observed.
+#
+# E-00c and E-00d are preserved untouched as historical competency failures.
+#
+# THE ONLY INTENDED SUBSTANTIVE CHANGE IS MODEL/PROVIDER CONFIGURATION. The 24 frozen
+# AF-Auth scenarios, all 62 variants, seeds [1,2,3], 186 episodes, the agent loop, the
+# neutral system prompt, the oracles, temperature and every metric are identical. Verify:
+#
+#     diff experiments/e00d_openweight_14b/config.yaml #          experiments/e00e_hosted_openweight/config.yaml
+#
+# `provider: openai` here means the OpenAI-compatible WIRE FORMAT. The model is Meta's.
+# That distinction is the whole point of the experiment, so do not read the provider field
+# as the model lineage.
+#
+# BEFORE RUNNING:
+#   agentfw models --grep llama                 # confirm the id and that it advertises tools
+#   agentfw preflight --base-url https://openrouter.ai/api/v1 #                     --model meta-llama/llama-4-maverick
+# See docs/REPLICATION_HOSTED.md.
+
+experiment: E-00e
+defense: undefended
+split: dev
+suites: [af_auth]
+seeds: [1, 2, 3]
+# Local servers batch internally; more client threads mostly adds queueing. Raise only
+# after watching GPU utilisation.
+# Raised from 4 (E-00c/d) purely because a hosted API tolerates more concurrency than one
+# GPU. This is an execution knob: it changes wall-clock time, not any measured quantity.
+# Called out here so it does not look like an undeclared change.
+max_workers: 6
+save_traces: true
+
+models:
+  - id: llama4-maverick
+    provider: openai          # OpenAI-compatible wire format, NOT an OpenAI model
+    model: meta-llama/llama-4-maverick
+    kind: open-weight-hosted
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    extra_headers:
+      HTTP-Referer: https://github.com/agent-firewall
+      X-Title: Agent Firewall E-00e
+    max_tokens: 2048
+    temperature: 1.0
+    extra_body:
+      # Pin OpenRouter to upstream providers that actually implement native tool calling,
+      # and forbid silent fallback to one that does not. A run that quietly lands on a
+      # provider without tool support would look like a competency failure and would not
+      # be one.
+      provider:
+        require_parameters: true
+        allow_fallbacks: true
+      # E-00c/d passed `chat_template_kwargs: {enable_thinking: false}` to suppress Qwen3's
+      # thinking mode, so the comparison with E-00b's non-reasoning models held. That key is
+      # Qwen-specific and is dropped here rather than carried over: Llama 4 Maverick has no
+      # thinking mode to disable, so the intent - no extended reasoning traces - holds by
+      # default. If a reasoning-capable model is ever substituted in, this must be revisited.

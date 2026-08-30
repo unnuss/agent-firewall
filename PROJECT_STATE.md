@@ -2,7 +2,7 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-08-29 (E-00c ran and was inconclusive; E-00d ready to run)
+**Last updated:** 2026-08-29 (E-00c and E-00d both inconclusive; E-00e ready to run)
 
 **Two separate things, deliberately not conflated:**
 
@@ -11,11 +11,20 @@
 | **Phase 1 engineering** | **Complete.** Sandbox, agent, providers, oracles, generator, runner, metrics, CLI. 73 tests, lint clean. Nothing outstanding. |
 | **The E-00 empirical gate** | **Passed on the revised suite (E-00b), under revised validation.** The original E-00 did not clearly clear it. The revised result rests on a dev-only, single-model-family suite with two known defects (F-05, F-06). It is not yet settled evidence. |
 
-**Do not start Phase 2.** The blocking item is a cross-family replication (R-09).
-**E-00c ran and was inconclusive** — Qwen3-8B scored 31.9% high-authority compliance against
-a pre-registered 60% floor, so it is neither confirmation nor falsification (D-019).
-**E-00d** is the competency retry on Qwen3-14B-AWQ: built, pre-registered, awaiting a
-Kaggle session. See `docs/REPLICATION_OPENWEIGHT.md` section 6.
+**Do not start Phase 2.** The blocking item is a cross-family replication (R-09). Two
+attempts have failed the competency floor and are preserved as historical inconclusive
+runs; **E-00e** moves to hosted inference and is ready to run.
+
+| Run | Model | Compliance | Floor | Verdict |
+|---|---|---|---|---|
+| E-00c | Qwen3-8B (fp16, Kaggle) | 31.9% | 60% | inconclusive |
+| E-00d | Qwen3-14B-AWQ (Kaggle) | 36.1% | 60% | inconclusive |
+| **E-00e** | **Llama 4 Maverick (hosted)** | ? | 60% | **ready** |
+
+Doubling parameters bought 4.2 points. The binding constraint is free-tier hardware
+capability, not a missing model family — so D-020 moves to hosted inference. **The 60%
+floor is unchanged and must not be adjusted after E-00e is observed.** Runbook:
+`docs/REPLICATION_HOSTED.md`.
 
 ---
 
@@ -34,7 +43,7 @@ Kaggle session. See `docs/REPLICATION_OPENWEIGHT.md` section 6.
 4. **Check the competency gate before quoting any open-weight number.** `agentfw report`
    prints it; `agentfw compare` marks sub-floor rows. E-00c's rates look directionally
    supportive and are *not evidence* — see D-019 for why that confound flatters us.
-5. Do not begin Phase 2. The blocker is E-00d — section 5.
+5. Do not begin Phase 2. The blocker is E-00e — section 5.
 
 Health check (no API calls, ~5s):
 
@@ -159,36 +168,42 @@ directory `report.md` and `report.json` are versioned; the episode log and trace
 
 ## 5. What is blocked on the user
 
-**E-00d — the competency retry.** Built, pre-registered, needs a Kaggle session. Cannot be
-run from this machine (no NVIDIA GPU).
+**E-00e — cross-family replication on hosted inference.** Built, pre-registered, needs an
+OpenRouter key and about $1 of credit. Estimated cost of the run itself: **$0.15-0.25**,
+from measured token counts.
 
-Where the cross-family question stands:
+Two prior attempts and why they did not answer the question:
 
 | Run | Model | Compliance | Verdict |
 |---|---|---|---|
 | E-00b | gpt-5-mini + gpt-4.1-mini | 81.2% | interpretable; gap +36.7pp |
-| **E-00c** | Qwen3-8B (fp16) | **31.9%** | **INCONCLUSIVE** — failed the 60% floor |
-| **E-00d** | Qwen3-14B-AWQ | ? | **ready to run** |
+| E-00c | Qwen3-8B (fp16) | 31.9% | **INCONCLUSIVE** — failed the floor |
+| E-00d | Qwen3-14B-AWQ | 36.1% | **INCONCLUSIVE** — failed the floor |
+| **E-00e** | Llama 4 Maverick, hosted | ? | **ready to run** |
 
-E-00c's rates pointed the right way (17.8% vs 1.4%) and are still not evidence: an agent
-that fails to act two thirds of the time produces low rates everywhere, and the explicit-low
-denominator is exactly where incapability and correct restraint look identical. The confound
-runs in the direction that flatters the hypothesis. D-019.
+Neither Qwen run says anything about cross-family generalisation. E-00c's rates pointed the
+right way and are still not evidence: an agent that fails to act two thirds of the time
+produces low rates everywhere, and the explicit-low denominator is exactly where
+incapability and correct restraint look identical (D-019).
 
-Ready to go for E-00d:
+Ready to go for E-00e:
 
-- `experiments/e00d_openweight_14b/config.yaml` — verified to differ from E-00c's **only**
-  in the experiment id and model identity; a test asserts it, and `diff` shows it.
-- `docs/REPLICATION_OPENWEIGHT.md` section 6 — exact Kaggle cells, including
-  `--quantization awq` and `--dtype float16`, both needed because T4 is Turing.
-- Preflight and pilot gates retained. The pilot cell now inspects the *high-authority*
-  variant specifically, since that is what E-00c failed.
-- The 60% floor is enforced in code (`metrics.competency_gate`), printed by `agentfw
-  report`, and marked by `agentfw compare`.
-- **AWQ quantization is a documented confound** (RISK R-12): survivable if E-00d passes and
-  shows the gap, fatal to interpretation if it does not.
+- `experiments/e00e_hosted_openweight/config.yaml` — differs from E-00d's only in the
+  experiment id, the model/provider block, and `max_workers` (an execution knob that
+  changes wall-clock time, not any measured quantity). Two tests enforce this, including
+  one asserting all three replication configs enumerate the identical 186 episodes.
+- `docs/REPLICATION_HOSTED.md` — credential setup, model verification, preflight, pilot,
+  run, and a table saying in advance what each compliance band means.
+- `agentfw models --grep llama` — reads model ids, native tool support and live pricing
+  from the provider, so none of it depends on documentation that ages.
+- Preflight and 3-episode pilot gates retained. The pilot inspects the **high-authority**
+  variant specifically, since that is exactly what E-00c and E-00d failed.
+- **The 60% floor is unchanged** (D-019) and enforced in code.
 
-After E-00d, in priority order:After E-00c, in priority order:
+**Note on the config's `provider: openai` field:** that denotes the OpenAI-compatible wire
+format, not the model lineage. The model is Meta's. Audit `model:` and `base_url:`.
+
+After E-00e, in priority order:After E-00d, in priority order:After E-00c, in priority order:
 
 1. **Fix F-05 and F-06** before any of this is used as a baseline: repair `sam_number`,
    audit the eight low-compliance scenarios, loosen the over-strict benign oracles (F-03).
@@ -224,8 +239,9 @@ After E-00d, in priority order:After E-00c, in priority order:
 | R-06 | Effect-ontology error dominates the error budget | medium | partly mitigated: declare/execute agreement is a test |
 | R-07 | Scenario authoring is slow; Phase 5 overruns | high | mitigated: format + generator shipped; about to be exercised by D-017 |
 | R-08 | Scope creep into multi-agent / memory / computer-use | medium | open |
-| R-09 | No second model family; blocks T3 attacks, the saliency spike, **and generalisation of the E-00b finding** | **critical** | still open — E-00c was inconclusive (D-019); E-00d is the retry |
-| R-12 | **AWQ quantization confounds E-00d**: a 4-bit model compared against unquantized API models | high | accepted and documented; benign if E-00d passes and shows the gap, fatal to interpretation if not |
+| R-09 | No second model family; blocks T3 attacks, the saliency spike, **and generalisation of the E-00b finding** | **critical** | still open — E-00c and E-00d both failed the competency floor; E-00e (hosted) is the third attempt (D-020) |
+| R-13 | **Three families failing would implicate our benchmark, not the models** — if hosted Llama also lands sub-floor, the live question becomes whether the sandbox is unusually hard for non-OpenAI models | medium | watch; named in advance so it cannot be rationalised later |
+| R-12 | AWQ quantization confounds E-00d | high | **realised** — E-00d landed sub-floor, so the confound resolved in the uninformative direction exactly as predicted; E-00e avoids it by using an unquantized hosted model |
 | R-10 | Benign BTC is action-level, not answer-quality | medium | **confirmed by F-03**; loosen before quoting BTC |
 | R-11 | Scenario defects inflate or deflate headline numbers | high | **realised (F-05, F-06)**; caught by hand-checking, not by a test. Needs a compliance-floor gate on every new scenario. |
 

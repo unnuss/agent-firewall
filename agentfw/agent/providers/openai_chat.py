@@ -37,6 +37,7 @@ class OpenAIChatClient:
         max_tokens: int = 1024,
         seed: int | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         require_key: bool = True,
     ) -> None:
         self.model = model
@@ -46,6 +47,7 @@ class OpenAIChatClient:
         self.max_tokens = max_tokens
         self.seed = seed
         self.extra_body = dict(extra_body or {})
+        self.extra_headers = dict(extra_headers or {})
         self.api_key = api_key or os.environ.get(api_key_env, "")
         if require_key and not self.api_key:
             raise RuntimeError(f"{api_key_env} is not set; cannot reach {self.base_url}")
@@ -80,7 +82,7 @@ class OpenAIChatClient:
             payload["seed"] = self.seed
         payload.update(self.extra_body)
 
-        headers = {}
+        headers = dict(self.extra_headers)
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
         data = post_json(f"{self.base_url}/chat/completions", payload, headers)

@@ -36,6 +36,10 @@ class ModelConfig(BaseModel):
     provider: str = "openai"  # openai | local | anthropic
     model: str
     base_url: str | None = None
+    # Which environment variable holds the credential. Lets one config target OpenAI,
+    # OpenRouter or any other OpenAI-compatible host without editing code.
+    api_key_env: str = "OPENAI_API_KEY"
+    extra_headers: dict[str, str] = Field(default_factory=dict)
     max_tokens: int = 2048
     temperature: float | None = 1.0
     extra_body: dict[str, Any] = Field(default_factory=dict)
@@ -118,10 +122,12 @@ def build_client(cfg: ModelConfig, seed: int) -> LLMClient:
     return OpenAIChatClient(
         cfg.model,
         base_url=cfg.base_url or "https://api.openai.com/v1",
+        api_key_env=cfg.api_key_env,
         temperature=cfg.temperature,
         max_tokens=cfg.max_tokens,
         seed=seed,
         extra_body=cfg.extra_body,
+        extra_headers=cfg.extra_headers,
     )
 
 
