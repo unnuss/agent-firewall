@@ -268,7 +268,105 @@ qwen2.5-coder through Ollama, which is why it is now a command rather than a not
 model (compliance >= 60%), the E-00b finding does not generalise and the project's framing
 must be revisited before any firewall is built.
 
-**Results.** *(pending — not yet run; requires Kaggle/Colab GPU)*
+**Results.** Run 2026-08-29 on Kaggle 2×T4, Qwen3-8B via vLLM. 186/186 episodes usable, no
+provider or parser failures — the preflight gate did its job.
+
+| Metric | E-00c (Qwen3-8B) | E-00b (OpenAI, for reference) |
+|---|---|---|
+| Underspecified OR | 17.8% [4.4, 35.6] (8/45) | 38.9% [25.6, 52.2] |
+| Explicit-low OR | 1.4% [0.0, 4.3] (1/69) | 2.2% [0.0, 6.5] |
+| Matched-pair contrast | 19.0% vs 0.0% | 35.7% vs 3.6% |
+| Ambiguity-only flips | 4/14 scenarios | 11/14 scenarios |
+| Scenario incidence | 4/15 vs 1/23 | 13/15 vs 1/23 |
+| Overall OR | 7.9% | 16.7% |
+| **High-authority compliance** | **31.9% [15.3, 50.0]** | 81.2% [69.4, 91.0] |
+
+### Verdict: INCONCLUSIVE. Not confirmation, not falsification.
+
+Compliance is **31.9%**, roughly half the pre-registered competency floor of 60%. By the
+rule written down *before* this run, that settles it: the model could not reliably produce
+the contested effect even when the user explicitly asked for it, so its low overreach rate
+carries no information about authorization behaviour. Roughly two thirds of the
+high-authority episodes failed to do the licensed thing at all.
+
+**The directional signal is not evidence, and is recorded only so it is not lost.** The
+contrast does point the same way — 17.8% versus 1.4%, 19.0% versus 0.0% on matched pairs,
+zero explicit-low flips. It is tempting to read that as weak confirmation. It is not, for a
+concrete reason: an agent that fails to act 68% of the time when instructed produces low
+rates *everywhere*, and the explicit-low denominator is exactly where that failure mode
+looks identical to correct restraint. The apparent gap is confounded with incapability in
+the direction that flatters our hypothesis, which is precisely when a pre-registered rule
+earns its keep.
+
+**What we did learn, and it is worth something.**
+
+- The harness runs unmodified against a locally served open-weight model. 186/186 usable,
+  zero parser failures. `preflight` caught nothing because there was nothing to catch —
+  which is the outcome you want from a gate.
+- Qwen3-8B is **not competent enough** to be an agent in this sandbox. That is a fact about
+  the model, not about our scenarios: the same 24 scenarios yield 81.2% compliance on
+  gpt-4.1-mini/gpt-5-mini. It rules the 8B out for every later phase, not just this one.
+- The cross-family question (R-09) remains **completely open**.
+
+**Preserved as a historical inconclusive result.** Not to be re-run, edited, or folded into
+E-00d. The competency floor is now enforced mechanically: `agentfw report` prints a
+competency-gate verdict, and `agentfw compare` marks any run below the floor as not
+evidence either way, so no future reader can quote these numbers without the caveat
+attached.
+
+---
+
+## E-00d — Competency retry: Qwen3-14B-AWQ
+**Phase:** 1 · **Status:** planned, prediction registered 2026-08-29 · **Blocks Phase 2**
+
+**Question.** Identical to E-00c: does the underspecified-vs-explicit-low gap appear outside
+the OpenAI family? E-00c could not answer it because the model failed the competency floor.
+E-00d retries with a larger model.
+
+**The only intended change is the model.** Qwen3-8B (fp16) → **Qwen3-14B-AWQ** (4-bit,
+~10 GB), same Kaggle 2×T4 environment. Frozen and identical: the 24 AF-Auth scenarios and
+all 62 variants, seeds `[1, 2, 3]`, 186 episodes, the agent loop, the neutral system prompt,
+the oracles, temperature 1.0, thinking mode off, and every metric including the 60%
+competency floor. The config is a copy of E-00c's with one field changed, which is
+verifiable by diff.
+
+**Registered predictions.**
+- **Primary:** compliance **clears 60%**, making the run interpretable. This is the whole
+  point of the retry, and it is the prediction most likely to be wrong — a 14B model at
+  4-bit is not obviously twice the agent an 8B model at fp16 is.
+- **Conditional on clearing the floor:** underspecified OR **> 20%**, explicit-low **< 10%**,
+  gap **> 15pp**. Smaller than E-00b's 36.7pp, because the 0% explicit-escalation floor
+  looks like heavily-optimised safety behaviour that an open-weight model has had less of.
+- **If compliance lands between 45% and 60%**, the run is still inconclusive by the rule. It
+  does not become interpretable because we would like it to. Next move in that case is a
+  different family (Llama-3.1-8B) rather than a third size of Qwen.
+
+**Falsifies.** If compliance clears 60% and underspecified overreach comes in under ~10%,
+the E-00b finding does not generalise across model families, and the project's framing must
+be revisited before any firewall is built.
+
+### Stated limitation: AWQ quantization is a confound
+
+E-00d compares a **4-bit quantized** model against E-00b's **unquantized API** models. That
+is not a clean single-variable change, and the asymmetry matters:
+
+- **If E-00d passes the floor and shows the gap**, the confound is largely benign. Weight
+  quantization degrades capability; it does not plausibly *manufacture* a specific
+  ambiguity-versus-explicitness asymmetry across 14 scenarios and 7 domains. The finding
+  would stand, with the caveat noted.
+- **If E-00d fails the floor, or shows no gap**, the confound is **fatal to interpretation**.
+  We would be unable to separate three explanations: the phenomenon is family-specific;
+  the model is too weak; or AWQ degraded exactly the instruction-following the measurement
+  depends on. That is an inconclusive result of a worse kind than E-00c's, because it looks
+  like an answer.
+
+We accept it because the alternative on 2×T4 is a 14B model in fp16 at ~28 GB, which does
+not leave workable KV cache across two 16 GB cards. The honest resolution is an
+**unquantized** cross-family run when better hardware exists; until then no E-00d result may
+be described as a clean cross-family comparison. Recorded as **RISK R-12**.
+
+**Results.** *(pending — not yet run; requires Kaggle GPU)*
+
 
 ---
 

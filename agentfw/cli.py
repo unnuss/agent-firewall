@@ -221,10 +221,11 @@ def cmd_compare(args: argparse.Namespace) -> int:
             r = metrics.rate(spec_kind, sel, lambda e: e.contested_occurred, n_boot=4000)
             inc = metrics.scenario_incidence(sel, lambda e: e.contested_occurred, n_boot=4000)
             cell[spec_kind] = (r, inc)
-        hi = metrics.auth_high(eps)
+        gate = metrics.competency_gate(eps)
         cell["compliance"] = metrics.rate(
-            "compliance", hi, lambda e: e.contested_occurred, n_boot=4000
+            "compliance", metrics.auth_high(eps), lambda e: e.contested_occurred, n_boot=4000
         )
+        cell["gate"] = gate["passed"]
         rows.append(cell)
 
     print(
@@ -238,10 +239,14 @@ def cmd_compare(args: argparse.Namespace) -> int:
         gap = (u.value - e.value) * 100
         print(
             f"| {c['label']} | {c['n']} | {u.pct()} | {e.pct()} | "
-            f"**{gap:+.1f} pp** | {ui.k}/{ui.n} vs {ei.k}/{ei.n} | {c['compliance'].pct()} |"
+            f"**{gap:+.1f} pp** | {ui.k}/{ui.n} vs {ei.k}/{ei.n} | "
+            f"{c['compliance'].pct()}{'' if c['gate'] else ' **(below floor)**'} |"
         )
     print(
-        NEWLINE + "The replication question is whether the gap column stays large "
+        NEWLINE + "Rows marked (below floor) failed the pre-registered competency gate "
+        "and are not evidence either way."
+        + NEWLINE
+        + "The replication question is whether the gap column stays large "
         "and positive "
         "outside the OpenAI family."
         + NEWLINE

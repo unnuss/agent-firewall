@@ -2,7 +2,7 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-08-29 (thesis revised to match the evidence; E-00c prepared)
+**Last updated:** 2026-08-29 (E-00c ran and was inconclusive; E-00d ready to run)
 
 **Two separate things, deliberately not conflated:**
 
@@ -11,9 +11,11 @@
 | **Phase 1 engineering** | **Complete.** Sandbox, agent, providers, oracles, generator, runner, metrics, CLI. 73 tests, lint clean. Nothing outstanding. |
 | **The E-00 empirical gate** | **Passed on the revised suite (E-00b), under revised validation.** The original E-00 did not clearly clear it. The revised result rests on a dev-only, single-model-family suite with two known defects (F-05, F-06). It is not yet settled evidence. |
 
-**Do not start Phase 2.** The blocking item is **E-00c**, a cross-family replication on an
-open-weight model. Setup is complete and pre-registered; it needs a Kaggle/Colab GPU
-session to run. See `docs/REPLICATION_OPENWEIGHT.md`.
+**Do not start Phase 2.** The blocking item is a cross-family replication (R-09).
+**E-00c ran and was inconclusive** — Qwen3-8B scored 31.9% high-authority compliance against
+a pre-registered 60% floor, so it is neither confirmation nor falsification (D-019).
+**E-00d** is the competency retry on Qwen3-14B-AWQ: built, pre-registered, awaiting a
+Kaggle session. See `docs/REPLICATION_OPENWEIGHT.md` section 6.
 
 ---
 
@@ -29,7 +31,10 @@ session to run. See `docs/REPLICATION_OPENWEIGHT.md`.
    under-specification. Section 2.2 tabulates exactly which claims are supported, which are
    refuted, and which are argued but unmeasured. The superseded wording is preserved there
    rather than deleted.
-4. Do not begin Phase 2. The blocker is E-00c — section 5.
+4. **Check the competency gate before quoting any open-weight number.** `agentfw report`
+   prints it; `agentfw compare` marks sub-floor rows. E-00c's rates look directionally
+   supportive and are *not evidence* — see D-019 for why that confound flatters us.
+5. Do not begin Phase 2. The blocker is E-00d — section 5.
 
 Health check (no API calls, ~5s):
 
@@ -154,30 +159,43 @@ directory `report.md` and `report.json` are versioned; the episode log and trace
 
 ## 5. What is blocked on the user
 
-**E-00c — the cross-family replication.** Everything for it is built and pre-registered;
-it needs a GPU session, which cannot be run from this machine (no NVIDIA GPU).
+**E-00d — the competency retry.** Built, pre-registered, needs a Kaggle session. Cannot be
+run from this machine (no NVIDIA GPU).
 
-Ready to go:
+Where the cross-family question stands:
 
-- `experiments/e00c_openweight/config.yaml` — 24 AF-Auth scenarios, 3 seeds, 186 episodes.
-  Verified to parse and enumerate correctly without running.
-- `docs/REPLICATION_OPENWEIGHT.md` — model choice with hardware requirements, the exact
-  notebook cells, and a table saying in advance what each outcome would mean.
-- `agentfw preflight` — verifies an endpoint does native structured tool calling before any
-  GPU time is spent. This guards the failure we already hit locally: a model whose template
-  lacks a tool-call parser returns calls as prose, every episode ends at step one, and the
-  run reports a meaningless 0%.
-- `agentfw compare` — prints the cross-family contrast table.
-- **E-00c is pre-registered in `EXPERIMENTS.md`** with a prediction and an
-  outcome-interpretation table written before the run.
+| Run | Model | Compliance | Verdict |
+|---|---|---|---|
+| E-00b | gpt-5-mini + gpt-4.1-mini | 81.2% | interpretable; gap +36.7pp |
+| **E-00c** | Qwen3-8B (fp16) | **31.9%** | **INCONCLUSIVE** — failed the 60% floor |
+| **E-00d** | Qwen3-14B-AWQ | ? | **ready to run** |
 
-Recommended model: **Qwen3-8B** on Kaggle's 2×T4. Fallback Qwen3-4B on a single card.
+E-00c's rates pointed the right way (17.8% vs 1.4%) and are still not evidence: an agent
+that fails to act two thirds of the time produces low rates everywhere, and the explicit-low
+denominator is exactly where incapability and correct restraint look identical. The confound
+runs in the direction that flatters the hypothesis. D-019.
 
-After E-00c, in priority order:
+Ready to go for E-00d:
+
+- `experiments/e00d_openweight_14b/config.yaml` — verified to differ from E-00c's **only**
+  in the experiment id and model identity; a test asserts it, and `diff` shows it.
+- `docs/REPLICATION_OPENWEIGHT.md` section 6 — exact Kaggle cells, including
+  `--quantization awq` and `--dtype float16`, both needed because T4 is Turing.
+- Preflight and pilot gates retained. The pilot cell now inspects the *high-authority*
+  variant specifically, since that is what E-00c failed.
+- The 60% floor is enforced in code (`metrics.competency_gate`), printed by `agentfw
+  report`, and marked by `agentfw compare`.
+- **AWQ quantization is a documented confound** (RISK R-12): survivable if E-00d passes and
+  shows the gap, fatal to interpretation if it does not.
+
+After E-00d, in priority order:After E-00c, in priority order:
 
 1. **Fix F-05 and F-06** before any of this is used as a baseline: repair `sam_number`,
    audit the eight low-compliance scenarios, loosen the over-strict benign oracles (F-03).
-2. Only then Phase 2, the deterministic firewall core.
+2. **Recover E-00c's raw episode log** if the Kaggle session is still available — its
+   figures are currently recorded from a session summary and have not been recomputed from
+   raw episodes here. See `experiments/e00c_openweight/results/PROVENANCE.md`.
+3. Only then Phase 2, the deterministic firewall core.
 
 ## 6. Open questions for the user
 
@@ -206,7 +224,8 @@ After E-00c, in priority order:
 | R-06 | Effect-ontology error dominates the error budget | medium | partly mitigated: declare/execute agreement is a test |
 | R-07 | Scenario authoring is slow; Phase 5 overruns | high | mitigated: format + generator shipped; about to be exercised by D-017 |
 | R-08 | Scope creep into multi-agent / memory / computer-use | medium | open |
-| R-09 | No second model family; blocks T3 attacks, the saliency spike, **and generalisation of the E-00b finding** | **critical** | open (D-016 amended); route agreed = Kaggle/Colab |
+| R-09 | No second model family; blocks T3 attacks, the saliency spike, **and generalisation of the E-00b finding** | **critical** | still open — E-00c was inconclusive (D-019); E-00d is the retry |
+| R-12 | **AWQ quantization confounds E-00d**: a 4-bit model compared against unquantized API models | high | accepted and documented; benign if E-00d passes and shows the gap, fatal to interpretation if not |
 | R-10 | Benign BTC is action-level, not answer-quality | medium | **confirmed by F-03**; loosen before quoting BTC |
 | R-11 | Scenario defects inflate or deflate headline numbers | high | **realised (F-05, F-06)**; caught by hand-checking, not by a test. Needs a compliance-floor gate on every new scenario. |
 

@@ -1,0 +1,43 @@
+# E-00d — competency retry of E-00c on a larger model.
+#
+# E-00c ran clean (186/186, no parser failures) but FAILED the pre-registered competency
+# floor: high-authority compliance was 31.9% against a 60% floor, so its numbers are
+# neither confirmation nor falsification. E-00c is preserved untouched as a historical
+# inconclusive result and is NOT superseded by this file.
+#
+# THE ONLY INTENDED CHANGE IS THE MODEL. Everything else - the 24 frozen AF-Auth scenarios,
+# all 62 variants, seeds [1,2,3], 186 episodes, the agent loop, the neutral system prompt,
+# the oracles, temperature, thinking-mode-off, and every metric including the 60% floor -
+# is identical. Verify that claim rather than trusting it:
+#
+#     diff experiments/e00c_openweight/config.yaml experiments/e00d_openweight_14b/config.yaml
+#
+# STATED CONFOUND: this is a 4-bit AWQ build compared against unquantized API models.
+# Quantization degrades capability; it does not plausibly manufacture an ambiguity-specific
+# asymmetry. So a positive result survives the caveat, and a negative or sub-floor result
+# is uninterpretable - we could not separate "family-specific" from "too weak" from "AWQ
+# broke instruction-following". See EXPERIMENTS.md E-00d and RISK R-12.
+
+experiment: E-00d
+defense: undefended
+split: dev
+suites: [af_auth]
+seeds: [1, 2, 3]
+# Local servers batch internally; more client threads mostly adds queueing. Raise only
+# after watching GPU utilisation.
+max_workers: 4
+save_traces: true
+
+models:
+  - id: qwen3-14b-awq
+    provider: local
+    model: Qwen/Qwen3-14B-AWQ
+    kind: open-weight-4bit
+    base_url: null
+    max_tokens: 2048
+    temperature: 1.0
+    extra_body:
+      # Qwen3 ships a thinking mode. Leave it off: E-00b's OpenAI models ran without
+      # extended reasoning traces, and the comparison has to hold that fixed.
+      chat_template_kwargs:
+        enable_thinking: false

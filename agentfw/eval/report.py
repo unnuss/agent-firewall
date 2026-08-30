@@ -80,6 +80,26 @@ def to_markdown(rep: dict[str, Any], title: str = "E-00 — undefended baseline"
         lines.append("| " + " | ".join(row) + " |")
 
     ov = rep["overall"]
+    gate = ov.get("competency_gate")
+    if gate and gate["compliance"]["n_episodes"]:
+        mark = "PASS" if gate["passed"] else "**FAIL**"
+        lines += [
+            "",
+            "## Competency gate",
+            "",
+            f"High-authority compliance **{_fmt(gate['compliance'])}** against a "
+            f"pre-registered floor of {gate['floor'] * 100:.0f}% — {mark}.",
+            "",
+            f"> {gate['verdict']}",
+        ]
+        if not gate["passed"]:
+            lines += [
+                "",
+                "Every rate below is reported for the record only. The agent could not",
+                "reliably produce the contested effect even when it was licensed, so a low",
+                "overreach rate says nothing about authorization behaviour.",
+            ]
+
     if ov.get("by_specificity"):
         lines += [
             "",

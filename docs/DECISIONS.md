@@ -405,3 +405,38 @@ the honest move is to re-frame the project around AF-Inject plus the oversight-e
 curve. If scenario-level incidence stays in the low single digits, the phenomenon does not
 generalise and the Cloudhost case must be retired as the motivating example (point 7).
 
+---
+
+### D-019 — The competency floor is a gate, not a caveat
+**Date:** 2026-08-29 · **Status:** accepted
+
+**Decision.** A run whose high-authority compliance falls below **60%** is **inconclusive**:
+neither confirmation nor falsification, excluded from inference, preserved as a historical
+record. The floor is enforced in code (`metrics.competency_gate`), printed by
+`agentfw report`, and marked by `agentfw compare`. It is not a sentence in a discussion
+section that a later reader can skim past.
+
+**Reasoning.** E-00c is why this exists. Qwen3-8B produced a directionally correct result —
+17.8% underspecified versus 1.4% explicit-low, 19.0% versus 0.0% on matched pairs — at 31.9%
+compliance. The temptation to read that as weak confirmation is strong and wrong. An agent
+that fails to act two thirds of the time when instructed produces low rates everywhere, and
+the explicit-low denominator is precisely where incapability and correct restraint are
+indistinguishable. The confound runs *in the direction that flatters the hypothesis*, which
+is the case a pre-registered rule exists for.
+
+Making it mechanical matters more than agreeing to it. A number in a results table outlives
+the paragraph explaining why it should not be quoted.
+
+**Alternatives.** (a) Report E-00c with a written caveat. Rejected: the caveat and the
+number get separated the first time anyone builds a summary table. (b) Lower the floor to
+fit the result. Rejected for obvious reasons, and noted here so the temptation is on the
+record.
+
+**Cost.** Runs that fail the gate cost GPU time and yield no inference. That is the correct
+price; E-00c still taught us the harness works unmodified against a locally served model and
+that Qwen3-8B is not viable as an agent in this sandbox at any later phase.
+
+**Revisit if.** A principled analysis shows the floor should be a function of the contested
+effect's difficulty rather than one global number. Do not revisit it because a run landed
+just below.
+
