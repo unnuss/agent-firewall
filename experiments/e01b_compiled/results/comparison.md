@@ -35,6 +35,18 @@ this is the number R-15 says must be reported instead of the gold-scope figure.
 | `llm-qwen-local-p2__M0-ask-all` | 12.6% (17/135) | 0.0% (0/207) | 41.7% (90/216) | 0.0% (0/36) | 15.4% (28/182) | 0.30 | 1.55 |
 | `llm-qwen-local-p2__M0-ask-all-budget12` | 12.6% (17/135) | 0.0% (0/207) | 41.7% (90/216) | 0.0% (0/36) | 15.4% (28/182) | 0.30 | 1.67 |
 | `llm-qwen-local-p2__M0-no-ask` | 12.6% (17/135) | 0.0% (0/207) | 41.2% (89/216) | 0.0% (0/36) | 34.5% (48/139) | 0.00 | 0.00 |
+| `gpt41mini-s1__M0-consequential` | 25.2% (34/135) | 0.0% (0/207) | 68.5% (148/216) | 0.0% (0/36) | 16.9% (27/160) | 0.00 | 0.27 |
+| `gpt41mini-s1__M0-ask-all` | 25.2% (34/135) | 0.0% (0/207) | 69.0% (149/216) | 0.0% (0/36) | 8.2% (15/182) | 0.13 | 1.40 |
+| `gpt41mini-s1__M0-ask-all-budget12` | 25.2% (34/135) | 0.0% (0/207) | 69.0% (149/216) | 0.0% (0/36) | 8.2% (15/182) | 0.13 | 1.49 |
+| `gpt41mini-s1__M0-no-ask` | 25.2% (34/135) | 0.0% (0/207) | 68.5% (148/216) | 0.0% (0/36) | 16.9% (27/160) | 0.00 | 0.00 |
+| `gpt41mini-s2__M0-consequential` | 25.2% (34/135) | 0.0% (0/207) | 70.4% (152/216) | 0.0% (0/36) | 13.1% (21/160) | 0.00 | 0.34 |
+| `gpt41mini-s2__M0-ask-all` | 25.2% (34/135) | 0.0% (0/207) | 70.4% (152/216) | 0.0% (0/36) | 8.2% (15/182) | 0.13 | 1.44 |
+| `gpt41mini-s2__M0-ask-all-budget12` | 25.2% (34/135) | 0.0% (0/207) | 70.4% (152/216) | 0.0% (0/36) | 8.2% (15/182) | 0.13 | 1.56 |
+| `gpt41mini-s2__M0-no-ask` | 25.2% (34/135) | 0.0% (0/207) | 70.4% (152/216) | 0.0% (0/36) | 13.1% (21/160) | 0.00 | 0.00 |
+| `gpt41mini-s3__M0-consequential` | 25.2% (34/135) | 0.0% (0/207) | 66.7% (144/216) | 0.0% (0/36) | 13.1% (21/160) | 0.00 | 0.27 |
+| `gpt41mini-s3__M0-ask-all` | 25.2% (34/135) | 0.0% (0/207) | 66.7% (144/216) | 0.0% (0/36) | 8.2% (15/182) | 0.13 | 1.35 |
+| `gpt41mini-s3__M0-ask-all-budget12` | 25.2% (34/135) | 0.0% (0/207) | 66.7% (144/216) | 0.0% (0/36) | 8.2% (15/182) | 0.13 | 1.44 |
+| `gpt41mini-s3__M0-no-ask` | 25.2% (34/135) | 0.0% (0/207) | 66.7% (144/216) | 0.0% (0/36) | 13.1% (21/160) | 0.00 | 0.00 |
 
 Undefended reference on the same episodes: underspecified overreach 45.9% (62/135), ASR 22.2% (8/36).
 
@@ -63,3 +75,15 @@ Undefended reference on the same episodes: underspecified overreach 45.9% (62/13
 | `llm-qwen-local-p2__M0-ask-all` | `{'G1_structural_denial': 9, 'G2_constraint_violation': 270, 'G3_ask_budget_exhausted': 19}` |
 | `llm-qwen-local-p2__M0-ask-all-budget12` | `{'G1_structural_denial': 9, 'G2_constraint_violation': 270}` |
 | `llm-qwen-local-p2__M0-no-ask` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 270}` |
+| `gpt41mini-s1__M0-consequential` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 111}` |
+| `gpt41mini-s1__M0-ask-all` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 111, 'G3_ask_budget_exhausted': 14}` |
+| `gpt41mini-s1__M0-ask-all-budget12` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 111}` |
+| `gpt41mini-s1__M0-no-ask` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 111}` |
+| `gpt41mini-s2__M0-consequential` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 106}` |
+| `gpt41mini-s2__M0-ask-all` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 106, 'G3_ask_budget_exhausted': 18}` |
+| `gpt41mini-s2__M0-ask-all-budget12` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 106}` |
+| `gpt41mini-s2__M0-no-ask` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 106}` |
+| `gpt41mini-s3__M0-consequential` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 107}` |
+| `gpt41mini-s3__M0-ask-all` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 107, 'G3_ask_budget_exhausted': 14}` |
+| `gpt41mini-s3__M0-ask-all-budget12` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 107}` |
+| `gpt41mini-s3__M0-no-ask` | `{'G1_structural_denial': 7, 'G2_constraint_violation': 107}` |

@@ -43,6 +43,18 @@ scope_sources:
     kind: compiled
     path: experiments/e09a_compiler/results/llm-qwen2.5-coder-14b-local.p2.s1.jsonl
 
+  # The registered arm (D-028 / E-09a), all three seeds, so E-01b carries the same
+  # variance estimate the scope-level report does. Prompt v2.
+  - label: gpt41mini-s1
+    kind: compiled
+    path: experiments/e09a_compiler/results/llm-gpt-4.1-mini.p2.s1.jsonl
+  - label: gpt41mini-s2
+    kind: compiled
+    path: experiments/e09a_compiler/results/llm-gpt-4.1-mini.p2.s2.jsonl
+  - label: gpt41mini-s3
+    kind: compiled
+    path: experiments/e09a_compiler/results/llm-gpt-4.1-mini.p2.s3.jsonl
+
 # Three policies, for one reason each.
 #
 #   consequential    the Phase 2 default: interrupt only where the consequence warrants it.

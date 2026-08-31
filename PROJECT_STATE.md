@@ -13,11 +13,11 @@
    artifacts, D-027 what the scripted human knows in E-01b, D-028 the experiment renaming,
    D-029 credential precedence and why a run was misdiagnosed for a day.
    D-022, D-023 and D-024 remain the Phase 1/2 constraints.
-2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**, including E-09a's run log and the
-   2026-08-31 correction in it. E-09a's registered `gpt-4.1-mini` arm is unrun and is the
-   first thing to finish; it is ready to go.
-3. Skim findings **F-10 to F-15**, then the older **F-07, F-08, F-09**. F-13, F-14 and F-15
-   all came out of running a real compiler, and all three change what to build next.
+2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**. Both are done, including the
+   registered `gpt-4.1-mini` arm at three seeds; E-09a's run log carries a correction worth
+   reading about how that arm was misdiagnosed as blocked on billing for a day.
+3. Read **F-16 first** — it falsifies the phase's central prediction and is the reason the
+   rest of Phase 3 needs re-planning. Then F-10 to F-15, then the older F-07 to F-09.
 4. Continue Phase 3 per `docs/ROADMAP.md`. Start at section 6 of this document.
 
 Health check (~35 s, no API calls, no keys needed):
@@ -47,24 +47,37 @@ correct scope*, with the ASK path contributing nothing in that condition (F-09).
 therefore began where PROJECT_STATE said it must: with the scope itself. The intent compiler
 exists, its inputs are restricted by construction to the user's turn and the tool catalogue
 (D-025), and the measurement harness around it — E-09a against the gold labels, E-01b
-against real verdicts — is built and running. Four arms have run: two deliberate floors, and
-a real LLM compiler twice (a local model, run because the OpenAI path appeared unavailable —
-it was not; see D-029).
-Between them they establish that a tool-allowlist scope is worth nothing against overreach
-(F-11), that ASK's value is real and large once the scope is wrong (269 refusals recovered
-against 0 under gold), and that a compiler too weak to be an agent in this harness still cuts
-measured overreach from 45.9% to 17.0% — at a compliance cost from 84.7% to 60.6%, most of it
-traceable to invented constraints that no interruption can repair (F-13). **The registered
-arm, `gpt-4.1-mini`, has still not run and is what settles the central prediction — it was
-never blocked on billing, only on a credential-precedence bug that is now fixed (D-029).**
+against real verdicts — is built and running, and **the registered arm has now run and
+falsified the phase's central prediction (F-16).**
+
+`gpt-4.1-mini`, three seeds, licenses the contested effect on **53.3%** of underspecified
+instructions — against **45.9%** for the undefended agents on the same instructions. The bet
+was that asking "what did this person authorize?" is easier than asking "what should I do?".
+It is not, and not because the compiler fails to notice: it raised an open question on
+**100%** of underspecified variants and granted the contested effect on half of them anyway,
+asking *which* payment method rather than *whether* to pay. It is the same model with the
+same prior, so it carries the same bias; the compiler relocated the failure rather than
+removing it.
+
+The deterministic core is unaffected and so is the injection result: **ASR stays at 0.0%**
+under compiled scopes, because those utterances are plain read-only requests and
+deny-by-default does that work without any ML. End to end the compiled system halves
+overreach (45.9% → 25.2%) at a compliance cost of 84.7% → 68.5%, which is real but is a long
+way from the gold-scope 0.0%.
+
+Also established: a tool-allowlist scope is worth nothing against overreach (F-11); ASK's
+value is real once the scope is wrong (269 refusals recovered against 0 under gold);
+invented constraints fire a hard gate no interruption can repair (F-13); and scope-level
+metrics can improve while the deployed system gets worse, so a compiler change is not an
+improvement until E-01b says so.
 
 ## 2. Phase 3 deliverables, against the roadmap
 
 | # | Deliverable | Status |
 |---|---|---|
 | 1 | `intent/compiler.py` — utterance → IntentScope | done: `LLMIntentCompiler` + two deterministic floors, `intent/catalog.py`, `intent/store.py` |
-| 1 | **E-09a** — compiled scopes scored against gold | harness done, predictions registered and scored; floors + an exploratory local LLM arm measured; **the registered `gpt-4.1-mini` arm is unrun and ready** |
-| 1b | **E-01b** — the replay with compiled scopes | done for all four arms that exist |
+| 1 | **E-09a** — compiled scopes scored against gold | **DONE.** Predictions registered before any LLM call and scored; prediction 3 **falsified** (F-16) |
+| 1b | **E-01b** — the replay with compiled scopes | **DONE** for all seven arms, including the registered one at three seeds |
 | 2 | The M0–M5 ladder | not started — deliberately, see section 6 |
 | 3 | Calibration (ECE, reliability) | not started |
 | 4 | E-01 (the pre-registered similarity prediction, D-012) | not started |
@@ -127,17 +140,16 @@ subsumes the deleted check, because prose that reached the output would change i
 | `tool-ceiling` | 0.813 | 24.4% | **100%** | 100% | **0%** |
 | `read-only` | 0.727 | 22.1% | **0%** | 0% | **0%** |
 | `llm-qwen2.5-coder-14b` (exploratory, prompt v1) | 0.576 | 20.9% | 33.3% [13.3, 60.0] | 87.5% | 58.3% |
-| `llm-qwen2.5-coder-14b` (exploratory, prompt v2) | 0.550 | 19.8% | **26.7%** [6.7, 46.7] | **100%** | **75.0%** |
+| `llm-qwen2.5-coder-14b` (exploratory, prompt v2) | 0.550 | 19.8% | 26.7% [6.7, 46.7] | 100% | 75.0% |
+| **`gpt-4.1-mini` (registered, 3 seeds)** | 0.554 | 19.8% | **53.3%** [26.7, 80.0] | **100%** | **50.0%** |
 
-The first column is why F1 is not the metric. A compiler with no notion of authorization at
-all scores 0.813 against the gold labels while leaking the contested effect on every
-low-authority variant — *above* the real compiler's 0.576.
+The first column is why F1 is not the metric: `tool-ceiling`, which has no notion of
+authorization at all, scores **0.813** — above every real compiler measured.
 
-The LLM row clears the pre-registered retention floor (0.80), so it may be interpreted, but
-it is a quantized 14B code model on one greedy decode and it is weak evidence. Registered
-predictions scored: 1 held, 2 failed (instructively), **3 not met** — leakage 33.3% with an
-interval reaching 60%, so "clearly below the undefended 45.9%" is not established — 4 narrowly
-missed, 5 held emphatically (163 under-grants to 15 over-grants), 6 held.
+The registered arm clears the retention floor at 100%, so it is a competent reader and every
+number is interpretable. Seed agreement 0.965; leakage, retention and contrast are identical
+on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALSIFIED,
+4 held, 5 held, 6 held.** Prediction 3 was the architecture's central bet — see F-16.
 
 ### E-01b — what those scopes do to real verdicts (702 episodes, $0)
 
@@ -148,10 +160,10 @@ missed, 5 held emphatically (163 under-grants to 15 over-grants), 6 held.
 | tool-ceiling | consequential | **45.9%** | 84.7% | 16.7% | 0.0% | 0.00 |
 | read-only | consequential | 0.0% | **78.2%** | 0.0% | **12.1%** | 0.11 |
 | read-only | all-out-of-scope | 0.0% | 82.9% | 0.0% | 0.0% | 0.32 |
-| llm-qwen-local-p1 | consequential | 17.0% [3.7, 32.6] | 60.6% | 0.0% | 11.9% | 0.00 |
-| llm-qwen-local-p1 | all-out-of-scope | 17.0% | 61.1% | 0.0% | 0.0% | 0.18 |
-| llm-qwen-local-p2 | consequential | **12.6%** [1.5, 26.7] | **41.2%** | 0.0% | **34.5%** | 0.00 |
-| llm-qwen-local-p2 | all-out-of-scope | 12.6% | 41.7% | 0.0% | 15.4% | 0.30 |
+| llm-qwen-local-p1 | consequential | 17.0% | 60.6% | 0.0% | 11.9% | 0.00 |
+| llm-qwen-local-p2 | consequential | 12.6% | 41.2% | 0.0% | 34.5% | 0.00 |
+| **`gpt-4.1-mini` s1** | consequential | **25.2%** [11.9, 40.0] | **68.5%** | **0.0%** | 16.9% | 0.00 |
+| **`gpt-4.1-mini` s1** | all-out-of-scope | 25.2% | 69.0% | 0.0% | 8.2% | 0.13 |
 
 - The gold row reproduces E-01a exactly, which is the check that D-027's wider reviewer
   oracle cannot bind when the scope is already right.
@@ -185,7 +197,7 @@ missed, 5 held emphatically (163 under-grants to 15 over-grants), 6 held.
 
 | ID | Issue | Action owed |
 |---|---|---|
-| **READY** | E-09a's registered `gpt-4.1-mini` arm has never run. It was **not** blocked on billing — a stale exported key shadowed the working one in `.env.local` (D-029, fixed and smoke-tested). Account has ~$3.86 | Run it. One command, under $0.50 |
+| **F-16** | The compiler carries the agent's authority bias: 53.3% leakage against the agents' own 45.9%. Prediction 3 falsified | **Re-plan Phase 3** (section 6). The ladder was designed to calibrate `P(licensed)`; the measured problem is a biased prior, not an uncalibrated score |
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
 | **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
 | **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
@@ -203,28 +215,48 @@ missed, 5 held emphatically (163 under-grants to 15 over-grants), 6 held.
 | **R-15** | FPR-block must be reported against compiled scopes, never gold | **Done** — E-01b reports it per scope source |
 | **R-16** | **New.** Prompt development and measurement share the dev slice | The tuning slice is declared: benign + af_inject + the control pairs. The 14 core underspecified triples were not looked at while writing the prompt, and any later prompt change must be declared and re-registered |
 
-## 6. Phase 3 — what is next, in order
+## 6. Phase 3 — what is next, and it needs a decision
 
-1. **Run E-09a's registered `gpt-4.1-mini` arm and then E-01b's.** Prediction 3 — that
-   leakage on underspecified variants comes in well below the agents' own 45.9% overreach —
-   is the load-bearing claim of the whole architecture, and the only arm that has tested it
-   is a quantized 14B code model that returned 33.3% with an interval covering 45.9%. That
-   neither confirms nor refutes it. Use prompt v2.
-2. **Fix F-13 before the ladder.** It is cheap, it is structural rather than statistical, and
-   on the only real compiler measured it accounted for the majority of the utility loss —
-   59 hard-gate blocks that no amount of calibration or cascading would have touched.
-3. **Then read the failure modes before building any ladder.** The point of doing E-09a first
-   was to find out how much ML machinery is warranted. The evidence so far says the errors are
-   overwhelmingly *under*-granting (163 to 15) plus invented bounds, not over-granting — which
-   points at the dependency screener (F-07), the cost model's missing `C_block_benign` term
-   (F-10) and constraint provenance (F-13), and away from a large calibrated authorization
-   head. Confirm against the funded arm before acting on it.
-4. **Then** the ladder, calibration, E-01, E-02, E-03 — reduced or expanded on the evidence.
+**Deliverable 1 is complete and it did not go the way the roadmap assumed.** The registered
+arm falsified prediction 3 (F-16): the compiler carries the same authority bias as the agent,
+because it is the same model. Deliverables 2-8 were designed on the assumption that the
+compiler would be roughly right and the remaining work was calibrating `P(licensed)` into an
+ASK band. That assumption is now measured and false, so the ladder should not simply proceed
+as written. **This is the re-plan the roadmap itself asked for** ("If it is small, say so and
+re-plan Phase 4 rather than building a cost model with nothing to arbitrate") — the gap is
+not small, it is in the opposite direction to the one anticipated.
 
-**What the floors already tell Phase 4.** The trade-off curve will not be flat. `read-only`
-and `tool-ceiling` sit at opposite corners of it and both are reachable by a bad compiler, so
-there is something real for a cost model to arbitrate. What is not yet known is where a
-competent compiler lands between them, and that is exactly the blocked measurement.
+Three options, and the choice is the user's:
+
+**(a) Attack the bias directly — the honest continuation.** The open question F-16 leaves is
+whether *any* compiler configuration has an authority bias different from the agent's. Cheap
+things to try, each a registered arm with a versioned prompt: a framing that forces a verdict
+per candidate effect class rather than a free list; a second model as an independent
+compiler, so disagreement itself becomes signal; asking for the *narrowest* scope that
+completes the stated goal. If none of them moves leakage, that is a strong and publishable
+negative result about intent compilation with current models — and it is the most
+intellectually honest thing this project could produce.
+
+**(b) Fix what is structural first.** F-13 (constraint provenance — an invented bound fires a
+hard gate that no interruption can repair; ~110 firings per seed on the registered arm) and
+F-10 (`consequential()` cannot distinguish "not worth asking about" from "the compiler
+probably dropped this"). Both are deterministic, both are cheap, and both are worth doing
+whatever happens to the compiler. Neither touches the ML.
+
+**(c) Re-scope the claim.** Report the deterministic core as the contribution, with compiled
+scopes as the measured limit on it, and drop the ladder. The result would be: deny-by-default
+over an effect ontology removes 100% of measured injection success and, given a correct
+scope, all measured overreach; automatic scope inference with a frontier model recovers about
+half of that and no more, for the reason F-16 gives.
+
+**What is not in doubt.** ASR is 0.0% under compiled scopes. The injection half of the thesis
+does not depend on the compiler at all, and it held.
+
+**The M0-M5 ladder as designed is now questionable** rather than obviously next. It estimates
+`P(licensed)` to place an ASK band. The measured failure is not an uncalibrated score, it is a
+prior that is confidently wrong — a better-calibrated version of the same model's opinion is
+not obviously worth building. E-01 (D-012's pre-registered similarity prediction) is still
+worth running because it is cheap and its negative result is already interesting.
 
 **Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-024, or D-025's input
 restriction without a documented reason.

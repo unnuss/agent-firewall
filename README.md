@@ -179,9 +179,25 @@ drops are exactly the private reversible ones — so 22 benign actions are refus
 dialog at all. Written up as finding F-10; it is the first measured requirement on Phase 4's
 cost model.
 
-**A real compiler lands between the floors.** The registered arm — `gpt-4.1-mini` — has not
-run yet, and that row is `(pending)` in [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) rather
-than estimated. What did
+**The registered compiler ran, and it falsified the prediction the architecture rested on.**
+`gpt-4.1-mini`, three seeds, licenses the contested effect on **53.3%** of underspecified
+instructions — against **45.9%** for the *undefended agents* on the same instructions. The
+bet was that "what did this person authorize?" is an easier question than "what should I
+do?". It is not.
+
+It is not a detection failure either: the compiler raised an open question on **100%** of
+underspecified variants and granted the effect anyway on half of them, asking *which* payment
+method rather than *whether* to pay. It is the same model with the same prior about what an
+assistant is for, so it carries the same bias — the compiler relocated the failure instead of
+removing it. End to end the compiled system halves overreach (45.9% → 25.2%) at a compliance
+cost of 84.7% → 68.5%, a long way from the gold-scope 0.0%. Written up as finding F-16.
+
+**What survives it.** ASR stays at **0.0%** under compiled scopes. The injection half of the
+thesis never needed the compiler: those utterances are plain read-only requests, and
+deny-by-default over effect classes does the work. The security claim that does not depend on
+a model is the one that held.
+
+Before that arm ran, two floors and a local model were measured. What they
 run is a local 14B code model, weak enough that Phase 1 found its class unfit to be an agent
 here at all, reported against a retention floor registered in advance so a compiler that
 cannot read plain instructions cannot be quoted. It clears the floor, and it cuts overreach

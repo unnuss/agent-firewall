@@ -93,8 +93,17 @@ finding instead; Phase 3 is where intelligence goes.
 
 ## Phase 3 — Intent compilation and the authorization model (the ML core) — IN PROGRESS
 
-**Status, 2026-08-31.** Deliverable 1 is built and measured on every compiler that can be
-run without an API budget: two deterministic floors and a local LLM arm on two prompt
+**Status, 2026-08-31 (later).** Deliverable 1 is **complete**, and the registered
+`gpt-4.1-mini` arm **falsified prediction 3** — the compiler licenses the contested effect on
+53.3% of underspecified instructions against the undefended agents' 45.9%, because it is the
+same model carrying the same authority bias (F-16). Deliverables 2-8 were designed assuming
+the compiler would be roughly right and the remaining work was calibration; that assumption is
+now measured and false. **The ladder should not proceed as written** — see PROJECT_STATE
+section 6 for the three re-plan options. ASR under compiled scopes is 0.0%, so the injection
+half of the thesis is unaffected.
+
+**Status, 2026-08-31 (earlier).** Deliverable 1 is built and measured on every compiler that
+can be run without an API budget: two deterministic floors and a local LLM arm on two prompt
 versions. Findings F-10 to F-15. The one that changes how the rest of the phase is run:
 **prompt v2 improved every scope-level metric and made the deployed system substantially
 worse**, so a compiler change is not an improvement until E-01b says so. F-13 (an invented
