@@ -39,7 +39,12 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agentfw.core.scope import Constraint, IntentScope, scope_from_user_turn
+from agentfw.core.scope import (
+    Constraint,
+    ConstraintProvenance,
+    IntentScope,
+    scope_from_user_turn,
+)
 from agentfw.core.types import EffectClass
 from agentfw.intent import catalog, prompts
 
@@ -126,6 +131,12 @@ def _build_constraint(raw: dict[str, Any]) -> Constraint:
     data.pop("describe_as", None)
     return Constraint(
         applies_to=catalog.parse(applies) if applies else None,
+        # Everything a compiler emits is a guess about a limit, and is marked as one
+        # (D-030). No attempt is made here to work out which guesses correspond to
+        # something the user really said: that would be inference inside the component
+        # whose inference is under measurement, and the honest place to settle it is the
+        # human the escalation reaches.
+        provenance=ConstraintProvenance.COMPILER,
         **{k: v for k, v in data.items() if v is not None},
     )
 

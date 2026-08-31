@@ -75,6 +75,13 @@ class Firewall:
     # Ground truth for the scripted reviewer, keyed by effect class string. Supplied by
     # the evaluation harness; ``None`` in any real deployment, where a human answers.
     licensed_oracle: dict[str, bool] = field(default_factory=dict)
+    # The scope a person wrote for this utterance, when the harness has one (D-027). It is
+    # never the scope the firewall runs on — it is what the scripted human *knows*. Where
+    # it is present it supersedes ``licensed_oracle``, because it can answer about bounds
+    # as well as classes: a user who said "under $150" and is asked to lift an inferred
+    # $150 limit on a $214 payment says no, and an oracle that only knew about effect
+    # classes would have said yes and quietly lost B2 enforcement (D-030).
+    licensed_scope: IntentScope | None = None
     asks_used: int = 0
     episode_id: str = ""
 
@@ -142,6 +149,7 @@ class Firewall:
             args=action.args,
             effects=mapping.effects,
             would_grant=decision.would_grant,
+            relaxable=decision.relaxable,
             reason=decision.explanation,
             scope=self.scope,
             evidence_spans=evidence_spans(action.args, self.trace.ingested()),
@@ -166,7 +174,9 @@ class Firewall:
                 ),
             )
 
-        record = self.reviewer.review(request, licensed=self._ground_truth(mapping))
+        record = self.reviewer.review(
+            request, licensed=self._ground_truth(mapping, action.args)
+        )
         self.scope = self.scope.expand_via_consent(record)
         if not record.approved:
             return (
@@ -208,13 +218,24 @@ class Firewall:
             second.model_copy(update={"decided_by": f"{second.decided_by}+consent"}),
         )
 
-    def _ground_truth(self, mapping: EffectMapping) -> bool | None:
-        """Was every out-of-scope effect here in fact licensed by the user's utterance?
+    def _ground_truth(
+        self, mapping: EffectMapping, args: dict[str, Any] | None = None
+    ) -> bool | None:
+        """Would the user's own scope have allowed this action?
 
         Read from the scenario's own construction (AF-Auth ground truth is structural, by
         D-010), never inferred. Absent means the harness does not know, and the reviewer
         treats not-knowing as not-licensed.
+
+        With a full gold scope available the question is asked in one piece — *would the
+        hand-written scope have allowed this exact call?* — which covers both the effect
+        class and any bound the user stated. The older effect-class dictionary is kept for
+        E-01a, where nothing but a contested class is ever put to a reviewer.
         """
+        if self.licensed_scope is not None:
+            return all(
+                self.licensed_scope.satisfies(e, args or {}).satisfied for e in mapping.effects
+            )
         if not self.licensed_oracle:
             return None
         pending = [
@@ -298,6 +319,7 @@ def build_firewall(
     cfg: PolicyConfig | None = None,
     reviewer: ask_mod.Reviewer | None = None,
     licensed_oracle: dict[str, bool] | None = None,
+    licensed_scope: IntentScope | None = None,
 ) -> Firewall:
     """Wire a firewall to a router. The router supplies the effect declarations."""
     return Firewall(
@@ -307,6 +329,7 @@ def build_firewall(
         cfg=cfg or PolicyConfig(),
         reviewer=reviewer,
         licensed_oracle=licensed_oracle or {},
+        licensed_scope=licensed_scope,
         episode_id=episode_id,
         audit=AuditLog(episode_id),
     )

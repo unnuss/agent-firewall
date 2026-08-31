@@ -72,7 +72,6 @@ No interruption recovered a refusal. Every ASK was answered no, so ASK and BLOCK
 | Gate | Count |
 |---|---|
 | `G1_structural_denial` | 7 |
-| `G2_constraint_violation` | 107 |
 
 ## Per scenario
 

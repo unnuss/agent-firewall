@@ -19,6 +19,7 @@ from agentfw.core.labels import Destination
 from agentfw.core.scope import (
     ConsentRecord,
     Constraint,
+    ConstraintProvenance,
     Declassification,
     IntentScope,
     ScopeViolation,
@@ -376,3 +377,103 @@ def test_no_constraint_kind_can_make_check_raise():
             satisfied, reason = c.check(effect, args)
             assert isinstance(satisfied, bool)
             assert isinstance(reason, str)
+
+
+# ---------------------------------------------------------------------------
+# D-030: a guessed bound is negotiable, a stated one is not
+# ---------------------------------------------------------------------------
+
+
+def _user_label():
+    return Label(integrity=Integrity.USER, origin="test")
+
+
+def test_consent_may_lift_a_bound_the_compiler_inferred():
+    inferred = Constraint(
+        kind="budget",
+        max_usd=150.0,
+        provenance=ConstraintProvenance.COMPILER,
+    )
+    scope = scope_from_user_turn(
+        "pay it", [ec("PURCHASE", "FINANCIAL")], span_id="s002", constraints=[inferred]
+    )
+    widened = scope.expand_via_consent(
+        ConsentRecord(
+            span_id="ask:1",
+            label=_user_label(),
+            approved=True,
+            relaxed_constraints=(inferred,),
+        )
+    )
+    assert widened.constraints == ()
+    assert widened.authorized_effects == scope.authorized_effects
+
+
+def test_consent_may_never_lift_a_bound_the_user_stated():
+    """The hard half of D-030. B2 is a boundary the user drew; an approval dialog is not a
+    place to renegotiate it, and the attempt raises rather than being ignored."""
+    stated = Constraint(kind="budget", max_usd=150.0)  # default provenance is USER
+    scope = scope_from_user_turn(
+        "pay it if under $150",
+        [ec("PURCHASE", "FINANCIAL")],
+        span_id="s002",
+        constraints=[stated],
+    )
+    with pytest.raises(ScopeViolation):
+        scope.expand_via_consent(
+            ConsentRecord(
+                span_id="ask:1",
+                label=_user_label(),
+                approved=True,
+                relaxed_constraints=(stated,),
+            )
+        )
+
+
+def test_constraint_provenance_defaults_to_the_restrictive_reading():
+    """A caller that forgets gets the hard gate, not the negotiable one."""
+    assert Constraint(kind="budget", max_usd=1.0).provenance is ConstraintProvenance.USER
+
+
+def test_a_refused_consent_lifts_nothing():
+    inferred = Constraint(
+        kind="budget", max_usd=150.0, provenance=ConstraintProvenance.COMPILER
+    )
+    scope = scope_from_user_turn(
+        "pay it", [ec("PURCHASE", "FINANCIAL")], span_id="s002", constraints=[inferred]
+    )
+    after = scope.expand_via_consent(
+        ConsentRecord(
+            span_id="ask:1",
+            label=_user_label(),
+            approved=False,
+            requested_effects=(),
+            relaxed_constraints=(inferred,),
+        )
+    )
+    assert after.constraints == (inferred,)
+
+
+def test_scope_check_separates_the_two_kinds_of_failure():
+    effect = Effect(
+        verb=Verb.PURCHASE,
+        resource_class=ResourceClass.FINANCIAL,
+        magnitude=Magnitude(unit="usd", value=214.0),
+    )
+    stated = Constraint(kind="budget", max_usd=150.0)
+    inferred = Constraint(
+        kind="budget", max_usd=100.0, provenance=ConstraintProvenance.COMPILER
+    )
+
+    only_inferred = scope_from_user_turn(
+        "x", [ec("PURCHASE", "FINANCIAL")], span_id="s002", constraints=[inferred]
+    ).satisfies(effect, {})
+    assert only_inferred.only_compiler_bounds_failed is True
+
+    # A stated bound failing alongside an inferred one is still a refusal: the presence of
+    # a guess does not make a real boundary negotiable.
+    both = scope_from_user_turn(
+        "x", [ec("PURCHASE", "FINANCIAL")], span_id="s002", constraints=[stated, inferred]
+    ).satisfies(effect, {})
+    assert both.only_compiler_bounds_failed is False
+    assert both.user_constraint_failures and both.compiler_constraint_failures

@@ -619,8 +619,7 @@
  },
  "errors": [],
  "gates": {
-  "G1_structural_denial": 7,
-  "G2_constraint_violation": 270
+  "G1_structural_denial": 7
  },
  "injection": {
   "asr_defended": {

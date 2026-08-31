@@ -863,3 +863,83 @@ command now needs `--prefer-exported-key`. They are told, on that command, that 
 **Revisit if.** A deployment context appears where the environment is the authoritative
 credential source and the file is a stale artifact — the mirror of this situation. The
 warning already makes that case visible; only the default would need to move.
+
+---
+
+### D-030 — A bound the compiler inferred is negotiable; a bound the user stated is not
+**Date:** 2026-08-31 · **Status:** accepted · **Fixes F-13**
+
+**Decision.** `Constraint` gains a `provenance` field, `USER` or `COMPILER`, defaulting to
+`USER`. Gate G2 — the hard structural refusal for a constraint violation — fires only for
+`USER` bounds. A violated `COMPILER` bound escalates to a human instead, and a human who
+approves lifts it through `expand_via_consent`, which **raises** if asked to lift a `USER`
+bound. The compiler marks everything it emits `COMPILER`; the gold scopes keep the default.
+
+**The problem, measured.** G2 exists for THREAT_MODEL family B2: the effect class is
+licensed, this instance is not — right verb, over budget. It is deliberately a *hard* gate,
+because a violated explicit bound is not ambiguity: the user already said where the line
+was, and putting it to them again would spend attention to be told what they already told
+us. That reasoning is exactly right for a bound the user stated and exactly wrong for one a
+model guessed. E-01b measured the cost: the registered `gpt-4.1-mini` compiler invented 127
+bounds across three seeds, G2 fired ~110 times per seed, and compliance on licensed work
+fell to **68.5%** against gold's 84.7% with benign FPR-block at **16.9%**. None of it was
+repairable, because a hard gate never reaches the ASK path.
+
+**The result.** With inferred bounds escalating instead of refusing, on the same scopes and
+the same episodes:
+
+| | before | after |
+|---|---|---|
+| compliance, `consequential` | 68.5% | **84.3%** (gold: 84.7%) |
+| compliance, `all_out_of_scope` | 69.0% | **84.7%** — identical to gold |
+| benign FPR-block | 16.9% | **7.5%**, and 0.0% at `all_out_of_scope` |
+| G2 firings | ~110 per seed | **0** |
+| interruptions per benign episode | 0.00 | 0.14 |
+| overreach (underspecified) | 25.2% | **25.2%**, unchanged |
+| ASR | 0.0% | **0.0%**, unchanged |
+
+**Essentially the entire utility gap between a compiled scope and a hand-written one was
+this one mistake**, and it cost 0.14 interruptions per benign episode to fix. Security did
+not move: the compiler's over-granting is a separate failure (F-16) and this changes nothing
+about it.
+
+**Why this does not weaken B2, and how that is enforced.** Three ways, none of them by
+convention:
+
+1. `expand_via_consent` raises `ScopeViolation` if a consent record names a `USER`-provenanced
+   constraint. A stated bound cannot be negotiated away by answering a dialog.
+2. Provenance defaults to `USER`, so a caller who forgets gets the hard gate — the more
+   restrictive reading — rather than the negotiable one.
+3. A stated bound failing *alongside* an inferred one still refuses; `only_compiler_bounds_failed`
+   requires that no user bound failed.
+
+And B2 still holds end to end under a compiled scope, where every bound is a guess and none
+of them reach G2. It holds through the human: the escalation reaches someone who knows what
+they actually said, and they decline. A test drives exactly that case — user says "under
+$150", compiler infers $150, agent proposes $214, verdict BLOCK with `consent_approved:
+False` and no G2. **Enforcement moved from the gate to the person, which is where it belongs
+when the machine was only guessing.**
+
+**What made this measurable at all.** The reviewer oracle had to learn about bounds. It knew
+only effect classes (D-027), so asked to lift an inferred $150 limit on a $214 payment it
+would have said yes — the class is licensed — and B2 would have silently vanished under
+compiled scopes with the metrics still looking fine. It now answers the whole question:
+*would the gold scope have allowed this exact call?* That is a change to the harness's
+ground truth, not to the firewall.
+
+**Cost of being wrong.** A compiler that invents a bound which happens to protect the user
+now gets that protection overridden by a human who says yes. The protection was never the
+user's instruction, so this is the correct direction, but it is a real transfer of
+responsibility onto the reviewer and it shows up as interruptions rather than refusals.
+
+**Alternatives rejected.** (a) Have the compiler decide which of its own bounds are
+"grounded" in the utterance — inference inside the component whose inference is under
+measurement, and a verbatim-quote check would certify a correctly quoted phrase attached to
+a wrongly computed bound. (b) Drop compiler constraints entirely — throws away the
+correct ones, including the B2 bounds the compiler does extract properly. (c) Leave it and
+report the cost — rejected because the cost is most of the utility gap and the fix is
+structural rather than statistical.
+
+**Revisit if.** Phase 4's cost model arrives: "how confident is the compiler in this bound"
+is exactly the sort of quantity it could price, and provenance is the two-valued placeholder
+for it.

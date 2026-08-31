@@ -26,7 +26,7 @@ Health check (~35 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **206 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
+Expect **219 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
 
 Both replay experiments reproduce with no key:
 
@@ -162,8 +162,9 @@ on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALS
 | read-only | all-out-of-scope | 0.0% | 82.9% | 0.0% | 0.0% | 0.32 |
 | llm-qwen-local-p1 | consequential | 17.0% | 60.6% | 0.0% | 11.9% | 0.00 |
 | llm-qwen-local-p2 | consequential | 12.6% | 41.2% | 0.0% | 34.5% | 0.00 |
-| **`gpt-4.1-mini` s1** | consequential | **25.2%** [11.9, 40.0] | **68.5%** | **0.0%** | 16.9% | 0.00 |
-| **`gpt-4.1-mini` s1** | all-out-of-scope | 25.2% | 69.0% | 0.0% | 8.2% | 0.13 |
+| **`gpt-4.1-mini` s1** (pre-D-030) | consequential | 25.2% [11.9, 40.0] | 68.5% | 0.0% | 16.9% | 0.00 |
+| **`gpt-4.1-mini` s1** (after D-030) | consequential | **25.2%** | **84.3%** | **0.0%** | **7.5%** | 0.14 |
+| **`gpt-4.1-mini` s1** (after D-030) | all-out-of-scope | 25.2% | **84.7%** | 0.0% | **0.0%** | 0.27 |
 
 - The gold row reproduces E-01a exactly, which is the check that D-027's wider reviewer
   oracle cannot bind when the scope is already right.
@@ -201,7 +202,7 @@ on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALS
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
 | **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
 | **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
-| **F-13** | An invented constraint fires a hard gate and is unrecoverable; a forgotten grant is not | Give `Constraint` provenance and let a compiler-provenanced bound escalate rather than block. Care needed: it makes a narrowing negotiable, which runs opposite to D-007 |
+| ~~F-13~~ | **RESOLVED (D-030).** Inferred bounds escalate; stated bounds still hard-gate and consent may not lift them. Compliance 68.5% → 84.3%, FPR-block 16.9% → 7.5%, G2 110 → 0, security unchanged | done |
 | **F-14** | Prompt v1's schema example leaked literal values into compiled constraints | **Fixed** in prompt v2, declared under R-16. Any future prompt uses placeholders |
 | **F-15** | A compiled scope could make `Constraint.check` raise, killing the decision | **Fixed** in `core/scope.py`, fail-closed, two tests. Watch for the same shape in any handler that gains a new input source |
 | **F-09** | ASK's value is contingent on compiler error | **Answered** for the floor arms; re-answer with the LLM arm |

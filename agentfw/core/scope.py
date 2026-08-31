@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import fnmatch
 from datetime import datetime
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -47,6 +48,30 @@ from agentfw.core.types import (
     ResourceClass,
     Verb,
 )
+
+
+class ConstraintProvenance(StrEnum):
+    """Who drew this line — and therefore what a violation of it means (D-030, F-13).
+
+    ``USER`` is a bound stated in the user's own words: "under $150", "do not copy anyone
+    else at Northwind". Violating it is THREAT_MODEL family B2, it is not ambiguity, and the
+    correct response is to refuse without spending anybody's attention — the user already
+    said where the line was.
+
+    ``COMPILER`` is a bound an intent compiler *inferred*. A violation of it is not evidence
+    that the user drew a line; it is evidence that a model guessed one. E-01b measured what
+    treating the two identically costs: the registered compiler invented 127 bounds across
+    three seeds and fired the hard G2 gate about 110 times per seed, blocking purchases and
+    sends the utterance had explicitly authorized, and no interruption could repair any of
+    them because a hard gate never reaches the ASK path.
+
+    The distinction cannot be inferred from the constraint's contents, which is why it is
+    stored rather than derived, and it defaults to ``USER`` so that a caller who forgets to
+    set it gets the *more* restrictive treatment.
+    """
+
+    USER = "USER"
+    COMPILER = "COMPILER"
 
 
 class ScopeViolation(Exception):
@@ -82,6 +107,9 @@ class Constraint(BaseModel):
     # One of: budget, recipient, domain, time_window, resource_glob, magnitude.
     kind: str
     applies_to: EffectClass | None = None
+    # Who drew this line. Defaults to USER, the more restrictive reading, so that a caller
+    # that forgets to say cannot accidentally make a bound negotiable (D-030).
+    provenance: ConstraintProvenance = ConstraintProvenance.USER
     max_usd: float | None = None
     allowed_recipients: tuple[str, ...] = ()
     allowed_domains: tuple[str, ...] = ()
@@ -273,6 +301,10 @@ class ConsentRecord(BaseModel):
     requested_effects: tuple[EffectClass, ...] = ()
     granted_effects: tuple[EffectClass, ...] = ()
     granted_declassifications: tuple[Declassification, ...] = ()
+    # Bounds the human agreed to lift (D-030). Only a COMPILER-provenanced constraint may
+    # appear here; ``expand_via_consent`` raises on anything else, so a bound the user
+    # stated in their own words cannot be negotiated away by answering a dialog.
+    relaxed_constraints: tuple[Constraint, ...] = ()
     answer_text: str = ""
 
     @model_validator(mode="after")
@@ -298,7 +330,27 @@ class ScopeCheck(BaseModel):
     satisfied: bool
     in_scope: bool
     constraint_failures: tuple[str, ...] = ()
+    # Failures split by who drew the line (D-030). The combinator treats them differently
+    # and the audit log has to show which kind fired, so the split is computed once here
+    # rather than re-derived by every consumer.
+    user_constraint_failures: tuple[str, ...] = ()
+    compiler_constraint_failures: tuple[str, ...] = ()
     reason: str = ""
+
+    @property
+    def only_compiler_bounds_failed(self) -> bool:
+        """Every bound this effect breached was inferred rather than stated.
+
+        The precise condition for escalating instead of refusing: the effect class is
+        licensed, and the only thing standing in the way is a model's guess about its
+        limits. If a *user-stated* bound also failed, this is False and the refusal stands.
+        """
+        return (
+            self.in_scope
+            and not self.satisfied
+            and bool(self.compiler_constraint_failures)
+            and not self.user_constraint_failures
+        )
 
 
 class IntentScope(BaseModel):
@@ -389,9 +441,28 @@ class IntentScope(BaseModel):
             for item in record.granted_effects
             if item not in self.authorized_effects
         )
+        # Lifting an inferred bound (D-030). This is a widening, so it goes through exactly
+        # the same door as a grant does — a USER-labeled ConsentRecord — and it is refused
+        # outright for any bound the user themselves stated. That asymmetry is the whole
+        # point: a model's guess about a limit is negotiable, a person's statement of one is
+        # not (THREAT_MODEL family B2).
+        stated = [
+            c
+            for c in record.relaxed_constraints
+            if c.provenance is not ConstraintProvenance.COMPILER
+        ]
+        if stated:
+            raise ScopeViolation(
+                f"consent tried to lift {len(stated)} user-stated bound(s): "
+                f"{[c.kind for c in stated]}. Only an inferred bound may be relaxed (D-030)."
+            )
+        kept_constraints = tuple(
+            c for c in self.constraints if c not in record.relaxed_constraints
+        )
         return self.model_copy(
             update={
                 "grants": self.grants + new_grants,
+                "constraints": kept_constraints,
                 "declassifications": self.declassifications
                 + tuple(record.granted_declassifications),
                 "revision": self.revision + 1,
@@ -411,15 +482,24 @@ class IntentScope(BaseModel):
                 reason=f"{klass} is not in the authorized effect set",
             )
         failures = []
+        by_user = []
+        by_compiler = []
         for c in self.constraints:
             passed, why = c.check(effect, args)
             if not passed:
-                failures.append(f"{c.kind}: {why}")
+                rendered = f"{c.kind}: {why}"
+                failures.append(rendered)
+                if c.provenance is ConstraintProvenance.COMPILER:
+                    by_compiler.append(rendered)
+                else:
+                    by_user.append(rendered)
         if failures:
             return ScopeCheck(
                 satisfied=False,
                 in_scope=True,
                 constraint_failures=tuple(failures),
+                user_constraint_failures=tuple(by_user),
+                compiler_constraint_failures=tuple(by_compiler),
                 reason="; ".join(failures),
             )
         return ScopeCheck(satisfied=True, in_scope=True, reason=f"{klass} is authorized")

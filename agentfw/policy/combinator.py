@@ -39,7 +39,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from agentfw.core.effects import EffectMapping, consequential
-from agentfw.core.scope import IntentScope, ScopeCheck
+from agentfw.core.scope import Constraint, ConstraintProvenance, IntentScope, ScopeCheck
 from agentfw.core.types import ProposedAction, Verdict, most_restrictive
 from agentfw.monitors.base import Disposition, Signal
 
@@ -72,6 +72,9 @@ class Decision(BaseModel):
     scope_checks: tuple[ScopeCheck, ...] = ()
     # The effect classes an ASK would have to grant for this action to proceed.
     would_grant: tuple[str, ...] = ()
+    # Inferred bounds an ASK would have to lift for this action to proceed (D-030). Held as
+    # the constraints themselves, because consent has to name exactly what it relaxes.
+    relaxable: tuple[Constraint, ...] = ()
 
 
 class _Gate(BaseModel):
@@ -121,15 +124,23 @@ def structural_gates(
         )
     )
 
-    # G2. The effect class is licensed but this instance breaches a stated bound
-    # (THREAT_MODEL B2). A violated explicit constraint is not ambiguity, so it is not a
-    # candidate for an interruption: the user already said where the line was.
-    breaches = [c for c in checks if c.in_scope and not c.satisfied]
+    # G2. The effect class is licensed but this instance breaches a bound **the user
+    # stated** (THREAT_MODEL B2). A violated explicit constraint is not ambiguity, so it is
+    # not a candidate for an interruption: the user already said where the line was.
+    #
+    # A bound the *compiler inferred* is a different object and is deliberately not here
+    # (D-030, F-13). Violating a guess is not evidence the user drew a line, and routing it
+    # through a hard gate makes it unrepairable — no interruption can lift a G2 — which
+    # E-01b measured as the single largest source of utility loss under a real compiler.
+    # Those breaches escalate in stage 2 instead, where a human can settle them.
+    breaches = [
+        c for c in checks if c.in_scope and not c.satisfied and c.user_constraint_failures
+    ]
     gates.append(
         _Gate(
             name="G2_constraint_violation",
             fired=bool(breaches),
-            reason="; ".join(c.reason for c in breaches),
+            reason="; ".join("; ".join(c.user_constraint_failures) for c in breaches),
         )
     )
 
@@ -178,9 +189,28 @@ def decide(
     per_effect: list[Verdict] = []
     reasons: list[str] = []
     to_grant: list[str] = []
+    to_relax: list[Constraint] = []
     for effect, check in zip(mapping.effects, checks, strict=True):
         if check.satisfied:
             per_effect.append(Verdict.ALLOW)
+            continue
+        if check.only_compiler_bounds_failed:
+            # The class is licensed; the only obstacle is a limit a model inferred (D-030).
+            # That is a question, not a boundary, so it escalates rather than refusing —
+            # and it escalates regardless of `consequential`, because the relevant fact is
+            # not how large the consequence is but that nobody actually set this limit.
+            to_relax.extend(
+                c
+                for c in scope.constraints
+                if c.provenance is ConstraintProvenance.COMPILER
+                and not c.check(effect, action.args)[0]
+            )
+            if cfg.ask_on == "never":
+                per_effect.append(Verdict.BLOCK)
+                reasons.append(f"{check.reason}; no ASK channel configured")
+            else:
+                per_effect.append(Verdict.ASK)
+                reasons.append(f"{check.reason}; this limit was inferred, not stated")
             continue
         to_grant.append(str(effect.effect_class))
         if scope.refused(effect.effect_class):
@@ -233,6 +263,7 @@ def decide(
             signals=tuple(signals),
             scope_checks=tuple(checks),
             would_grant=tuple(dict.fromkeys(to_grant)),
+            relaxable=tuple(dict.fromkeys(to_relax)),
         )
 
     return Decision(
@@ -243,4 +274,5 @@ def decide(
         signals=tuple(signals),
         scope_checks=tuple(checks),
         would_grant=tuple(dict.fromkeys(to_grant)),
+        relaxable=tuple(dict.fromkeys(to_relax)),
     )

@@ -31,7 +31,7 @@ from typing import Any, Protocol
 from pydantic import BaseModel, ConfigDict
 
 from agentfw.core.effects import describe
-from agentfw.core.scope import ConsentRecord, IntentScope
+from agentfw.core.scope import ConsentRecord, Constraint, IntentScope
 from agentfw.core.types import Effect, EffectClass, Integrity, Label, TraceSpan
 
 MAX_VALUE_CHARS = 160
@@ -50,6 +50,12 @@ class AskRequest(BaseModel):
     arguments: tuple[tuple[str, str, str, str], ...] = ()
     effects: tuple[Effect, ...] = ()
     would_grant: tuple[str, ...] = ()
+    # Bounds the assistant *inferred* that this action breaches, and that approving would
+    # lift (D-030). Structured rather than pre-rendered, because the consent record has to
+    # name the exact constraints being lifted; the text below is derived from them. They
+    # are a different kind of thing from would_grant: not "may it do this at all" but "was
+    # this limit ever yours".
+    relaxable: tuple[Constraint, ...] = ()
     reason: str = ""  # the combinator's own explanation, itself firewall-derived
     evidence: tuple[tuple[str, str], ...] = ()  # (span id, integrity)
     objective: str = ""
@@ -70,6 +76,7 @@ def build_request(
     args: dict[str, Any],
     effects: tuple[Effect, ...],
     would_grant: tuple[str, ...],
+    relaxable: tuple[Constraint, ...] = (),
     reason: str,
     scope: IntentScope,
     evidence_spans: list[TraceSpan],
@@ -99,11 +106,40 @@ def build_request(
         arguments=tuple(attributed),
         effects=effects,
         would_grant=would_grant,
+        relaxable=relaxable,
         reason=reason,
         evidence=tuple((s.id, s.label.integrity.value) for s in evidence_spans),
         objective=scope.objective,
         budget_remaining=budget_remaining,
     )
+
+
+def _describe_constraint(c: Constraint) -> str:
+    """Firewall-derived prose for one inferred bound. Enum fields and numbers only.
+
+    ``note`` is the compiler's own text and is the one field here that a model wrote, so it
+    is quoted rather than narrated — the same treatment untrusted argument values get, and
+    for the same reason (P4).
+    """
+    bound = [
+        f"{k}={v}"
+        for k, v in (
+            ("max_usd", c.max_usd),
+            ("recipients", list(c.allowed_recipients) or None),
+            ("domains", list(c.allowed_domains) or None),
+            ("from", c.window_start),
+            ("to", c.window_end),
+            ("paths", list(c.globs) or None),
+            ("unit", c.unit),
+            ("max", c.max_value),
+        )
+        if v is not None
+    ]
+    applies = f" on {c.applies_to}" if c.applies_to else ""
+    text = f"{c.kind}{applies}: {', '.join(bound)}"
+    if c.note:
+        text += f'   [inferred from: "{_truncate(c.note)}"]'
+    return text
 
 
 def render(req: AskRequest) -> str:
@@ -132,6 +168,13 @@ def render(req: AskRequest) -> str:
             "",
             "Approving grants the assistant this authority for the rest of the task:",
             *[f"  - {g}" for g in req.would_grant],
+        ]
+    if req.relaxable:
+        lines += [
+            "",
+            "The assistant inferred these limits from your request. You did not state them",
+            "in those words, and approving lifts them:",
+            *[f"  - {_describe_constraint(c)}" for c in req.relaxable],
         ]
     if req.evidence:
         shown = ", ".join(f"{sid} ({integrity})" for sid, integrity in req.evidence)
@@ -207,6 +250,7 @@ class ScriptedReviewer:
             approved=approved,
             requested_effects=tuple(_parse_effect_classes(req.would_grant)),
             granted_effects=tuple(_parse_effect_classes(req.would_grant)) if approved else (),
+            relaxed_constraints=req.relaxable if approved else (),
             answer_text="APPROVE" if approved else "DENY",
         )
 

@@ -19,7 +19,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from agentfw.core.effects import EffectMapping
-from agentfw.core.scope import ec, scope_from_user_turn
+from agentfw.core.scope import Constraint, ConstraintProvenance, ec, scope_from_user_turn
 from agentfw.core.types import (
     Effect,
     Externality,
@@ -384,3 +384,119 @@ def test_reviewer_errors_are_reproducible_and_actually_occur():
 def test_a_refused_consent_grants_nothing():
     record = ask_mod.ScriptedReviewer().review(_request(), licensed=False)
     assert record.granted_effects == ()
+
+
+# ---------------------------------------------------------------------------
+# D-030: which bounds reach the hard gate, and which reach a human
+# ---------------------------------------------------------------------------
+
+
+def test_a_user_stated_bound_still_fires_the_hard_gate():
+    """B2 is unchanged. This is the test that stops D-030 from being a weakening."""
+    effect = Effect(
+        verb=Verb.PURCHASE,
+        resource_class=ResourceClass.FINANCIAL,
+        reversibility=Reversibility.IRREVERSIBLE,
+        externality=Externality.BINDING_ON_USER,
+        magnitude=Magnitude(unit="usd", value=214.0),
+    )
+    sc = scope_from_user_turn(
+        "pay it if it is under $150",
+        [ec("PURCHASE", "FINANCIAL")],
+        span_id="s002",
+        constraints=[Constraint(kind="budget", max_usd=150.0)],
+    )
+    decision = decide(action(), mapping(effect), sc, [], cfg=PolicyConfig())
+    assert decision.verdict is Verdict.BLOCK
+    assert "G2_constraint_violation" in decision.gates_fired
+    assert decision.relaxable == ()
+
+
+def test_an_inferred_bound_escalates_instead_of_refusing():
+    effect = Effect(
+        verb=Verb.PURCHASE,
+        resource_class=ResourceClass.FINANCIAL,
+        reversibility=Reversibility.IRREVERSIBLE,
+        externality=Externality.BINDING_ON_USER,
+        magnitude=Magnitude(unit="usd", value=214.0),
+    )
+    guessed = Constraint(kind="budget", max_usd=150.0, provenance=ConstraintProvenance.COMPILER)
+    sc = scope_from_user_turn(
+        "pay the invoice", [ec("PURCHASE", "FINANCIAL")], span_id="s002", constraints=[guessed]
+    )
+    decision = decide(action(), mapping(effect), sc, [], cfg=PolicyConfig())
+    assert decision.verdict is Verdict.ASK
+    assert "G2_constraint_violation" not in decision.gates_fired
+    assert decision.relaxable == (guessed,)
+
+
+def test_an_inferred_bound_still_refuses_when_there_is_no_human():
+    """`ask_on: never` is pure deny-by-default. Escalation with nobody to escalate to is a
+    refusal, not an allow."""
+    effect = Effect(
+        verb=Verb.PURCHASE,
+        resource_class=ResourceClass.FINANCIAL,
+        magnitude=Magnitude(unit="usd", value=214.0),
+    )
+    sc = scope_from_user_turn(
+        "pay the invoice",
+        [ec("PURCHASE", "FINANCIAL")],
+        span_id="s002",
+        constraints=[
+            Constraint(kind="budget", max_usd=150.0, provenance=ConstraintProvenance.COMPILER)
+        ],
+    )
+    decision = decide(action(), mapping(effect), sc, [], cfg=PolicyConfig(ask_on="never"))
+    assert decision.verdict is Verdict.BLOCK
+
+
+def test_a_stated_bound_beside_an_inferred_one_still_refuses():
+    effect = Effect(
+        verb=Verb.PURCHASE,
+        resource_class=ResourceClass.FINANCIAL,
+        magnitude=Magnitude(unit="usd", value=214.0),
+    )
+    sc = scope_from_user_turn(
+        "pay it if it is under $150",
+        [ec("PURCHASE", "FINANCIAL")],
+        span_id="s002",
+        constraints=[
+            Constraint(kind="budget", max_usd=150.0),
+            Constraint(kind="budget", max_usd=100.0, provenance=ConstraintProvenance.COMPILER),
+        ],
+    )
+    decision = decide(action(), mapping(effect), sc, [], cfg=PolicyConfig())
+    assert decision.verdict is Verdict.BLOCK
+    assert "G2_constraint_violation" in decision.gates_fired
+
+
+def test_the_ask_names_the_inferred_limit_and_says_it_was_not_stated():
+    guessed = Constraint(
+        kind="budget",
+        max_usd=150.0,
+        provenance=ConstraintProvenance.COMPILER,
+        note="pay the invoice",
+    )
+    req = ask_mod.build_request(
+        call_id="c1",
+        step=1,
+        tool="payments_charge",
+        args={"amount": 214.0},
+        effects=(
+            Effect(
+                verb=Verb.PURCHASE,
+                resource_class=ResourceClass.FINANCIAL,
+                magnitude=Magnitude(unit="usd", value=214.0),
+            ),
+        ),
+        would_grant=(),
+        relaxable=(guessed,),
+        reason="budget: amount 214.00 usd exceeds the 150.00 budget",
+        scope=scope(ec("PURCHASE", "FINANCIAL")),
+        evidence_spans=[],
+        budget_remaining=3,
+    )
+    text = ask_mod.render(req)
+    assert "inferred these limits" in text
+    assert "You did not state them" in text
+    assert "max_usd=150.0" in text

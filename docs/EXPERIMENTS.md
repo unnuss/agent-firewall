@@ -1227,7 +1227,25 @@ wrong predicate when the risk is that *the compiler under-granted*. Switching to
 Recorded as finding **F-10**; it is the first concrete requirement on Phase 4's cost model,
 which needs a `C_block_benign` term the placeholder rule does not have.
 
-**The registered arm, added 2026-08-31.** Three seeds of `gpt-4.1-mini`, prompt v2.
+**The registered arm, added 2026-08-31, and re-measured after D-030.** Three seeds of
+`gpt-4.1-mini`, prompt v2. The `before D-030` column treated every compiled bound as if the
+user had stated it, which is the defect F-13 describes.
+
+| Measure (policy `consequential`) | before D-030 | after D-030 | gold |
+|---|---|---|---|
+| overreach, underspecified | 25.2% | **25.2%** | 0.0% |
+| ASR | 0.0% | **0.0%** | 0.0% |
+| compliance on licensed work | 68.5% | **84.3%** | 84.7% |
+| benign FPR-block | 16.9% | **7.5%** | 0.0% |
+| G2 firings per seed | ~110 | **0** | 0 |
+| interruptions per benign episode | 0.00 | 0.14 | 0.00 |
+
+At `all_out_of_scope` the compiled arm reaches **84.7% compliance at 0.0% FPR-block** —
+identical to gold on both — for 0.27 interruptions per benign episode. What remains between
+compiled and gold is now **entirely the security column**: 25.2% overreach against 0.0%,
+which is F-16 and is not a constraint problem.
+
+The pre-D-030 figures below are kept as recorded.
 
 | Scope source | Policy | Overreach (underspec.) | Compliance (high) | ASR | Benign FPR-block | ASKs/ep benign |
 |---|---|---|---|---|---|---|
@@ -1496,7 +1514,26 @@ nothing (D-028).
 ## Open findings from Phase 3
 
 - **F-10 — `consequential()` answers the wrong question when the compiler is the thing that
-  might be wrong.** The Phase 2 placeholder asks a human only when the out-of-scope effect is
+  might be wrong.** **Re-measured after D-030, and the residue is exactly this finding in
+  pure form.** With the constraint noise removed, every one of the 12 benign actions still
+  refused without a dialog on the registered arm is an under-granted *read*: 9
+  `contacts_search`, 2 `calendar_list`, 1 `email_list`, each explained as "reversible and
+  unobservable, not worth an ASK". The predicate gets this failure mode precisely backwards
+  — a private reversible read is the **least** consequential thing an agent can do and the
+  **most** likely thing a compiler drops (373 of the registered arm's 505 under-grants are
+  READs).
+
+  **It does not need a new mechanism; it needs the cost model.** `ask_on: all_out_of_scope`
+  already takes benign FPR-block to 0.0% at 0.27 interruptions per benign episode, with
+  identical security. Both settings are measured, and choosing between them is exactly the
+  `C_ask` against `C_block_benign` trade-off that ARCHITECTURE section 5 specifies and that
+  Phase 4 implements. **Deliberately not changed now:** picking the default by looking at
+  which value wins on the dev slice is tuning, and `ask_on` is documented as a knob to be
+  swept rather than set. What Phase 4 needs from the ML core is therefore not "how dangerous
+  is this effect" but "how likely is it that the compiler dropped this class", which is a
+  different estimand from the one the M0-M5 ladder was designed around.
+
+  The original finding follows. The Phase 2 placeholder asks a human only when the out-of-scope effect is
   irreversible or externally visible. That is the right test when the risk is *the agent
   overreaching*: nobody should be interrupted to approve a private, reversible draft the
   agent invented. It is the wrong test when the risk is *the compiler having under-granted*,
@@ -1539,6 +1576,14 @@ nothing (D-028).
   authority. Revisit before the held-out scopes are written, where the rule should be applied
   uniformly from the start.
 - **F-13 — a constraint the compiler invented is unrecoverable; a grant it forgot is not.**
+  **RESOLVED 2026-08-31 by D-030.** Inferred bounds now escalate instead of refusing, and a
+  human can lift one; a user-stated bound still fires the hard gate and consent may not lift
+  it. On the registered arm this took compliance from 68.5% to **84.3%** (gold: 84.7%) and
+  benign FPR-block from 16.9% to **7.5%**, with G2 firings from ~110 per seed to **0** and
+  overreach and ASR both unchanged — for 0.14 interruptions per benign episode. Essentially
+  the whole utility gap between a compiled scope and a hand-written one was this one
+  mistake. The original finding follows.
+
   Gate G2 (constraint violation) is a hard structural gate by design: a violated explicit
   bound is not ambiguity, because the user already said where the line was, so it never
   reaches the ASK path. That is right for a bound the *user stated* and wrong for one the

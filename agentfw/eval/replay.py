@@ -175,13 +175,15 @@ def replay_episode(
         if pattern.verb is not None and pattern.resource_class is not None:
             key = f"({pattern.verb.value}, {pattern.resource_class.value})"
             oracle[key] = bool(variant.contested_authorized)
+    licensed_scope: IntentScope | None = None
     if cfg.reviewer_oracle == "gold":
         if gold is None:
             raise ValueError("reviewer_oracle='gold' needs the gold scopes to answer from")
-        licensed = gold.scope_for(scenario.id, variant.id, record.utterance)
-        # A class gold licenses is one the user would say yes to; a class it does not
-        # license stays absent, and absence is refusal in ``Firewall._ground_truth``.
-        oracle.update({str(k): True for k in licensed.authorized_effects})
+        # The whole hand-written scope, not a list of classes drawn from it. The reviewer
+        # answers "would this scope have allowed this call?", which covers the bounds the
+        # user stated as well as the classes they licensed — necessary once a compiler's
+        # inferred bounds can be put to a human (D-030).
+        licensed_scope = gold.scope_for(scenario.id, variant.id, record.utterance)
 
     firewall = build_firewall(
         scope=scope,
@@ -191,6 +193,7 @@ def replay_episode(
         cfg=cfg.policy(),
         reviewer=ScriptedReviewer(epsilon=cfg.reviewer_epsilon) if cfg.with_reviewer else None,
         licensed_oracle=oracle,
+        licensed_scope=licensed_scope,
     )
     router.guard = firewall
 
