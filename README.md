@@ -180,8 +180,8 @@ dialog at all. Written up as finding F-10; it is the first measured requirement 
 cost model.
 
 **A real compiler lands between the floors.** The registered arm — `gpt-4.1-mini` — has not
-run: the OpenAI credit balance was exhausted when Phase 3 reached it, and that row is
-`(pending)` in [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) rather than estimated. What did
+run yet, and that row is `(pending)` in [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) rather
+than estimated. What did
 run is a local 14B code model, weak enough that Phase 1 found its class unfit to be an agent
 here at all, reported against a retention floor registered in advance so a compiler that
 cannot read plain instructions cannot be quoted. It clears the floor, and it cuts overreach

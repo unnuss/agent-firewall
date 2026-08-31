@@ -27,7 +27,8 @@ scope_sources:
     path: experiments/e09a_compiler/results/read-only.s0.jsonl
 
   # Exploratory, and labelled as such everywhere it appears: a quantized 14B code model
-  # running locally because the OpenAI credit balance is exhausted. It clears E-09a's
+  # run locally because the OpenAI path appeared unavailable at the time (it was a
+  # credential-precedence bug, not billing — D-029). It clears E-09a's
   # pre-registered retention floor (87.5%), so its numbers may be interpreted; it is one
   # greedy decode, so it carries no variance estimate.
   - label: llm-qwen-local-p1

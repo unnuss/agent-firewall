@@ -803,3 +803,63 @@ inconsistencies that would have produced duplicate or missing experiments:
 **Why this is worth a decision rather than a rename.** Duplicate experiment ids are how a
 result gets reported twice with different numbers, and a missing one is how a deliverable
 quietly disappears between phases. Both were live here.
+
+---
+
+### D-029 — `.env.local` wins a credential conflict, and the conflict is announced
+**Date:** 2026-08-31 · **Status:** accepted · **Reverses part of the rule in `config.py`**
+
+**Decision.** When `.env.local` and an exported environment variable hold *different* values
+for the same name, the file wins, and the disagreement is printed before the command runs.
+`--prefer-exported-key` restores the old precedence; it still prints. Credentials are
+reported everywhere by fingerprint (`sha8:...`), never by presence and never by value.
+
+**What went wrong, in full, because the failure is more instructive than the fix.** E-09a's
+registered `gpt-4.1-mini` arm returned `insufficient_quota` /
+`credit_balance_exhausted`. That was recorded in the run log, in PROJECT_STATE and in the
+README as an arm blocked on billing, and it sat there for a day. It was not a billing
+problem. The shell running the experiment had inherited an `OPENAI_API_KEY` from the user's
+environment — a *different* key from the one in `.env.local`, on an account with no credit —
+and the old rule ("an existing environment variable always wins over the file") meant
+`load_local_env` skipped the working key and reported `[]`. Nothing printed the difference,
+because the only credential diagnostic in the project was `has_openai_key: true`, which was
+true of the wrong key.
+
+**This is a recurrence, and that is the strongest argument for the reversal.** E-00's run
+log, 2026-08-29, records the identical diagnosis: *"the key visible to the runner (SHA-256
+prefix `cb8a849d`) differs from the newly issued key in the user's shell (`6de690a5`)"*.
+Those are the same two keys, two days later. The mitigation shipped then was `.env.local`
+itself — and it did not hold, because the precedence rule written into it meant the file
+could not override the stale export it existed to work around. A mitigation that cannot fire
+in the case that motivated it is not a mitigation, and the second occurrence cost a day and
+put a false cause into three documents.
+
+**Why the old rule was half right.** Its stated rationale — the file must not silently
+shadow a deliberately exported key — is sound, and the reversal does not discard it. What it
+missed is that the problem is *symmetric*: a stale export shadows a deliberate file edit just
+as silently, and that direction is the more likely one, because an export persists invisibly
+across sessions while a file edit is a visible act in the repository. The asymmetry that
+breaks the tie: `.env.local` is the only one of the two a reader of the repo can see, so it
+is the only one whose contents can be reasoned about later.
+
+**Why not simply warn and keep the precedence.** Because a warning that does not change the
+outcome still burns the run, and the run in question is the one this phase's central
+prediction depends on. The project's own philosophy applies: an ambiguous authority is
+resolved conservatively *and loudly*, not silently.
+
+**What this is not.** It is not a change to the compiler, the prompt, the model, the
+experiment design or any metric. E-09a's registered arm is unchanged in every respect; it
+was simply never reaching the account it was configured for.
+
+**Enforced by tests, not by discipline.** `tests/test_config.py` asserts that the file wins a
+conflict, that the environment can still win but never quietly, that an exported-but-empty
+value does not shadow, and that a fingerprint identifies a key without containing any part of
+it — including that two 164-character keys, which is what the two real ones were, fingerprint
+differently.
+
+**Cost of being wrong.** Someone who exports a key intending to override the file for one
+command now needs `--prefer-exported-key`. They are told, on that command, that the file won.
+
+**Revisit if.** A deployment context appears where the environment is the authoritative
+credential source and the file is a stale artifact — the mirror of this situation. The
+warning already makes that case visible; only the default would need to move.

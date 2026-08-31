@@ -878,7 +878,7 @@ inference, exactly as E-00c/d/e were.
 |---|---|---|
 | 2026-08-30 | Predictions and the retention floor registered | before any LLM call |
 | 2026-08-30 | `tool-ceiling`, `read-only` (86 utterances each, no key, no cost) | done |
-| 2026-08-30 | `llm-gpt-4.1-mini`, 3 seeds | **blocked** — the OpenAI key returns `insufficient_quota` / `credit_balance_exhausted`. Two calls attempted, both refused, nothing charged |
+| 2026-08-30 | `llm-gpt-4.1-mini`, 3 seeds | **blocked** — the provider returned `insufficient_quota` / `credit_balance_exhausted`. Two calls attempted, both refused, nothing charged. **The stated cause was wrong: see the correction below** |
 | 2026-08-30 | `llm-qwen2.5-coder-14b-local`, attempt 1 | **discarded — harness defect, not a result.** Six concurrent workers against a CPU-bound local server queued behind each other, the provider timeout fired on **25 of 86** utterances, and each timeout scored as an empty scope. Micro-F1 0.450 and retention 66.7% were therefore measuring my own concurrency setting |
 | 2026-08-30 | `llm-qwen2.5-coder-14b-local`, attempt 2, serialised, prompt v1 | done — 0 failures; **clears the retention floor at 87.5%** |
 | 2026-08-30 | prompt v2 written after F-14; local arm re-run on it | declared under R-16; artifacts versioned `p1`/`p2`, reported as two experiments. **Better on every scope metric, much worse in E-01b** |
@@ -893,11 +893,31 @@ takes a per-arm `max_workers` so that a local arm is serialised by configuration
 by remembering to. The discarded numbers are recorded here and their artifacts are not kept,
 because keeping them invites somebody to quote them later.
 
-**The headline arm is blocked on credit, not on work.** Everything it needs exists: the
+**Correction, 2026-08-31 — the arm was never blocked on credit (D-029).** The account had
+~$3.86 the whole time. The shell running the experiment had inherited a *different*
+`OPENAI_API_KEY` from the user's environment, on an exhausted account, and the credential
+loader's rule at the time was that an exported variable beats `.env.local` — so the working
+key in the file was skipped and `load_local_env` reported loading nothing. No diagnostic
+caught it, because the project's only credential check was `has_openai_key: true`, which was
+true of the wrong key. Fixed in `agentfw/config.py`: the file now wins a conflict, the
+conflict is printed before the command runs, and every credential is reported by fingerprint.
+Verified with one `gpt-4.1-mini` compilation of a benign tuning-slice utterance (928 tokens,
+about $0.0005), which returned `READ:CALENDAR` with no error.
+
+Nothing about the arm itself changed — same prompt, model, seeds, metrics and design.
+
+**And it had happened before.** E-00's run log for 2026-08-29 records the same two keys by
+the same fingerprints — `cb8a849d` stale, `6de690a5` working — and diagnoses it correctly as
+"environment staleness, not billing". The mitigation shipped then was `.env.local` itself,
+and it could not fire, because the precedence rule inside it let the stale export win. Two
+lessons, both cheap and both learned the expensive way: **a failure attributed to an external
+cause should be verified against that cause before it is written into a run log** — this one
+went into three documents and was wrong in all three — and **a mitigation that cannot fire in
+the case that motivated it is not a mitigation.**
+
+**The headline arm is blocked on nothing now, and is the first thing to run.** Everything it needs exists: the
 compiler, the prompt, the harness, the metrics, the config and the downstream experiment
-that consumes its output. Completing it is one command once the balance is topped up, or
-once an `OPENROUTER_API_KEY` is present in `.env.local` and the arm's `api_key_env` and
-`base_url` are pointed at it:
+that consumes its output. Completing it is one command:
 
 ```
 agentfw compile-scopes experiments/e09a_compiler/config.yaml --compiler llm-gpt-4.1-mini

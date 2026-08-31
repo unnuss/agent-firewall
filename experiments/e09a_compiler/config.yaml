@@ -38,10 +38,11 @@ compilers:
       # section 5 asks for the distribution rather than one point.
       temperature: 1.0
 
-  # Exploratory only, and labelled as such wherever it appears. Run because the OpenAI
-  # credit balance was exhausted when Phase 3 reached this point and a local model costs
-  # nothing but wall-clock. It is a 14B code model at Q4, i.e. exactly the class of model
-  # D-016 recorded as unfit for this harness, so it is a check on the pipeline and a weak
+  # Exploratory only, and labelled as such wherever it appears. Run because the OpenAI path
+  # appeared unavailable when Phase 3 reached this point — it was a credential-precedence
+  # bug rather than billing (D-029) — and a local model costs nothing but wall-clock. It is
+  # a 14B code model at Q4, i.e. exactly the class of model D-016 recorded as unfit for
+  # this harness, so it is a check on the pipeline and a weak
   # data point rather than the compiler result. One greedy decode, so it carries no
   # variance estimate. If it misses the retention floor its leakage number is not
   # interpretable and must not be quoted.

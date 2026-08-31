@@ -17,7 +17,7 @@ import json
 import sys
 from pathlib import Path
 
-from agentfw.config import load_local_env
+from agentfw.config import credential_report, load_local_env
 from agentfw.eval import report as report_mod
 from agentfw.eval.generator import expand_dir, write_suite
 from agentfw.eval.runner import RunConfig, env_report, run
@@ -541,7 +541,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--override-env",
         action="store_true",
-        help="let .env.local override an already-set environment variable",
+        help=(
+            "retained for compatibility; .env.local now wins by default (D-029), so this "
+            "is a no-op"
+        ),
+    )
+    p.add_argument(
+        "--prefer-exported-key",
+        action="store_true",
+        help=(
+            "on a conflict, use the exported environment variable rather than the value in "
+            ".env.local. This was the default until D-029"
+        ),
     )
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -615,9 +626,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("smoke").set_defaults(fn=cmd_smoke)
 
     args = p.parse_args(argv)
-    loaded = load_local_env(override=args.override_env)
-    if loaded:
-        print(f"[env] loaded {', '.join(loaded)} from .env.local")
+    creds = load_local_env(prefer_environment=args.prefer_exported_key)
+    if creds.summary():
+        print(f"[env] {creds.summary()}")
+    # A shadowed credential is never allowed to be quiet again (D-029). This is printed
+    # before the command runs, because the cost of noticing afterwards is a wasted run.
+    for line in creds.warnings():
+        print(f"[env] WARNING  {line}")
+    print(f"[env] credentials {json.dumps(credential_report())}")
     return int(args.fn(args))
 
 

@@ -105,7 +105,9 @@ utility loss and should be fixed before any ladder is built.
 exists with three arms; E-09a's two deterministic floors and E-01b's floor arms have run at
 zero cost, and they already produce two findings (F-10, F-11) and the first measurement of
 what the ASK primitive is worth (269 refusals recovered under an under-granting scope,
-against 0 under gold). **The LLM arm is blocked on an exhausted OpenAI credit balance**, and
+against 0 under gold). **The registered LLM arm has not run yet** — it was misdiagnosed as
+blocked on billing for a day when the real cause was credential precedence (D-029), now
+fixed — and
 nothing in deliverables 2-8 should start before it runs, for the reason the re-ordering note
 below already gives: the ladder's size should be a response to the compiler's error profile,
 not a plan made before seeing it.

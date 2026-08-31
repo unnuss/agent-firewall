@@ -8,12 +8,14 @@
 
 ## 0. If you are the next session, do exactly this
 
-1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-025 to D-028** — D-025
+1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-025 to D-029** — D-025
    fixes what the intent compiler may see, D-026 why compiled scopes are committed
-   artifacts, D-027 what the scripted human knows in E-01b, D-028 the experiment renaming.
+   artifacts, D-027 what the scripted human knows in E-01b, D-028 the experiment renaming,
+   D-029 credential precedence and why a run was misdiagnosed for a day.
    D-022, D-023 and D-024 remain the Phase 1/2 constraints.
-2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**, including E-09a's run log. One arm of
-   E-09a is blocked on an exhausted API credit balance and is the first thing to finish.
+2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**, including E-09a's run log and the
+   2026-08-31 correction in it. E-09a's registered `gpt-4.1-mini` arm is unrun and is the
+   first thing to finish; it is ready to go.
 3. Skim findings **F-10 to F-15**, then the older **F-07, F-08, F-09**. F-13, F-14 and F-15
    all came out of running a real compiler, and all three change what to build next.
 4. Continue Phase 3 per `docs/ROADMAP.md`. Start at section 6 of this document.
@@ -24,7 +26,7 @@ Health check (~35 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **196 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
+Expect **206 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
 
 Both replay experiments reproduce with no key:
 
@@ -46,20 +48,22 @@ therefore began where PROJECT_STATE said it must: with the scope itself. The int
 exists, its inputs are restricted by construction to the user's turn and the tool catalogue
 (D-025), and the measurement harness around it — E-09a against the gold labels, E-01b
 against real verdicts — is built and running. Four arms have run: two deliberate floors, and
-a real LLM compiler twice (a local model, because the OpenAI credit balance is exhausted).
+a real LLM compiler twice (a local model, run because the OpenAI path appeared unavailable —
+it was not; see D-029).
 Between them they establish that a tool-allowlist scope is worth nothing against overreach
 (F-11), that ASK's value is real and large once the scope is wrong (269 refusals recovered
 against 0 under gold), and that a compiler too weak to be an agent in this harness still cuts
 measured overreach from 45.9% to 17.0% — at a compliance cost from 84.7% to 60.6%, most of it
 traceable to invented constraints that no interruption can repair (F-13). **The registered
-arm, `gpt-4.1-mini`, is still blocked on credit and is what settles the central prediction.**
+arm, `gpt-4.1-mini`, has still not run and is what settles the central prediction — it was
+never blocked on billing, only on a credential-precedence bug that is now fixed (D-029).**
 
 ## 2. Phase 3 deliverables, against the roadmap
 
 | # | Deliverable | Status |
 |---|---|---|
 | 1 | `intent/compiler.py` — utterance → IntentScope | done: `LLMIntentCompiler` + two deterministic floors, `intent/catalog.py`, `intent/store.py` |
-| 1 | **E-09a** — compiled scopes scored against gold | harness done, predictions registered and scored; floors + an exploratory local LLM arm measured; **the registered `gpt-4.1-mini` arm is pending on API credit** |
+| 1 | **E-09a** — compiled scopes scored against gold | harness done, predictions registered and scored; floors + an exploratory local LLM arm measured; **the registered `gpt-4.1-mini` arm is unrun and ready** |
 | 1b | **E-01b** — the replay with compiled scopes | done for all four arms that exist |
 | 2 | The M0–M5 ladder | not started — deliberately, see section 6 |
 | 3 | Calibration (ECE, reliability) | not started |
@@ -181,7 +185,7 @@ missed, 5 held emphatically (163 under-grants to 15 over-grants), 6 held.
 
 | ID | Issue | Action owed |
 |---|---|---|
-| **BLOCKER** | The OpenAI key returns `credit_balance_exhausted`; E-09a's LLM arm has never run | Top up, or add `OPENROUTER_API_KEY` to `.env.local` and repoint the arm. Two commands, under $0.50 |
+| **READY** | E-09a's registered `gpt-4.1-mini` arm has never run. It was **not** blocked on billing — a stale exported key shadowed the working one in `.env.local` (D-029, fixed and smoke-tested). Account has ~$3.86 | Run it. One command, under $0.50 |
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
 | **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
 | **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
@@ -228,9 +232,12 @@ restriction without a documented reason.
 ## 7. Environment notes
 
 - Python 3.12.9, uv 0.12.7, git 2.55, Windows 11. Venv at `.venv/`.
-- Credentials load from **`.env.local`** (gitignored). It currently holds `OPENAI_API_KEY`
-  **and that key has no credit**; `OPENROUTER_API_KEY`, which E-00f used, is no longer
-  present. `--override-env` is a top-level flag.
+- Credentials load from **`.env.local`** (gitignored). It holds a **working**
+  `OPENAI_API_KEY` (~$3.86 as of 2026-08-31); `OPENROUTER_API_KEY`, which E-00f used, is no
+  longer present. **The file now wins a conflict with an exported variable and says so
+  (D-029)** — the reverse rule cost E-09a a day and had already cost E-00 a day before that.
+  Every command prints the credential fingerprint it is using; `--prefer-exported-key`
+  restores the old precedence.
 - No NVIDIA GPU. Ollama is installed with `qwen2.5-coder:14b` and `dolphin3`; both are
   unusable as *agents* (D-016/D-020) but a compiler needs only JSON output, so
   `qwen2.5-coder:14b` runs as an explicitly exploratory arm at roughly 50–100 s per

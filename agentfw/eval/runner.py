@@ -325,8 +325,16 @@ def load_results(path: Path) -> list[EpisodeResult]:
 
 
 def env_report() -> dict[str, Any]:
+    """What a run should record about its environment.
+
+    Credentials appear by **fingerprint, not presence** (D-029). ``has_openai_key: true``
+    was the entire old report, and it stayed true throughout the incident where a stale
+    exported key shadowed the working one in ``.env.local``: the report was accurate and
+    useless. A fingerprint answers the question that actually matters — *which* key.
+    """
+    from agentfw.config import credential_report
+
     return {
-        "has_openai_key": bool(os.environ.get("OPENAI_API_KEY")),
-        "has_anthropic_key": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "credentials": credential_report(),
         "local_base_url": os.environ.get("AGENTFW_LOCAL_BASE_URL", "http://localhost:11434/v1"),
     }
