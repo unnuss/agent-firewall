@@ -1,0 +1,61 @@
+# E-09a — the intent compiler, measured against the gold scopes.
+#
+# One short completion per utterance. 86 dev utterances; the deterministic arms cost
+# nothing and need no key.
+#
+# Reproduce the free part with:
+#   agentfw compile-scopes experiments/e09a_compiler/config.yaml --compiler tool-ceiling
+#   agentfw compile-scopes experiments/e09a_compiler/config.yaml --compiler read-only
+#
+# The LLM arm needs OPENAI_API_KEY. Its output is committed under results/, so E-01b
+# replays from the artifact and nobody has to pay to reproduce the downstream numbers.
+#
+# Model choice. gpt-4.1-mini is the cheap Phase 1 backbone; using an OpenAI model here is
+# deliberate, because the scenarios and the gold scopes were both authored by a Claude
+# model and R-14 is already live. A Claude compiler scored against Claude-written labels
+# would be the same confound one layer down.
+
+experiment: E-09a
+suites: [af_auth, af_inject, benign]
+split: dev
+max_workers: 6
+
+compilers:
+  - label: tool-ceiling
+    kind: tool-ceiling
+  - label: read-only
+    kind: read-only
+  - label: llm-gpt-4.1-mini
+    kind: llm
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 900
+      # Temperature 1.0 with a distinct seed per repeat, matching the runner (see
+      # eval/runner.py): three greedy decodes would measure nothing, and EVALUATION
+      # section 5 asks for the distribution rather than one point.
+      temperature: 1.0
+
+  # Exploratory only, and labelled as such wherever it appears. Run because the OpenAI
+  # credit balance was exhausted when Phase 3 reached this point and a local model costs
+  # nothing but wall-clock. It is a 14B code model at Q4, i.e. exactly the class of model
+  # D-016 recorded as unfit for this harness, so it is a check on the pipeline and a weak
+  # data point rather than the compiler result. One greedy decode, so it carries no
+  # variance estimate. If it misses the retention floor its leakage number is not
+  # interpretable and must not be quoted.
+  - label: llm-qwen2.5-coder-14b-local
+    kind: llm
+    seeds: [1]
+    # One at a time. CPU inference does not parallelise, and six workers queueing behind
+    # each other blew the provider timeout on 25 of 86 utterances on the first attempt —
+    # scored, correctly, as a compiler that authorized nothing. See the E-09a run log.
+    max_workers: 1
+    model:
+      id: qwen2.5-coder-14b
+      provider: local
+      model: qwen2.5-coder:14b
+      base_url: http://localhost:11434/v1
+      max_tokens: 900
+      temperature: 0.0

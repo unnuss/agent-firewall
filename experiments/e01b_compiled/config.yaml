@@ -1,0 +1,82 @@
+# E-01b — E-01a's replay, with compiled scopes in place of gold ones.
+#
+# Same 702 committed episodes, same deterministic firewall, same policies. The only thing
+# that changes between arms is the object the episode's starting authority comes from.
+# No model is called: the compiled scopes are the artifacts E-09a wrote, so this whole
+# experiment reproduces from files in the repository with no key and no dollars.
+#
+#   agentfw replay experiments/e01b_compiled/config.yaml
+#
+# The `gold` arm is the reference. It should reproduce E-01a exactly — the reviewer oracle
+# widened in D-027, but under a gold scope nothing beyond the contested effect is ever put
+# to a reviewer, so the widening cannot bind. Any drift there is a bug, not a result.
+
+experiment: E-01b
+sources:
+  - experiments/e00b_revised/results/episodes.jsonl
+  - experiments/e00f_cross_vendor/results/episodes.jsonl
+
+scope_sources:
+  - label: gold
+    kind: gold
+  - label: tool-ceiling
+    kind: compiled
+    path: experiments/e09a_compiler/results/tool-ceiling.s0.jsonl
+  - label: read-only
+    kind: compiled
+    path: experiments/e09a_compiler/results/read-only.s0.jsonl
+
+  # Exploratory, and labelled as such everywhere it appears: a quantized 14B code model
+  # running locally because the OpenAI credit balance is exhausted. It clears E-09a's
+  # pre-registered retention floor (87.5%), so its numbers may be interpreted; it is one
+  # greedy decode, so it carries no variance estimate.
+  - label: llm-qwen-local-p1
+    kind: compiled
+    path: experiments/e09a_compiler/results/llm-qwen2.5-coder-14b-local.p1.s1.jsonl
+
+  # The same model on prompt v2, which removed the schema example's literal values after
+  # F-14. Kept as a *separate arm* rather than replacing p1: the two prompts are two
+  # experiments (R-16), and the pair is the evidence for whether F-13 was an artifact of
+  # one bad example or a real failure mode of constraint extraction.
+  - label: llm-qwen-local-p2
+    kind: compiled
+    path: experiments/e09a_compiler/results/llm-qwen2.5-coder-14b-local.p2.s1.jsonl
+
+# Three policies, for one reason each.
+#
+#   consequential    the Phase 2 default: interrupt only where the consequence warrants it.
+#   all-out-of-scope the maximally cautious variant. Under a compiled scope this is the arm
+#                    that can recover under-granting, because the classes a compiler drops
+#                    are mostly reversible private reads that `consequential()` will not
+#                    spend an interruption on.
+#   no-ask           pure deny-by-default. In E-01a it scored identically to the default on
+#                    every row; if that is still true here, ASK still buys nothing and F-09
+#                    stands. If it is not, the difference is exactly what ASK is for.
+#
+# The ask-all arm is also run at a larger budget, so that "ASK could not recover this" is
+# distinguishable from "the budget ran out first" (D-009 fails closed on exhaustion).
+policies:
+  - label: M0-consequential
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-ask-all
+    ask_on: all_out_of_scope
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-ask-all-budget12
+    ask_on: all_out_of_scope
+    ask_budget: 12
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-no-ask
+    ask_on: never
+    ask_budget: 0
+    reviewer_epsilon: 0.0
+    with_reviewer: false
+    reviewer_oracle: gold

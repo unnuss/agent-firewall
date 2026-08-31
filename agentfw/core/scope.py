@@ -104,7 +104,25 @@ class Constraint(BaseModel):
             # An unrecognised constraint kind is a configuration error, and the safe
             # reading of "I do not understand this bound" is that it is not satisfied.
             return False, f"unknown constraint kind {self.kind!r}"
-        return handler(effect, args)
+        try:
+            return handler(effect, args)
+        except Exception as exc:  # the monitor decides; it does not crash
+            # **A reference monitor must be total.** Phase 2 wrote every handler against
+            # bounds a person had typed, and a person does not write a time window with no
+            # timezone next to one that has one. Phase 3 put a *model's* output here, and
+            # `_check_time_window` raised TypeError comparing a naive datetime with an aware
+            # one — 21 episodes of E-01b died mid-decision rather than reaching a verdict
+            # (finding F-15). An exception escaping here is worse than any verdict: the
+            # caller decides what it means, and "the guard threw" is not one of ALLOW, ASK
+            # or BLOCK.
+            #
+            # Failing closed matches the branch above it: a bound we cannot evaluate is a
+            # bound we cannot say is satisfied. Note this can only ever make a decision more
+            # restrictive, so it cannot be used to obtain an ALLOW.
+            return False, (
+                f"{self.kind} constraint could not be evaluated "
+                f"({type(exc).__name__}: {exc}); treating it as unsatisfied"
+            )
 
     # -- individual kinds ---------------------------------------------------
 
@@ -165,6 +183,19 @@ class Constraint(BaseModel):
             hi = datetime.fromisoformat(self.window_end)
         except ValueError:
             return False, f"could not parse {stamp!r} against the authorized window"
+        # A bound written without a timezone and an argument written with one cannot be
+        # compared, and Python raises rather than guessing. Nor should we guess: assuming
+        # the naive side means UTC would silently widen or narrow the window by hours. The
+        # comparison is refused instead, which is the same answer this handler already
+        # gives to a stamp it cannot parse. `check()` also catches it as a backstop, but a
+        # named reason reads better in an audit log than a caught TypeError (F-15).
+        aware = {v.tzinfo is not None for v in (when, lo, hi)}
+        if len(aware) > 1:
+            return False, (
+                f"cannot compare {stamp!r} with the window "
+                f"{self.window_start}..{self.window_end}: one carries a timezone and the "
+                "other does not"
+            )
         if lo <= when <= hi:
             return True, ""
         return False, f"{stamp} falls outside {self.window_start}..{self.window_end}"

@@ -104,13 +104,15 @@ def test_p4_agent_rationale_never_reaches_the_ask_text(rationale: str):
         evidence_spans=[],
         budget_remaining=3,
     )
-    # Two assertions, and the second is the one that states P4 without being fooled by
-    # coincidence. Asserting "the rationale does not appear in the text" is wrong: a
-    # rationale of "APPROVAL REQ" is a substring of the firewall's own fixed header, which
-    # is a collision rather than a leak. What P4 actually claims is that the rendering is
-    # *independent* of the agent's prose, so the test renders with and without it and
-    # requires the output to be byte-identical.
-    assert rationale not in request.model_dump_json()
+    # One assertion, and it is the only one that states P4 without being fooled by
+    # coincidence. "The rationale does not appear in the text" is the wrong test: a
+    # rationale of "APPROVAL REQ" is a substring of the firewall's own fixed header, and
+    # one of "reversibilit" is a substring of a serialized field name — collisions, not
+    # leaks. Hypothesis found the second of those in Phase 3, which is exactly what a
+    # property test is for. What P4 actually claims is that the rendering is *independent*
+    # of the agent's prose, so the test renders with and without it and requires the output
+    # to be byte-identical. That check subsumes the substring one: prose that reached the
+    # output would change it.
     control = ask_mod.build_request(
         call_id=proposal.call_id,
         step=proposal.step,

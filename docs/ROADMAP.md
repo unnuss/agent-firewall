@@ -91,7 +91,24 @@ finding instead; Phase 3 is where intelligence goes.
 
 ---
 
-## Phase 3 — Intent compilation and the authorization model (the ML core)
+## Phase 3 — Intent compilation and the authorization model (the ML core) — IN PROGRESS
+
+**Status, 2026-08-31.** Deliverable 1 is built and measured on every compiler that can be
+run without an API budget: two deterministic floors and a local LLM arm on two prompt
+versions. Findings F-10 to F-15. The one that changes how the rest of the phase is run:
+**prompt v2 improved every scope-level metric and made the deployed system substantially
+worse**, so a compiler change is not an improvement until E-01b says so. F-13 (an invented
+constraint fires a hard gate no interruption can repair) is now the largest single source of
+utility loss and should be fixed before any ladder is built.
+
+**Status, 2026-08-30.** Deliverable 1 is built and half-measured. `intent/compiler.py`
+exists with three arms; E-09a's two deterministic floors and E-01b's floor arms have run at
+zero cost, and they already produce two findings (F-10, F-11) and the first measurement of
+what the ASK primitive is worth (269 refusals recovered under an under-granting scope,
+against 0 under gold). **The LLM arm is blocked on an exhausted OpenAI credit balance**, and
+nothing in deliverables 2-8 should start before it runs, for the reason the re-ordering note
+below already gives: the ladder's size should be a response to the compiler's error profile,
+not a plan made before seeing it.
 
 **Goal:** the intellectually strongest part of the project.
 

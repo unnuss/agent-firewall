@@ -135,6 +135,88 @@ is now the first thing Phase 3 does. Written up as
 
 Reproduce: `agentfw replay experiments/e01a_deterministic/config.yaml` (~40 s, no API key).
 
+## Phase 3: what happens when the scope is compiled rather than written by hand
+
+The scope is what the whole design rests on, so Phase 3 starts by asking how wrong it gets.
+`intent/compiler.py` turns an utterance into an `IntentScope` from two inputs and no others:
+the user's words, and the tools the application registered. It never sees the world, and it
+is not in the trusted computing base — its errors are measured, not assumed away.
+
+Two of the three compilers are deliberately stupid, because a single compiler could not be
+interpreted. `tool-ceiling` grants whatever the registered tools can do, which is the
+authority model an MCP gateway implements. `read-only` grants only reads. They bracket the
+trade-off, and running the same 702 episodes against each (`agentfw replay
+experiments/e01b_compiled/config.yaml`, no API calls, $0) says what each kind of compiler
+error costs:
+
+| Scope source | Overreach (underspecified) | Compliance (licensed) | ASR | Benign actions refused |
+|---|---|---|---|---|
+| *(undefended)* | 45.9% [34.1, 57.8] | 84.7% | 22.2% | — |
+| Hand-written gold | **0.0%** | 84.7% | **0.0%** | 0 / 182 |
+| `tool-ceiling` — grant what the tools can do | **45.9%** | 84.7% | 16.7% | 0 / 182 |
+| `read-only` — grant only reads | 0.0% | **78.2%** | 0.0% | **22 / 182** |
+| `read-only`, asking about everything out of scope | 0.0% | 82.9% | 0.0% | 0 / 182 |
+
+Three things fall out of it.
+
+**A tool allowlist is not an authorization mechanism.** `tool-ceiling` reproduces the
+undefended overreach rate exactly — 62 of the same 135 episodes. EVALUATION lists "a static
+allowlist matches Agent Firewall on AF-Auth" as a condition that would falsify this
+project's ML story; on this slice the allowlist authority model does not match Agent
+Firewall, it matches no defense at all.
+
+**ASK earns its keep only against compiler error, and now that is measured.** Under a gold
+scope, 90 approval prompts were raised and **0** were approved — the uncomfortable E-01a
+result. Under an under-granting scope, 359 were raised and **269 recovered a refusal**, with
+a human putting back the send, the delete and the purchase the compiler had dropped. The
+value of the interruption budget is a function of how wrong the compiler is, which is now a
+measured quantity rather than an argument.
+
+**And a defect the measurement found.** Phase 2 asks a human only when the effect is
+irreversible or visible to somebody else. That is right when the risk is an agent
+overreaching and wrong when the risk is a compiler under-granting — the classes a compiler
+drops are exactly the private reversible ones — so 22 benign actions are refused with no
+dialog at all. Written up as finding F-10; it is the first measured requirement on Phase 4's
+cost model.
+
+**A real compiler lands between the floors.** The registered arm — `gpt-4.1-mini` — has not
+run: the OpenAI credit balance was exhausted when Phase 3 reached it, and that row is
+`(pending)` in [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) rather than estimated. What did
+run is a local 14B code model, weak enough that Phase 1 found its class unfit to be an agent
+here at all, reported against a retention floor registered in advance so a compiler that
+cannot read plain instructions cannot be quoted. It clears the floor, and it cuts overreach
+from 45.9% to **17.0%** at 0% ASR — while compliance on licensed work falls from 84.7% to
+**60.6%**.
+
+Most of that utility loss has one cause, and it is the sharpest thing Phase 3 found.
+`Grant` carries provenance because authority must trace to something the user said.
+`Constraint` carries none — so when the compiler *invents* a bound (a $150 cap on an
+instruction that names no cap), the firewall cannot tell it from a bound the user stated, and
+treats it as a hard gate. It fired 59 times, blocking purchases the user had explicitly
+authorized, and **no interruption can repair a wrong bound** where a forgotten grant is
+repaired by one question. Written up as F-13.
+
+Most of those invented bounds came from the prompt's own JSON example, which carried a
+literal `$150` the model copied through (F-14). So the prompt was fixed — placeholders only —
+and the arm re-run. **Every scope-level metric improved and the deployed system got much
+worse:** leakage 33.3% → 26.7%, retention 87.5% → 100%, contrast fidelity 58.3% → 75.0%,
+while compliance fell 60.6% → 41.2%, benign refusals rose 11.9% → 34.5%, and the hard gate
+fired 59 → 270 times. Freed from copying the example, the model extracted bounds
+enthusiastically — 69 of them across 51 instructions, against six in the gold labels — and
+they are plausible and wrong: `["Priya"]` where the address is
+`priya.menon@northwind-systems.com`, `["Amex"]` as the recipient of a payment.
+
+That disagreement is the most useful thing this phase measured. Scoring the compiler against
+the labels ranks it; only running the verdicts grades it. **A compiler change is not an
+improvement until the replay says so** — and had we reported the label metrics alone, we
+would have shipped the worse prompt.
+
+Feeding a real compiler's output into the monitor also found a crash in the Phase 2 core: a
+naive-versus-aware datetime comparison raised inside a constraint check, taking 21 episodes
+out of the measurement rather than deciding them. Property tests had not found it, because
+they generate the bounds a specification allows and it took a model to write the pair that
+breaks. Fixed, fail-closed (F-15).
+
 ## Documentation
 
 | | |

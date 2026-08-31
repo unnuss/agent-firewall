@@ -667,3 +667,139 @@ the agent to batch its proposals and is out of scope here. Recorded as finding F
 
 **Revisit if.** Phase 4's cost model makes the interruption budget elastic, or the ASK
 rendering learns to cover a set of resources in one question.
+
+---
+
+### D-025 — The intent compiler reads the user's turn and the tool catalogue, and nothing else
+**Date:** 2026-08-30 · **Status:** accepted
+
+**Decision.** `Compiler.compile(utterance, tools)` is the entire interface. A compiler sees
+the text of one USER turn and the list of tools the application registered. It never sees a
+tool result, a web page, an email body, a scenario id, a variant id, a contested effect or a
+gold scope, and it runs once, before the agent starts.
+
+**Why the input restriction is the security property.** An attacker who can put text in
+front of the compiler does not have to hijack the agent — they can write the user's
+authorization scope directly, which is strictly better for them. Every invariant downstream
+assumes the scope is a statement of what *the user* asked for; a compiler that read
+untrusted content would make that assumption false at the root, and no amount of monitoring
+below it would help. So the restriction is enforced by the signature having nowhere to put
+the other data, and a test asserts the rendered prompt contains no scenario identity.
+
+**Why the tool catalogue is a legitimate input and the world is not.** "Give him read access
+to the copy in my cloud bucket" is `(GRANT, CLOUD_STORAGE)` rather than `(GRANT, USER_FILES)`
+only because of how this application's tools are carved up; that distinction is not in the
+English. The person who wrote the gold scopes had the tool list in front of them (D-023), a
+deployed compiler has the application's registered tools in front of it, and the tool list
+is identical across the variants of a minimal pair — so it cannot leak the a/b/c contrast
+that the whole benchmark turns on. `intent/catalog.py` holds the tool → effect-class ceiling
+as a table, with two tests keeping it from drifting away from the declarers.
+
+**What this does not claim.** The compiler is **outside the TCB** and stays there (D-006).
+It does not produce signals, it cannot force a verdict, and it cannot widen a scope once an
+episode is running — only a human answering an ASK can (D-007). What it can do is start the
+episode with the wrong authority, and that is a measured quantity (E-09a) rather than an
+assumption, which is the whole reason the boundary is drawn where D-006 draws it.
+
+**Failure is empty, not partial.** A provider error or an unparsable response yields an
+*empty* scope with the error recorded. An empty scope authorizes nothing, so a compiler
+outage degrades to refusing everything rather than to authorizing whatever half-parsed, and
+the affected episodes are counted separately so an unreliable compiler can never be mistaken
+for a cautious one.
+
+**Alternatives rejected.** (a) A rule-based keyword compiler — rejected already in D-023 as
+the "just one heuristic" failure mode. (b) Giving the compiler the trajectory so it can
+refine the scope as the episode proceeds — that is scope widening from untrusted input,
+i.e. exactly what P1 forbids. A *narrowing* mid-episode compiler is admissible and is left
+for later.
+
+**Revisit if.** A compiler needs the world to disambiguate a legitimate utterance (for
+instance to resolve "Thursday" against a calendar). The right form of that is a read-only
+narrowing pass over SYSTEM-labeled state, not access to tool output, and it needs its own
+decision.
+
+---
+
+### D-026 — Compiled scopes are committed artifacts, and E-01b is a pure function of them
+**Date:** 2026-08-30 · **Status:** accepted
+
+**Decision.** `agentfw compile-scopes` writes one JSONL record per (scenario, variant,
+compiler, seed) — effects, constraints, open questions, the prompt digest, the raw response,
+usage and latency — and that file is committed. E-01b reads it. No experiment downstream of
+the compiler ever calls a model.
+
+**Reasoning.** E-01b replays 702 episodes over 86 distinct utterances; compiling inside the
+replay would repeat every compilation hundreds of times, cost real money on every re-run,
+and smear the compiler's sampling variance through the results instead of measuring it.
+Compiling once and committing the output keeps the replay reproducible from the repository
+with no key and no dollars — the same property that makes E-01a reproducible — and puts
+compiler variance where it belongs, as a reported number across seeds.
+
+It also makes the artifact auditable. A compiled scope that nobody can inspect is an
+assertion; one with its prompt digest and raw response beside it is evidence.
+
+**Cost.** The artifacts are derived data in a repository that otherwise commits derived data
+sparingly. They are small (tens of KB) and they are *inputs* to a later experiment rather
+than outputs of one, which is the distinction that matters.
+
+---
+
+### D-027 — In E-01b the scripted reviewer answers from the gold scope
+**Date:** 2026-08-30 · **Status:** accepted
+
+**Decision.** When `reviewer_oracle: gold`, the scripted human approves an effect class if
+and only if the gold scope for that utterance licenses it. Absence remains refusal. E-01a's
+setting (`contested`, the one-entry oracle) is kept as the default and is what that
+experiment still runs with.
+
+**Why it was not needed before and is needed now.** Under a gold scope the only thing ever
+put to a reviewer is the contested effect, so an oracle that knew about the contested effect
+alone was complete. Under a *compiled* scope the firewall will ask about classes the
+compiler dropped — reads it needed, a draft it did not license — and a reviewer with no
+opinion refuses them all, because not-knowing is treated as not-licensed. That would score
+every recoverable interruption as unrecoverable and would make ASK look worthless for a
+second time, this time as an artifact of the harness rather than a finding.
+
+**Why gold is the right oracle and not a convenience.** The gold scope is the written
+statement of what the utterance licensed, produced by a person applying a rule fixed in
+advance (D-023). "Would this user approve this effect if asked?" and "does the utterance
+license this effect?" are the same question. Using gold to answer the human's side while the
+compiler supplies the machine's side is exactly the separation the experiment needs: the
+label grades, the compiler is graded, and neither is the other.
+
+**Checked, not asserted.** The gold arm of E-01b reproduces E-01a's numbers on every row
+(0.0% / 0.0% / 84.7% / 0.0% ASR / 0.0% FPR-block, 0.60 ASKs per underspecified episode), and
+records 90 ASKs of which 0 were approved. The widened oracle cannot bind when the scope is
+already correct, which is what makes the compiled arms comparable to it.
+
+**Cost of being wrong.** It models a *perfect* reviewer with respect to a label, so it
+overstates what a real human recovers; `reviewer_epsilon` exists to put error back and the
+fatigue model arrives in Phase 4. And it inherits every argument about the gold labels
+themselves, including authoring rule 2 (D-023).
+
+---
+
+### D-028 — E-09 is re-cut: compiler quality moves to Phase 3, and E-01b is the compiled replay
+**Date:** 2026-08-30 · **Status:** accepted
+
+**Decision.** Three naming and sequencing facts, fixed because the handoff carried two
+inconsistencies that would have produced duplicate or missing experiments:
+
+1. **E-09a — intent compiler against the gold scopes — runs in Phase 3**, as the first thing
+   in it. E-09 was written as a Phase 5 component-quality experiment covering the compiler
+   *and* the effect mapper, but ROADMAP Phase 3 deliverable 1 and PROJECT_STATE section 6
+   both require the compiler half immediately, because F-09 makes it the quantity that
+   bounds everything after it. The compiler half becomes **E-09a** and runs now; the effect
+   mapper's confusion matrix stays **E-09b** in Phase 5, where it can be run against the
+   held-out suite.
+2. **E-01b is the compiled-scope replay**, per ROADMAP and PROJECT_STATE. `eval/replay.py`'s
+   docstring used the same name for a *live defended run*, which is a different experiment
+   with a different cost profile and a different purpose.
+3. **The live defended run is E-01c**, and it is not a Phase 3 deliverable. It is the only
+   way to measure BTC and CuP under defense — a replay cannot, because it has no
+   counterfactual trajectory — and it needs an API budget, so it belongs with Phase 4's
+   integration work at the earliest.
+
+**Why this is worth a decision rather than a rename.** Duplicate experiment ids are how a
+result gets reported twice with different numbers, and a missing one is how a deliverable
+quietly disappears between phases. Both were live here.

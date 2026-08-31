@@ -38,3 +38,10 @@ experiments/**/traces/
 # and regenerates in seconds with no API access, so committing 5 MB of it would buy
 # nothing. The reports it produces ARE committed.
 experiments/e01a_deterministic/results/*.jsonl
+
+# E-01b's per-(scope, policy) replay output, for the same reason as E-01a's: derived data,
+# a pure function of the committed episodes plus the committed *compiled scopes*, and it
+# regenerates in about two minutes with no API access. The reports and the comparison ARE
+# committed, and so are E-09a's compiled scopes — those are an *input* to this experiment
+# rather than an output of it (D-026), which is the distinction that decides the rule.
+experiments/e01b_compiled/results/*.jsonl

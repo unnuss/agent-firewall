@@ -320,3 +320,59 @@ def test_effect_with_binding_externality_is_never_local():
         externality=Externality.BINDING_ON_USER,
     )
     assert destination_of(binding) is not Destination.LOCAL
+
+
+# ---------------------------------------------------------------------------
+# F-15: the monitor decides, it does not crash
+# ---------------------------------------------------------------------------
+
+
+def test_a_constraint_that_cannot_be_evaluated_fails_closed_rather_than_raising():
+    """Found by Phase 3, not by Phase 2, and that is the point.
+
+    Every Phase 2 handler was written against bounds a person typed, and a person does not
+    write a naive time window beside an aware timestamp. A *model* does, and comparing the
+    two raises TypeError inside the handler — which took 21 E-01b episodes out mid-decision
+    instead of producing a verdict. An exception escaping the monitor is worse than any
+    verdict it could have returned, because "the guard threw" is not one of ALLOW, ASK or
+    BLOCK and the caller has to invent a meaning for it.
+    """
+    naive_window = Constraint(
+        kind="time_window",
+        applies_to=ec("CREATE", "CALENDAR"),
+        window_start="2026-04-14T00:00:00",  # no timezone
+        window_end="2026-04-15T00:00:00",
+    )
+    effect = Effect(verb=Verb.CREATE, resource_class=ResourceClass.CALENDAR)
+    satisfied, reason = naive_window.check(effect, {"start": "2026-04-14T09:00:00+00:00"})
+    assert satisfied is False
+    assert "timezone" in reason
+
+
+def test_no_constraint_kind_can_make_check_raise():
+    """Totality, over the argument shapes a compiler actually produces: wrong types, empty
+    values, structures the handler did not anticipate. Any of them may deny; none may
+    raise, and none may accidentally allow."""
+    effect = Effect(verb=Verb.SEND, resource_class=ResourceClass.EMAIL, resource_id="x@y.z")
+    hostile_args = [
+        {"to": None},
+        {"to": 42},
+        {"to": {"nested": "object"}},
+        {"start": "not a date"},
+        {"path": 3.14},
+        {},
+    ]
+    constraints = [
+        Constraint(kind="budget", max_usd=None),
+        Constraint(kind="recipient", allowed_recipients=()),
+        Constraint(kind="domain", allowed_domains=()),
+        Constraint(kind="time_window", window_start="2026-04-14", window_end="nonsense"),
+        Constraint(kind="resource_glob", globs=("[",)),
+        Constraint(kind="magnitude", unit=None, max_value=None),
+        Constraint(kind="a kind nobody implemented"),
+    ]
+    for c in constraints:
+        for args in hostile_args:
+            satisfied, reason = c.check(effect, args)
+            assert isinstance(satisfied, bool)
+            assert isinstance(reason, str)

@@ -3,9 +3,24 @@
 **Status:** partly implemented. Sections 6 and 7 (agent loop, sandbox) landed in Phase 1.
 Phase 2 implemented the deterministic half: sections 3 (data model), 4.1 (IntegrityMonitor,
 structural mechanism only), the deterministic part of 4.2 (FlowMonitor), the structural
-gates of section 5, and section 8 (audit and replay). Still design-only: 4.1 mechanism 2
-(the dependency screener), 4.3 (the AuthorizationMonitor), the cost model in section 5, and
-the dashboard. Sections marked *(spike)* must be validated before we commit to them.
+gates of section 5, and section 8 (audit and replay). Phase 3 implemented the IntentCompiler (`agentfw/intent/`, D-025) and the
+measurement around it. Still design-only: 4.1 mechanism 2 (the dependency screener), 4.3
+(the AuthorizationMonitor), the cost model in section 5, and the dashboard. Sections marked *(spike)* must be validated before we commit to them.
+
+**Phase 3 added the IntentCompiler** — the box on the left of the diagram in section 1,
+design-only until now. It is `agentfw/intent/`, it is outside the TCB, and D-025 fixes its
+inputs at the user's turn plus the tool catalogue. Note what that box does *not* do: it
+produces a scope, not a signal, so nothing in section 5's gate ordering changes and no ML
+component has become able to force or overturn a verdict.
+
+**A correction Phase 3 made, from measuring it.** *Section 5's ASK band is described as
+though the only question were how confident we are that the user licensed an effect.* There
+is a second question underneath it, and the placeholder rule cannot see it: whether the
+effect is missing from the scope because the user did not license it or because the
+compiler dropped it. `consequential()` answers the first and is silent on the second, which
+costs 22 of 182 benign actions under an under-granting scope (finding F-10). The cost model
+in section 5 has the right shape — `E[BLOCK] = p · C_block_benign` — and Phase 4 has to
+actually implement that term rather than inherit the Phase 2 predicate.
 
 **Two corrections Phase 2 made to what is written below, both from building it.**
 

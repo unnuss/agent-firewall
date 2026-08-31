@@ -13,12 +13,28 @@ turn a missing label into a spectacular-looking security result.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 import yaml
 
 from agentfw.core.scope import Constraint, IntentScope, ec, scope_from_user_turn
 from agentfw.core.types import EffectClass
+
+
+class ScopeSource(Protocol):
+    """Where an episode's starting authority comes from.
+
+    Two implementations: ``GoldScopes`` (hand-written labels, D-023) and
+    ``intent.store.CompiledScopeStore`` (whatever the Phase 3 compiler produced). The
+    replay harness takes either, so the gold and compiled arms of E-01b differ in exactly
+    one object and nothing else — which is what makes the delta between them attributable
+    to the compiler rather than to the harness.
+    """
+
+    def scope_for(self, scenario_id: str, variant_id: str, objective: str) -> IntentScope: ...
+
+    def covers(self, scenario_id: str, variant_id: str) -> bool: ...
+
 
 # Deliberately *not* under suites/: ``load_suite`` rglobs that directory for scenario
 # YAML, so a scope file living there would be parsed as a malformed scenario.

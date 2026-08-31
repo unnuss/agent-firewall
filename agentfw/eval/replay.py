@@ -26,8 +26,11 @@ asked the user, tried another tool, or given up — and this harness cannot know
   another tool and we want to see that, but they are counted separately so the two
   populations are never silently mixed.
 
-The counterfactual gap is the reason a live defended run (E-01b) is a separate experiment
-rather than a footnote here.
+The counterfactual gap is the reason a live defended run (**E-01c**) is a separate
+experiment rather than a footnote here. It is not E-01b: E-01b is this same replay with
+compiled scopes in place of gold ones (D-028), which costs nothing and answers a different
+question — what the *compiler's* errors do to the verdicts. E-01c needs an API budget and
+is the only thing that can measure BTC and CuP under defense.
 """
 
 from __future__ import annotations
@@ -46,7 +49,7 @@ from agentfw.core.scope import IntentScope
 from agentfw.core.types import ProposedAction, Verdict
 from agentfw.eval.runner import EpisodeResult, load_results
 from agentfw.eval.scenario import Scenario, load_suite
-from agentfw.eval.scopes import GoldScopes
+from agentfw.eval.scopes import GoldScopes, ScopeSource
 from agentfw.firewall import build_firewall
 from agentfw.policy.ask import ScriptedReviewer
 from agentfw.policy.combinator import PolicyConfig
@@ -116,6 +119,19 @@ class ReplayConfig:
     reviewer_epsilon: float = 0.0
     # A reviewer is present unless we are measuring pure deny-by-default.
     with_reviewer: bool = True
+    # What the scripted human knows (D-027).
+    #
+    #   "contested"  E-01a's setting: the harness knows the truth about the scenario's
+    #                contested effect and nothing else, because under a gold scope nothing
+    #                else is ever put to the reviewer.
+    #   "gold"       E-01b's setting: the reviewer answers about *any* effect class, from
+    #                the gold scope — the statement of what the utterance licensed. A
+    #                compiled scope asks about classes gold contains and the reviewer says
+    #                yes; that is exactly the utility ASK exists to recover (F-09), and
+    #                without it every under-granted read would be scored as unrecoverable.
+    #
+    # Absence is still denial in both settings: a class gold does not license is refused.
+    reviewer_oracle: str = "contested"
     gates: dict[str, int] = field(default_factory=dict)
 
     def policy(self) -> PolicyConfig:
@@ -131,10 +147,16 @@ def _truncate(text: str) -> str:
 def replay_episode(
     record: EpisodeResult,
     scenario: Scenario,
-    scopes: GoldScopes,
+    scopes: ScopeSource,
     cfg: ReplayConfig,
+    gold: GoldScopes | None = None,
 ) -> ReplayedEpisode:
-    """Re-execute one recorded episode's tool calls behind the firewall."""
+    """Re-execute one recorded episode's tool calls behind the firewall.
+
+    ``scopes`` supplies the authority the episode starts with — the gold labels in E-01a, a
+    compiled scope in E-01b. ``gold`` is never the scope; it is the label the scripted
+    reviewer answers from when ``cfg.reviewer_oracle == "gold"``.
+    """
     variant = scenario.variant(record.variant_id)
     world = World.from_fixture(scenario.world.fixture, scenario.world.overlay, seed=record.seed)
     router = ToolRouter.for_tools(world, scenario.tools)
@@ -153,6 +175,13 @@ def replay_episode(
         if pattern.verb is not None and pattern.resource_class is not None:
             key = f"({pattern.verb.value}, {pattern.resource_class.value})"
             oracle[key] = bool(variant.contested_authorized)
+    if cfg.reviewer_oracle == "gold":
+        if gold is None:
+            raise ValueError("reviewer_oracle='gold' needs the gold scopes to answer from")
+        licensed = gold.scope_for(scenario.id, variant.id, record.utterance)
+        # A class gold licenses is one the user would say yes to; a class it does not
+        # license stays absent, and absence is refusal in ``Firewall._ground_truth``.
+        oracle.update({str(k): True for k in licensed.authorized_effects})
 
     firewall = build_firewall(
         scope=scope,
@@ -268,11 +297,13 @@ def replay_all(
     records: Iterable[EpisodeResult],
     cfg: ReplayConfig,
     *,
-    scopes: GoldScopes | None = None,
+    scopes: ScopeSource | None = None,
+    gold: GoldScopes | None = None,
     scenarios: dict[str, Scenario] | None = None,
 ) -> list[ReplayedEpisode]:
     load_all()
-    scopes = scopes or GoldScopes.load()
+    gold = gold or GoldScopes.load()
+    scopes = scopes or gold
     if scenarios is None:
         scenarios = {}
         for suite in ("af_auth", "af_inject", "benign"):
@@ -287,7 +318,7 @@ def replay_all(
         if record.error:
             continue  # a failed provider call has no trajectory to replay
         try:
-            out.append(replay_episode(record, scenario, scopes, cfg))
+            out.append(replay_episode(record, scenario, scopes, cfg, gold))
         except Exception as exc:  # a crashed replay is data, not a lost run
             out.append(
                 ReplayedEpisode(

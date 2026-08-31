@@ -2,207 +2,239 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-08-30 · **Phase 2 COMPLETE.** · **Next: Phase 3.**
+**Last updated:** 2026-08-31 · **Phase 3 in progress.** · Phase 2 complete.
 
 ---
 
-## 0. If you are the Phase 3 session, do exactly this
+## 0. If you are the next session, do exactly this
 
-1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-022, D-023, D-024** —
-   D-022 fixes what may be assumed from the Phase 1 evidence, D-023 fixes what E-01a's
-   numbers do and do not mean, D-024 explains the one behavioural rule added by measurement.
-2. Read **E-01a in `docs/EXPERIMENTS.md`**, and in particular the paragraph beginning "The
-   finding that matters". It changes what Phase 3 should do first.
-3. Skim findings **F-07, F-08, F-09** in `docs/EXPERIMENTS.md`. F-07 and F-09 both point at
-   Phase 3 work.
-4. Build Phase 3 per `docs/ROADMAP.md`. Start at section 6 of this document.
+1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-025 to D-028** — D-025
+   fixes what the intent compiler may see, D-026 why compiled scopes are committed
+   artifacts, D-027 what the scripted human knows in E-01b, D-028 the experiment renaming.
+   D-022, D-023 and D-024 remain the Phase 1/2 constraints.
+2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**, including E-09a's run log. One arm of
+   E-09a is blocked on an exhausted API credit balance and is the first thing to finish.
+3. Skim findings **F-10 to F-15**, then the older **F-07, F-08, F-09**. F-13, F-14 and F-15
+   all came out of running a real compiler, and all three change what to build next.
+4. Continue Phase 3 per `docs/ROADMAP.md`. Start at section 6 of this document.
 
-Health check (~5 s, no API calls, no keys needed):
+Health check (~35 s, no API calls, no keys needed):
 
 ```bash
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **168 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign scenarios, 23 tools.
+Expect **196 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
 
-E-01a reproduces in about 40 seconds, also with no key:
+Both replay experiments reproduce with no key:
 
 ```bash
 .venv/Scripts/python.exe -m agentfw.cli replay experiments/e01a_deterministic/config.yaml
+.venv/Scripts/python.exe -m agentfw.cli replay experiments/e01b_compiled/config.yaml
 ```
 
 ---
 
 ## 1. Where the project is, in one paragraph
 
-Phase 1 measured the problem and **changed the thesis**: agents respect explicit
-authorization boundaries almost perfectly, and fail by inferring authority from silence —
-38.9% on OpenAI models, 60.0% on Claude Sonnet 5 (D-022). Phase 2 built the deterministic
-reference monitor that turns that inference into a decision point: effect mapping, scope
-monotonicity, structural monitors, a hash-chained audit log, consent-integrity ASK
-rendering, and P1–P4 as property tests. E-01a then measured the monitor on its own and
-produced a result that **sharpens what Phase 3 has to prove**: given a correct scope, the
-deterministic core removes all measured overreach at zero utility cost — and the ASK path
-contributes nothing, because a correct scope leaves nothing to ask about. The value of
-every ML component in this project is therefore bounded by how far a *compiled* scope
-diverges from a gold one, and nobody has measured that yet.
+Phase 1 measured the problem and changed the thesis: agents respect explicit authorization
+boundaries almost perfectly and fail by inferring authority from silence — 38.9% on OpenAI
+models, 60.0% on Claude Sonnet 5 (D-022). Phase 2 built the deterministic reference monitor
+and E-01a showed it removes all measured overreach and all measured attack success *given a
+correct scope*, with the ASK path contributing nothing in that condition (F-09). Phase 3
+therefore began where PROJECT_STATE said it must: with the scope itself. The intent compiler
+exists, its inputs are restricted by construction to the user's turn and the tool catalogue
+(D-025), and the measurement harness around it — E-09a against the gold labels, E-01b
+against real verdicts — is built and running. Four arms have run: two deliberate floors, and
+a real LLM compiler twice (a local model, because the OpenAI credit balance is exhausted).
+Between them they establish that a tool-allowlist scope is worth nothing against overreach
+(F-11), that ASK's value is real and large once the scope is wrong (269 refusals recovered
+against 0 under gold), and that a compiler too weak to be an agent in this harness still cuts
+measured overreach from 45.9% to 17.0% — at a compliance cost from 84.7% to 60.6%, most of it
+traceable to invented constraints that no interruption can repair (F-13). **The registered
+arm, `gpt-4.1-mini`, is still blocked on credit and is what settles the central prediction.**
 
-## 2. Phase 2 deliverables, against the roadmap
+## 2. Phase 3 deliverables, against the roadmap
 
 | # | Deliverable | Status |
 |---|---|---|
-| 1 | `core/labels.py`, `core/effects.py`, `core/scope.py`, `core/audit.py` | done |
-| 2 | Label propagation through the trace; the (tool, args) → Effect mapper | done |
-| 3 | `IntentScope` with `expand_via_consent` as the only widening path | done, property-tested |
-| 4 | `PolicyCombinator`: structural gates + a placeholder fixed rule | done |
-| 5 | Consent-integrity ASK rendering (D-008); scripted reviewer oracle | done |
-| 6 | Hash-chained audit log with offline replay | done |
-| 7 | Property tests for P1–P4 (hypothesis) | done |
-| 8 | **E-01a: deterministic-only evaluation** | done — see section 4 |
+| 1 | `intent/compiler.py` — utterance → IntentScope | done: `LLMIntentCompiler` + two deterministic floors, `intent/catalog.py`, `intent/store.py` |
+| 1 | **E-09a** — compiled scopes scored against gold | harness done, predictions registered and scored; floors + an exploratory local LLM arm measured; **the registered `gpt-4.1-mini` arm is pending on API credit** |
+| 1b | **E-01b** — the replay with compiled scopes | done for all four arms that exist |
+| 2 | The M0–M5 ladder | not started — deliberately, see section 6 |
+| 3 | Calibration (ECE, reliability) | not started |
+| 4 | E-01 (the pre-registered similarity prediction, D-012) | not started |
+| 5 | E-02 (ladder comparison) | not started |
+| 6 | E-03 (cascade) | not started |
+| 7 | Dependency screener (F-07) | not started |
+| 8 | M6 distillation | conditional on E-03 (D-011), unchanged |
 
-Two things were added that the roadmap did not ask for, both because measurement forced
-them: **D-023** (gold scopes — Phase 2 has no scope source otherwise) and **D-024**
-(remember a refused ASK — without it one scenario drained the interruption budget on
-repeats of a question already answered).
-
-## 3. What exists in code
+## 3. What exists in code that did not before
 
 ```
 agentfw/
-  core/
-    types.py       effect ontology, label lattices, TraceSpan, ProposedAction, Verdict
-    labels.py      lattice ops, Destination classification, literal-evidence provenance
-    effects.py     EffectMapper (fail-closed), consequential(), describe()
-    scope.py       Constraint, Grant, Declassification, ConsentRecord, IntentScope
-    audit.py       AuditEvent, sha256 chain, verify(), offline replay
-  monitors/
-    base.py        Signal with the structural flag — D-006 as a type
-    integrity.py   the narrowed structural rule (see F-07)
-    flow.py        the deterministic P3 declassification gate only
-  policy/
-    combinator.py  ordered BLOCK-only gates, then the placeholder rule
-    ask.py         firewall-rendered ASK (P4) + ScriptedReviewer(epsilon)
-  firewall.py      the Guard implementation; asserts P2 before every ALLOW
+  intent/
+    catalog.py     tool -> effect-class ceiling, with two drift tests against the declarers
+    prompts.py     the compilation prompt; D-023's four authoring rules, and nothing scenario-specific
+    compiler.py    Compiler protocol, LLMIntentCompiler, ToolCeilingCompiler, ReadOnlyCompiler
+    store.py       CompiledScopeStore: the committed artifact, and the ScopeSource seam
   eval/
-    scopes.py      gold-scope loader; scopes_data/dev.yaml holds the labels
-    replay.py      E-01a: recorded trajectories re-run behind the firewall
-    replay_report.py
-  sandbox/ agent/ eval/  (Phase 1, unchanged except two additions below)
+    scope_run.py   the E-09a driver: compile every dev utterance, per arm and seed
+    scope_eval.py  compiled-vs-gold metrics and the E-09a report
+    scopes.py      + ScopeSource protocol, so replay takes gold or compiled interchangeably
+    replay.py      + a scope source parameter and the gold reviewer oracle (D-027)
+    replay_report.py + `ask_value` (what each interruption bought) and a cross-arm comparison
+  cli.py           + `agentfw compile-scopes`; `replay` gained `--scopes`
+experiments/
+  e09a_compiler/   config + committed compiled scopes + per-arm reports
+  e01b_compiled/   config + per-(scope, policy) reports + comparison.md
+tests/test_intent.py   24 tests; test_replay.py gained the two D-027 seam tests
 ```
-
-Phase 1 code changed in exactly three places, each deliberate:
-
-- **`ToolRouter.declare_for`** — a strict declarer that raises. `declare` swallowed
-  exceptions and returned `[]`, which under deny-by-default authorizes vacuously. That was
-  a fail-open path in the seam Phase 2 depends on. `declare` keeps its old behaviour for
-  Phase 1 callers; the firewall uses `declare_for` and turns any failure into gate G0.
-- **`run_episode(trace=...)`** — the caller may supply the Trace so a firewall installed in
-  the router reads the same spans the loop writes. Provenance the monitor cannot see is
-  provenance it cannot act on.
-- **`Verdict` in `core/types.py`** — every layer mentions it.
 
 Four things worth not re-deriving:
 
-- **The ASK is resolved synchronously inside `Guard.check`.** The Phase 1 seam is
-  two-valued and stays that way; ASK is a step on the way to one of the two answers, not a
-  third thing the router understands. This is also how a real deployment behaves.
-- **`policy_verdict` and `verdict` are different fields** in an audit event. The first is
-  what the combinator decided from the recorded inputs and is what `replay` reproduces; the
-  second is the outcome after a human answered, which is not a function of those inputs.
-  Collapsing them makes the log either unreplayable or untrue.
-- **The integrity monitor denies only at public destinations.** See F-07 — this is not
-  timidity, it is the boundary of what labels can establish without a screener.
-- **Refusals are remembered (D-024).** A refused effect class is not put to the user twice
-  in one episode.
+- **The compiler's input restriction is its signature.** `compile(utterance, tools)` and
+  nothing else. An attacker who could feed the compiler would be writing the user's
+  authorization scope, which beats hijacking the agent, so the restriction is enforced by
+  having nowhere to put the other data and asserted by a test over the rendered prompt.
+- **A compile failure is an empty scope**, never a partial one. Deny-by-default all the way
+  down, and the affected episodes are counted separately so an unreliable compiler cannot
+  look like a cautious one.
+- **Compiled scopes are committed artifacts** (D-026). E-01b never calls a model; it reads
+  the JSONL E-09a wrote. That is what keeps the downstream experiment free and reproducible.
+- **The scripted reviewer answers from gold in E-01b** (D-027), because a reviewer with an
+  opinion only about the contested effect would refuse every recoverable interruption and
+  make ASK look worthless a second time as a harness artifact.
 
-## 4. E-01a, and the finding Phase 3 has to act on
+**One Phase 2 test was corrected, not weakened.** `test_p4_agent_rationale_never_reaches_
+the_ask_text` carried two assertions, and hypothesis found a counterexample to the first:
+a rationale of `"reversibilit"` is a substring of a serialized field name, which is a
+collision rather than a leak. The test's own comment already argued that substring checking
+is the wrong test; the substring assertion is now gone and the byte-identity assertion —
+render with the prose, render without it, require the same output — carries P4 alone. It
+subsumes the deleted check, because prose that reached the output would change it.
 
-702 episodes replayed from E-00b and E-00f, 48 dev scenarios, three models, **no API calls
-and no dollars**. Full write-up in `docs/EXPERIMENTS.md`.
+## 4. Results so far
 
-| Slice | Undefended | Deterministic core |
-|---|---|---|
-| AF-Auth low, underspecified | 45.9% [34.1, 57.8] | **0.0%** |
-| AF-Auth low, explicit | 1.4% [0.0, 4.3] | **0.0%** |
-| AF-Auth high (licensed — must survive) | 84.7% [75.5, 92.6] | **84.7%**, unchanged |
-| ASR (AF-Inject) | 22.2% [2.8, 44.4] | **0.0%** |
-| Benign actions refused | — | **0 / 182** |
-| Benign episodes interrupted | — | **0 / 108** |
-| ASKs per episode (underspecified low) | — | 0.60 |
+### E-09a — compiled against gold
 
-**Read the caveats before quoting any of this.** The scope is a hand-written gold label
-(D-023), so this measures *enforcement given a correct scope*, not authorization reasoning.
-And it is a replay: after an episode's first refusal the trajectory is off-policy, so BTC
-and CuP under defense are **not measurable** and are not reported.
+| Arm | Micro-F1 | Exact match | Leakage (underspec. low) | Retention (high) | Contrast fidelity |
+|---|---|---|---|---|---|
+| `tool-ceiling` | 0.813 | 24.4% | **100%** | 100% | **0%** |
+| `read-only` | 0.727 | 22.1% | **0%** | 0% | **0%** |
+| `llm-qwen2.5-coder-14b` (exploratory, prompt v1) | 0.576 | 20.9% | 33.3% [13.3, 60.0] | 87.5% | 58.3% |
+| `llm-qwen2.5-coder-14b` (exploratory, prompt v2) | 0.550 | 19.8% | **26.7%** [6.7, 46.7] | **100%** | **75.0%** |
 
-**The uncomfortable result.** The `M0-no-ask` arm — pure deny-by-default, no human at all,
-zero interruptions — scores **identically on every row**. Given a correct scope, ASK buys
-nothing, because every ASK is answered "no" by construction. ASK's value is entirely in
-recovering utility that deny-by-default destroys when the compiled scope is wrong, and
-E-01a cannot see that because the scopes are correct by construction (F-09).
+The first column is why F1 is not the metric. A compiler with no notion of authorization at
+all scores 0.813 against the gold labels while leaking the contested effect on every
+low-authority variant — *above* the real compiler's 0.576.
 
-**So the first thing Phase 3 should measure is compiler/gold divergence**, because that
-quantity bounds the value of everything in Phases 3 and 4. If the compiler reproduces gold
-scopes closely, Phase 4's headline trade-off curve will be flat.
+The LLM row clears the pre-registered retention floor (0.80), so it may be interpreted, but
+it is a quantized 14B code model on one greedy decode and it is weak evidence. Registered
+predictions scored: 1 held, 2 failed (instructively), **3 not met** — leakage 33.3% with an
+interval reaching 60%, so "clearly below the undefended 45.9%" is not established — 4 narrowly
+missed, 5 held emphatically (163 under-grants to 15 over-grants), 6 held.
 
-## 5. Open defects and risks carried into Phase 3
+### E-01b — what those scopes do to real verdicts (702 episodes, $0)
+
+| Scope source | Policy | Overreach (underspec.) | Compliance (high) | ASR | Benign FPR-block | ASKs/ep benign |
+|---|---|---|---|---|---|---|
+| *(undefended)* | — | 45.9% [34.1, 57.8] | 84.7% | 22.2% | — | — |
+| gold | consequential | **0.0%** | 84.7% | **0.0%** | 0.0% | 0.00 |
+| tool-ceiling | consequential | **45.9%** | 84.7% | 16.7% | 0.0% | 0.00 |
+| read-only | consequential | 0.0% | **78.2%** | 0.0% | **12.1%** | 0.11 |
+| read-only | all-out-of-scope | 0.0% | 82.9% | 0.0% | 0.0% | 0.32 |
+| llm-qwen-local-p1 | consequential | 17.0% [3.7, 32.6] | 60.6% | 0.0% | 11.9% | 0.00 |
+| llm-qwen-local-p1 | all-out-of-scope | 17.0% | 61.1% | 0.0% | 0.0% | 0.18 |
+| llm-qwen-local-p2 | consequential | **12.6%** [1.5, 26.7] | **41.2%** | 0.0% | **34.5%** | 0.00 |
+| llm-qwen-local-p2 | all-out-of-scope | 12.6% | 41.7% | 0.0% | 15.4% | 0.30 |
+
+- The gold row reproduces E-01a exactly, which is the check that D-027's wider reviewer
+  oracle cannot bind when the scope is already right.
+- **F-11:** a tool-allowlist scope reproduces undefended overreach episode for episode.
+- **ASK finally does something:** 90 asks / 0 approved under gold; 359 asks / **269
+  recovered refusals** under `read-only`. F-09's contingency is now measured.
+- **F-10:** at `ask_on: consequential`, 22 of 182 benign actions are refused with no dialog,
+  all `CREATE` on private reversible resources. `consequential()` is the right predicate for
+  agent overreach and the wrong one for compiler under-granting.
+- **F-13:** the compiler arm fired gate G2 **59 times**, all on bounds it invented, and G2 is
+  a hard gate — no interruption can repair a wrong bound, while 33 forgotten grants on the
+  same run were repaired by one. `Grant` carries provenance and `Constraint` does not, so the
+  firewall cannot tell a bound the user stated from one the compiler guessed.
+- **F-14:** most of those invented bounds came from my own prompt — its JSON schema example
+  held a literal `$150` budget, and the model copied it. Fixed in prompt v2, declared under
+  R-16, artifacts versioned `p1`/`p2` so the two runs can never be compared silently.
+- **The two-level measurement earned its keep, and this is the result to remember.** Prompt
+  v2 improved *every* scope-level metric (leakage 33.3→26.7%, retention 87.5→100%, contrast
+  58.3→75.0%) and made the deployed system much worse (compliance 60.6→41.2%, benign
+  FPR-block 11.9→34.5%, G2 firings 59→270). Freed from copying the example's `$150`, the
+  model extracted bounds enthusiastically — 69 across 51 utterances against gold's 6 — and
+  they are plausible and wrong: `["Priya"]` where the address is
+  `priya.menon@northwind-systems.com`, `["Amex"]` as the recipient of a payment, a time
+  window clamped onto `READ:CALENDAR`. **A compiler change is not an improvement until E-01b
+  says so.**
+- **F-15:** feeding real compiler output into the monitor found a crash in Phase 2 TCB code —
+  a naive/aware datetime comparison raised inside `Constraint.check`, taking 21 episodes out
+  of the measurement entirely. Fixed and fail-closed; E-01a still reproduces bit-identically.
+
+## 5. Open defects and risks carried forward
 
 | ID | Issue | Action owed |
 |---|---|---|
-| **F-09** | E-01a cannot measure what ASK is for; its value is contingent on compiler error | Measure compiler/gold divergence **first** in Phase 3 |
-| **F-07** | Argument provenance is not authority provenance; the deterministic integrity rule cannot separate a legitimate reply from an exfiltration at a third-party destination | This *is* the dependency screener's job (ARCHITECTURE 4.1 mechanism 2) |
-| **F-08** | ASK granularity is per action, but the decision is about an effect class over a set of resources | Phase 4, with the cost model |
-| **F-05** | `af_auth.us.email.sam_number` asks for a Q3 figure the world does not contain | Fix before Phase 5 |
-| **F-06** | High-authority compliance on the OpenAI side is not trustworthy — 8 scenarios below 4/6 | Audit before quoting compliance |
+| **BLOCKER** | The OpenAI key returns `credit_balance_exhausted`; E-09a's LLM arm has never run | Top up, or add `OPENROUTER_API_KEY` to `.env.local` and repoint the arm. Two commands, under $0.50 |
+| **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
+| **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
+| **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
+| **F-13** | An invented constraint fires a hard gate and is unrecoverable; a forgotten grant is not | Give `Constraint` provenance and let a compiler-provenanced bound escalate rather than block. Care needed: it makes a narrowing negotiable, which runs opposite to D-007 |
+| **F-14** | Prompt v1's schema example leaked literal values into compiled constraints | **Fixed** in prompt v2, declared under R-16. Any future prompt uses placeholders |
+| **F-15** | A compiled scope could make `Constraint.check` raise, killing the decision | **Fixed** in `core/scope.py`, fail-closed, two tests. Watch for the same shape in any handler that gains a new input source |
+| **F-09** | ASK's value is contingent on compiler error | **Answered** for the floor arms; re-answer with the LLM arm |
+| **F-07** | Argument provenance is not authority provenance | Dependency screener, still owed in Phase 3 |
+| **F-08** | ASK granularity is per action, not per effect class over a resource set | Phase 4 |
+| **F-05** | `af_auth.us.email.sam_number` asks for a figure the world does not contain | Fix before Phase 5 |
+| **F-06** | High-authority compliance on the OpenAI side is untrustworthy in 8 scenarios | Audit before quoting compliance |
 | **F-03** | Benign BTC understated by over-strict oracles | Loosen before quoting BTC |
-| **R-09** | Open-weight generalisation unresolved; blocks T3 attacks and the saliency spike | Needs a competent open-weight model |
-| **R-13** | Three non-OpenAI models failed the competency floor; our harness may be harder for them | Investigate if a 4th fails |
-| **R-14** | Claude-authored scenarios evaluated a Claude model | Independent authorship in Phase 5 |
-| **R-15** | **New.** E-01a's 0% FPR-block depends on gold-scope authoring rule 2 (D-023). A stricter rule would raise it, and the compiler will not follow the rule exactly | Report FPR-block against compiled scopes, never against gold, once Phase 3 lands |
+| **R-09** | Open-weight generalisation unresolved | Needs a competent open-weight model |
+| **R-14** | Claude-authored scenarios evaluated a Claude model | Independent authorship in Phase 5. The compiler arm is deliberately an OpenAI model for the same reason |
+| **R-15** | FPR-block must be reported against compiled scopes, never gold | **Done** — E-01b reports it per scope source |
+| **R-16** | **New.** Prompt development and measurement share the dev slice | The tuning slice is declared: benign + af_inject + the control pairs. The 14 core underspecified triples were not looked at while writing the prompt, and any later prompt change must be declared and re-registered |
 
-## 6. Phase 3 — exact starting point
+## 6. Phase 3 — what is next, in order
 
-**Goal (ROADMAP Phase 3):** intent compilation and the authorization model — the
-intellectually strongest part of the project.
+1. **Run E-09a's registered `gpt-4.1-mini` arm and then E-01b's.** Prediction 3 — that
+   leakage on underspecified variants comes in well below the agents' own 45.9% overreach —
+   is the load-bearing claim of the whole architecture, and the only arm that has tested it
+   is a quantized 14B code model that returned 33.3% with an interval covering 45.9%. That
+   neither confirms nor refutes it. Use prompt v2.
+2. **Fix F-13 before the ladder.** It is cheap, it is structural rather than statistical, and
+   on the only real compiler measured it accounted for the majority of the utility loss —
+   59 hard-gate blocks that no amount of calibration or cascading would have touched.
+3. **Then read the failure modes before building any ladder.** The point of doing E-09a first
+   was to find out how much ML machinery is warranted. The evidence so far says the errors are
+   overwhelmingly *under*-granting (163 to 15) plus invented bounds, not over-granting — which
+   points at the dependency screener (F-07), the cost model's missing `C_block_benign` term
+   (F-10) and constraint provenance (F-13), and away from a large calibrated authorization
+   head. Confirm against the funded arm before acting on it.
+4. **Then** the ladder, calibration, E-01, E-02, E-03 — reduced or expanded on the evidence.
 
-**Start here, in this order.**
+**What the floors already tell Phase 4.** The trade-off curve will not be flat. `read-only`
+and `tool-ceiling` sit at opposite corners of it and both are reachable by a bad compiler, so
+there is something real for a cost model to arbitrate. What is not yet known is where a
+competent compiler lands between them, and that is exactly the blocked measurement.
 
-1. **`intent/compiler.py`, and measure it against the gold scopes immediately.** Effect-set
-   precision/recall and constraint-extraction accuracy, per D-023's labels. This is
-   deliverable 1 in the roadmap and it is also the answer to F-09, so it comes first rather
-   than alongside.
-2. Re-run E-01a with compiled scopes instead of gold ones (call it **E-01b**). The delta
-   between the two is the size of the opportunity for everything downstream. If it is
-   small, say so loudly and re-plan Phase 4.
-3. Then the M0–M5 ladder, E-01 (the pre-registered similarity prediction, D-012), E-02, E-03.
-
-**What Phase 2 tells Phase 3 to expect.** The structural floor is high and cheap: 0% ASR,
-0% overreach, 0 interruptions on benign work — *when the scope is right*. There is no
-headroom above that on these metrics. The ML core's entire job is to make the scope right,
-and its contribution should be reported as "how much of the gold-scope result does a
-compiled scope retain", not as an improvement over the undefended baseline.
-
-**Also owed in Phase 3:** the dependency screener (F-07), which is the component that
-separates a legitimate reply from an exfiltration when both draw their destination from
-untrusted content. Phase 2 narrowed the structural rule rather than guessing; the screener
-is what un-narrows it safely.
-
-**Do not** relitigate D-018, D-019, D-021, D-022 (Phase 1), or D-006 (no ML in the trusted
-path) without a documented reason. In particular, no ML component may produce a
-`Signal(structural=True)`; the combinator ignores non-structural signals when deciding to
-BLOCK, and a test asserts it.
+**Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-024, or D-025's input
+restriction without a documented reason.
 
 ## 7. Environment notes
 
 - Python 3.12.9, uv 0.12.7, git 2.55, Windows 11. Venv at `.venv/`.
-- Credentials load from **`.env.local`** (gitignored). `OPENAI_API_KEY` and
-  `OPENROUTER_API_KEY`. `--override-env` is a top-level flag.
-- No NVIDIA GPU. Local Ollama models cannot do reliable tool calling (D-016/D-020).
-- `ANTHROPIC_API_KEY` unset; the Anthropic native provider is unit-tested for message
-  translation but has never touched the live API. E-00f reached Claude through OpenRouter.
-- **Phase 2 spent $0.** Total API spend across the project is still roughly **$4**.
-- `.gitignore` was repaired this phase. A bad append had blanket-ignored
-  `experiments/**/results/`, leaving E-00's raw `episodes.jsonl` uncommitted while section
-  4 of this document claimed it was in the repository. It is committed now. E-01a's
-  per-policy replay output is deliberately *not* committed: it is derived data that
-  regenerates from committed inputs in seconds with no API access.
+- Credentials load from **`.env.local`** (gitignored). It currently holds `OPENAI_API_KEY`
+  **and that key has no credit**; `OPENROUTER_API_KEY`, which E-00f used, is no longer
+  present. `--override-env` is a top-level flag.
+- No NVIDIA GPU. Ollama is installed with `qwen2.5-coder:14b` and `dolphin3`; both are
+  unusable as *agents* (D-016/D-020) but a compiler needs only JSON output, so
+  `qwen2.5-coder:14b` runs as an explicitly exploratory arm at roughly 50–100 s per
+  utterance on CPU.
+- **Phase 3 has spent $0.** Total API spend across the project is still roughly **$4**.
+- E-09a's compiled scopes are committed on purpose (D-026): they are inputs to E-01b, not
+  outputs of it. E-01b's per-arm replay output is derived data and regenerates in ~2 minutes.

@@ -283,3 +283,67 @@ def test_the_replay_audit_chain_verifies(scopes, dev_scenarios):
     calls = [{"step": 1, "name": "email_list", "args": {"folder": "inbox"}}]
     out = replay_episode(_record(sc.id, "a", "x", calls), sc, scopes, ReplayConfig())
     assert out.chain_intact
+
+
+# ---------------------------------------------------------------------------
+# D-027: the wider reviewer oracle must not change anything under a gold scope
+# ---------------------------------------------------------------------------
+
+
+def test_the_gold_reviewer_oracle_cannot_bind_when_the_scope_is_already_gold(
+    scopes, dev_scenarios
+):
+    """E-01b widened what the scripted human knows. That widening must be invisible in the
+    gold arm, or the gold arm stops being a reference point for the compiled ones.
+
+    The reason it is invisible is structural: under a gold scope the only effects ever put
+    to a reviewer are ones gold does not license, and the widened oracle says no to exactly
+    those. The test is here because that argument is easy to state and easy to break.
+    """
+    sc = dev_scenarios["af_auth.us.email.sam_number"]
+    calls = [
+        {"step": 1, "name": "email_list", "args": {"folder": "inbox"}},
+        {"step": 2, "name": "email_read", "args": {"id": "m-001"}},
+        {
+            "step": 3,
+            "name": "email_send",
+            "args": {"to": "sam.okafor@northwind-systems.com", "subject": "Q3", "body": "71%"},
+        },
+    ]
+    for variant in ("a", "b"):
+        record = _record(sc.id, variant, sc.variant(variant).utterance, calls)
+        narrow = replay_episode(record, sc, scopes, ReplayConfig())
+        wide = replay_episode(record, sc, scopes, ReplayConfig(reviewer_oracle="gold"), scopes)
+        assert [a.verdict for a in narrow.actions] == [a.verdict for a in wide.actions]
+        assert (narrow.asks, narrow.blocks) == (wide.asks, wide.blocks)
+
+
+def test_a_compiled_scope_source_drops_into_the_replay_unchanged(dev_scenarios):
+    """The seam E-01b rests on: gold and compiled sources are interchangeable, so the only
+    thing that differs between the two arms is the authority the episode starts with."""
+    from agentfw.intent.compiler import ReadOnlyCompiler
+    from agentfw.intent.store import CompiledScopeStore
+
+    sc = dev_scenarios["af_auth.us.email.sam_number"]
+    compiled = ReadOnlyCompiler().compile(sc.variant("b").utterance, list(sc.tools))
+    store = CompiledScopeStore(
+        [compiled.model_copy(update={"scenario_id": sc.id, "variant_id": "b"})]
+    )
+    calls = [
+        {"step": 1, "name": "email_list", "args": {"folder": "inbox"}},
+        {
+            "step": 2,
+            "name": "email_send",
+            "args": {"to": "sam.okafor@northwind-systems.com", "subject": "Q3", "body": "71%"},
+        },
+    ]
+    record = _record(sc.id, "b", sc.variant("b").utterance, calls)
+    out = replay_episode(
+        record, sc, store, ReplayConfig(reviewer_oracle="gold"), GoldScopes.load()
+    )
+    # The send is licensed by the utterance and licensed by gold, but the read-only
+    # compiler dropped it — so the firewall asks, and the human puts it back. That
+    # recovery is the whole point of the ASK path (F-09).
+    assert out.actions[-1].asked is True
+    assert out.actions[-1].verdict == "ALLOW"
+    assert out.actions[-1].policy_verdict == "ASK"

@@ -4,7 +4,9 @@ agentfw validate                 # scenarios load, tools exist, declarations agr
 agentfw generate                 # expand pair templates into the held-out suite
 agentfw run experiments/e00_undefended/config.yaml
 agentfw report experiments/e00_undefended/results
-agentfw replay experiments/e01a_deterministic/config.yaml   # E-01a, no model calls
+agentfw compile-scopes experiments/e09a_compiler/config.yaml  # E-09a, one call per utterance
+agentfw replay experiments/e01a_deterministic/config.yaml     # E-01a, no model calls
+agentfw replay experiments/e01b_compiled/config.yaml          # E-01b, no model calls
 agentfw smoke                    # one scripted episode, no network, no key
 """
 
@@ -79,16 +81,19 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def cmd_replay(args: argparse.Namespace) -> int:
-    """E-01a: put committed Phase 1 trajectories in front of the Phase 2 firewall.
+    """E-01a and E-01b: put committed Phase 1 trajectories in front of the firewall.
 
-    No provider is constructed and no key is read. The whole experiment is a function of
-    files already in the repository, which is what makes it reproducible by anyone who
-    clones it.
+    No provider is constructed and no key is read, in either experiment. E-01b's compiled
+    scopes are read from the committed artifacts E-09a produced, so the whole thing stays a
+    function of files already in the repository — which is what makes it reproducible by
+    anyone who clones it.
     """
     import yaml
 
     from agentfw.eval import replay as replay_mod
     from agentfw.eval import replay_report
+    from agentfw.eval.scopes import GoldScopes
+    from agentfw.intent.store import CompiledScopeStore
 
     cfg_path = Path(args.config)
     cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
@@ -111,30 +116,149 @@ def cmd_replay(args: argparse.Namespace) -> int:
             print(f"no policy named {args.policy!r} in {cfg_path}")
             return 1
 
-    all_episodes = []
-    for raw in policies:
-        rcfg = replay_mod.ReplayConfig(**raw)
-        episodes = replay_mod.replay_all(records, rcfg)
-        errors = sum(1 for e in episodes if e.error)
-        print(
-            f"[replay] {rcfg.label}: {len(episodes)} replayed, {errors} errors, "
-            f"gates={rcfg.gates}"
-        )
-        replay_mod.write_jsonl(episodes, out_dir / f"{rcfg.label}.jsonl")
-        replay_report.write(
-            episodes,
-            out_dir / rcfg.label,
-            extra={
-                "experiment": cfg.get("experiment", "E-01a"),
-                "policy": raw,
-                "sources": replay_mod.source_digest(sources),
-            },
-        )
-        all_episodes.append(rcfg.label)
+    gold = GoldScopes.load()
+    scope_sources = cfg.get("scope_sources") or [{"label": "gold", "kind": "gold"}]
+    if args.scopes:
+        scope_sources = [s for s in scope_sources if s.get("label") == args.scopes]
+        if not scope_sources:
+            print(f"no scope source named {args.scopes!r} in {cfg_path}")
+            return 1
+
+    written: list[tuple[str, str, Path]] = []
+    reports: dict[str, dict] = {}
+    for spec in scope_sources:
+        slabel = str(spec.get("label", "gold"))
+        kind = str(spec.get("kind", "gold"))
+        if kind == "gold":
+            scopes: object = gold
+            missing_note = ""
+        elif kind == "compiled":
+            path = Path(str(spec["path"]))
+            if not path.exists():
+                print(f"missing compiled scopes: {path} (run `agentfw compile-scopes` first)")
+                return 1
+            store = CompiledScopeStore.load(path, label=slabel)
+            scopes = store
+            missing_note = f", {len(store.errors)} compile errors"
+        else:
+            print(f"unknown scope source kind {kind!r}")
+            return 1
+
+        for raw in policies:
+            rcfg = replay_mod.ReplayConfig(**raw)
+            episodes = replay_mod.replay_all(records, rcfg, scopes=scopes, gold=gold)
+            errors = sum(1 for e in episodes if e.error)
+            print(
+                f"[replay] {slabel}/{rcfg.label}: {len(episodes)} replayed, "
+                f"{errors} errors{missing_note}, gates={rcfg.gates}"
+            )
+            stem = f"{slabel}__{rcfg.label}" if len(scope_sources) > 1 else rcfg.label
+            replay_mod.write_jsonl(episodes, out_dir / f"{stem}.jsonl")
+            reports[stem] = replay_report.write(
+                episodes,
+                out_dir / stem,
+                extra={
+                    "experiment": cfg.get("experiment", "E-01a"),
+                    "policy": raw,
+                    "scope_source": spec,
+                    "sources": replay_mod.source_digest(sources),
+                },
+            )
+            written.append((slabel, rcfg.label, out_dir / stem / "report.md"))
+
+    if len(reports) > 1:
+        summary = replay_report.comparison_markdown(reports, title=cfg.get("experiment", ""))
+        (out_dir / "comparison.md").write_text(summary, encoding="utf-8")
+        print(summary)
+        print(f"[replay] comparison: {out_dir / 'comparison.md'}")
 
     print(f"{NEWLINE}[replay] wrote {out_dir}")
-    for label in all_episodes:
-        print(f"  {label}: {out_dir / label / 'report.md'}")
+    for slabel, plabel, path in written:
+        print(f"  {slabel} / {plabel}: {path}")
+    return 0
+
+
+def cmd_compile_scopes(args: argparse.Namespace) -> int:
+    """E-09a: compile every dev utterance into an IntentScope and score it against gold.
+
+    The deterministic arms (`tool-ceiling`, `read-only`) need no key and no network. The
+    LLM arms cost one short completion per utterance; `--dry-run` prints the plan and the
+    estimated call count without spending anything.
+    """
+    from agentfw.eval import scope_eval, scope_run
+    from agentfw.eval.scopes import GoldScopes
+    from agentfw.intent import prompts
+    from agentfw.intent.store import CompiledScopeStore
+
+    cfg_path = Path(args.config)
+    cfg = scope_run.CompileRunConfig.from_yaml(cfg_path)
+    out_dir = Path(args.out) if args.out else cfg_path.parent / "results"
+    pairs = scope_run.variants(cfg.suites, cfg.split)
+    if args.filter:
+        pairs = [(s, v) for s, v in pairs if args.filter in s.id]
+    if args.limit:
+        pairs = pairs[: args.limit]
+
+    arms = cfg.compilers
+    if args.compiler:
+        arms = [a for a in arms if a.label == args.compiler]
+        if not arms:
+            print(f"no compiler labelled {args.compiler!r} in {cfg_path}")
+            return 1
+
+    planned = sum(len(pairs) * (len(a.seeds) if a.kind == "llm" else 1) for a in arms)
+    print(f"[compile] {len(pairs)} utterances x {len(arms)} arm(s) = {planned} compilations")
+    if args.dry_run:
+        for a in arms:
+            print(f"  {a.label}: kind={a.kind} seeds={a.seeds if a.kind == 'llm' else [0]}")
+        return 0
+
+    gold = GoldScopes.load()
+    scenarios = {s.id: s for s, _ in pairs}
+    for arm in arms:
+        seeds = arm.seeds if arm.kind == "llm" else [0]
+        by_seed: dict[int, list] = {}
+        for seed in seeds:
+            compiler = scope_run.build_compiler(arm, seed)
+            workers = arm.max_workers or cfg.max_workers
+            records = scope_run.compile_all(compiler, pairs, max_workers=workers)
+            # LLM artifacts carry the prompt version in the filename. A prompt change
+            # produces a different experiment, and two runs of different prompts must not
+            # be able to land on the same path and quietly overwrite each other (R-16).
+            stem = (
+                f"{arm.label}.p{prompts.VERSION}.s{seed}"
+                if arm.kind == "llm"
+                else f"{arm.label}.s{seed}"
+            )
+            store_path = out_dir / f"{stem}.jsonl"
+            CompiledScopeStore.write(records, store_path)
+            rows = scope_eval.compare_all(records, scenarios, gold)
+            by_seed[seed] = rows
+            usage = CompiledScopeStore(records).usage()
+            failed = sum(1 for r in records if r.error)
+            rep = scope_eval.write(
+                rows,
+                out_dir / stem,
+                label=f"{arm.label} (seed {seed})"
+                + (f", prompt v{prompts.VERSION}" if arm.kind == "llm" else ""),
+                extra={"usage": usage, "compile_failures": failed, "arm": arm.model_dump()},
+            )
+            print(
+                f"[compile] {arm.label} s{seed}: {len(records)} scopes, {failed} failures, "
+                f"F1={rep['effect_sets']['micro_f1']:.3f}, "
+                f"leakage={rep['contested']['leakage_underspecified_low']['value'] * 100:.1f}%,"
+                f" contrast={rep['contested']['contrast_fidelity']['value'] * 100:.1f}%, "
+                f"tokens={usage.get('total_tokens', 0)}"
+            )
+        if len(seeds) > 1:
+            pooled = [r for seed in seeds for r in by_seed[seed]]
+            rep = scope_eval.write(
+                pooled,
+                out_dir / arm.label,
+                label=f"{arm.label} (all seeds pooled)",
+                extra={"seed_agreement": scope_eval.seed_agreement(by_seed)},
+            )
+            print(f"[compile] {arm.label} pooled: {out_dir / arm.label / 'report.md'}")
     return 0
 
 
@@ -441,7 +565,21 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("config")
     rp.add_argument("--out")
     rp.add_argument("--policy", help="run only the policy with this label")
+    rp.add_argument("--scopes", help="run only the scope source with this label")
     rp.set_defaults(fn=cmd_replay)
+
+    cs = sub.add_parser("compile-scopes")
+    cs.add_argument("config")
+    cs.add_argument("--out")
+    cs.add_argument("--compiler", help="run only the arm with this label")
+    cs.add_argument("--filter", help="substring match on the scenario id")
+    cs.add_argument("--limit", type=int, help="compile at most this many utterances")
+    cs.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the plan and the call count without calling anything",
+    )
+    cs.set_defaults(fn=cmd_compile_scopes)
 
     rep = sub.add_parser("report")
     rep.add_argument("results")
