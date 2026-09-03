@@ -1,0 +1,79 @@
+# E-10 — can the compiler's authority prior be changed at all?
+#
+# Three arms, registered together with their predictions in docs/EXPERIMENTS.md before any
+# of them ran. No arm is adapted in response to another's result: the point is that the
+# three are separable, and if all three fail that is the finding.
+#
+#   agentfw compile-scopes experiments/e10_formulation/config.yaml --compiler <label>
+#
+# Arm 3 holds the prompt at the registered E-09a baseline and changes only the model. It is
+# pinned to `baseline` deliberately and was chosen before arms 1 and 2 ran — pairing a
+# cross-vendor arm with whichever intervention scored best would confound family with
+# formulation and answer neither question.
+
+experiment: E-10
+suites: [af_auth, af_inject, benign]
+split: dev
+max_workers: 6
+
+compilers:
+  # Arm 1. Withholding becomes an explicit act rather than an omission, and the model's own
+  # hedging ("uncertain") becomes an open question rather than a grant.
+  - label: per-class-gpt-4.1-mini
+    kind: llm
+    prompt: per-class
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      # Longer output than the baseline: a verdict and a reason for every candidate class.
+      max_tokens: 1600
+      temperature: 1.0
+
+  # Arm 2. The baseline, plus "return the smallest authority the instruction supports" and
+  # a note naming F-16's exact error: an open question about *how* assumes the *whether*.
+  - label: narrowest-gpt-4.1-mini
+    kind: llm
+    prompt: narrowest
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 900
+      temperature: 1.0
+
+  # Arm 3. Only the model changes. Claude Sonnet 5 is the one cross-family model whose
+  # AGENT-side overreach on this exact slice is already measured (60.0%, E-00f), which makes
+  # this a within-model test of "the compiler inherits the model's prior" rather than an
+  # uninterpretable absolute number. Two seeds to stay inside the stated budget.
+  #
+  # `provider: openai` denotes the OpenAI-compatible WIRE FORMAT. The model is Anthropic's.
+  # Audit `model:` and `base_url:`, never `provider:`.
+  - label: baseline-claude-sonnet-5
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2]
+    # Two capacity fixes after attempt 1, both instrument defects rather than design
+    # changes, and both declared in the E-10 run log:
+    #
+    #   max_tokens  900 -> 2400. The 900 was copied from the gpt-4.1-mini arm, whose median
+    #               completion is 51 tokens. Sonnet's is 469, p90 769, max 890 — i.e. it was
+    #               being truncated against the cap, and a truncated answer parses as no
+    #               JSON and scores as an empty scope. 2400 is roughly 3x the observed p90.
+    #   max_workers 6 -> 2. Six concurrent workers drew HTTP 429 from OpenRouter on 12/86
+    #               and 22/86 calls; the provider's four retries did not clear it.
+    #
+    # Neither touches the prompt, the model, the seeds or the metrics. Attempt 1 is
+    # discarded rather than reported: 23/86 and 34/86 of its scopes were empty for harness
+    # reasons, and an empty scope cannot leak, so its 0.0% leakage measured the cap.
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 2400
+      temperature: 1.0

@@ -93,6 +93,24 @@ finding instead; Phase 3 is where intelligence goes.
 
 ## Phase 3 — Intent compilation and the authorization model (the ML core) — IN PROGRESS
 
+**Status, 2026-08-31 (final for the phase).** All three E-10 arms are done. The
+authority-leakage failure is **one cell of a 2x2, not a law**: changing the formulation moves
+it 53.3% → 0.0% (F-17) and changing the model moves it 53.3% → 10.0% (F-18), and agent-side
+behaviour does not predict compiler-side behaviour. Two configurations reach the gold result
+end to end. **Phase 3 has enough to close the architecture decision and not enough to choose
+a deployment configuration** — that needs the empty 2x2 cell and held-out gold scopes. See
+PROJECT_STATE section 6. The M0-M5 ladder should be re-scoped: the security axis is reachable
+without it, and what remains is the cost axis.
+
+**Status, 2026-08-31 (latest).** E-10 answered the question the re-plan was for: **the
+compiler's authority prior is formulation-dependent** (F-17). A per-class-verdict prompt on
+the same model takes contested leakage 53.3% → 0.0% and reaches the gold-scope result end to
+end (0.0% overreach, 0.0% ASR, 84.3% vs 84.7% compliance). Deliverable 1 is done and the
+security axis is no longer the open problem; the cost axis is (3-7% benign FPR-block, doubled
+ASK burden, 407 under-granted classes). The M0-M5 ladder should be re-scoped around that
+smaller and different estimand — "how likely is it the compiler dropped this class" — rather
+than the calibrated `P(licensed)` it was designed for. One arm of E-10 is still unrun.
+
 **Status, 2026-08-31 (later).** Deliverable 1 is **complete**, and the registered
 `gpt-4.1-mini` arm **falsified prediction 3** — the compiler licenses the contested effect on
 53.3% of underspecified instructions against the undefended agents' 45.9%, because it is the

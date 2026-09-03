@@ -55,6 +55,37 @@ scope_sources:
     kind: compiled
     path: experiments/e09a_compiler/results/llm-gpt-4.1-mini.p2.s3.jsonl
 
+  # E-10 arm 1: the per-class-verdict formulation, all three seeds.
+  - label: perclass-s1
+    kind: compiled
+    path: experiments/e10_formulation/results/per-class-gpt-4.1-mini.per-class-v1.s1.jsonl
+  - label: perclass-s2
+    kind: compiled
+    path: experiments/e10_formulation/results/per-class-gpt-4.1-mini.per-class-v1.s2.jsonl
+  - label: perclass-s3
+    kind: compiled
+    path: experiments/e10_formulation/results/per-class-gpt-4.1-mini.per-class-v1.s3.jsonl
+
+  # E-10 arm 2: the narrowest-sufficient formulation, all three seeds.
+  - label: narrowest-s1
+    kind: compiled
+    path: experiments/e10_formulation/results/narrowest-gpt-4.1-mini.narrowest-v1.s1.jsonl
+  - label: narrowest-s2
+    kind: compiled
+    path: experiments/e10_formulation/results/narrowest-gpt-4.1-mini.narrowest-v1.s2.jsonl
+  - label: narrowest-s3
+    kind: compiled
+    path: experiments/e10_formulation/results/narrowest-gpt-4.1-mini.narrowest-v1.s3.jsonl
+
+  # E-10 arm 3: the cross-vendor baseline. Prompt held fixed at the registered baseline;
+  # only the model changes.
+  - label: sonnet-s1
+    kind: compiled
+    path: experiments/e10_formulation/results/baseline-claude-sonnet-5.baseline-v2.s1.jsonl
+  - label: sonnet-s2
+    kind: compiled
+    path: experiments/e10_formulation/results/baseline-claude-sonnet-5.baseline-v2.s2.jsonl
+
 # Three policies, for one reason each.
 #
 #   consequential    the Phase 2 default: interrupt only where the consequence warrants it.

@@ -46,7 +46,7 @@ from agentfw.core.scope import (
     scope_from_user_turn,
 )
 from agentfw.core.types import EffectClass
-from agentfw.intent import catalog, prompts
+from agentfw.intent import catalog
 
 # The span id the agent loop gives the user's turn (see eval/scopes.py). A compiled grant
 # carries it for the same reason a gold one does: the authority traces to the user's turn,
@@ -73,6 +73,7 @@ class CompiledScope(BaseModel):
     compiler: str
     model: str = ""
     seed: int = 0
+    prompt_variant: str = "baseline"
     prompt_version: int = 0
     prompt_digest: str = ""
     utterance: str = ""
@@ -222,21 +223,34 @@ class LLMIntentCompiler:
     scripted one and the whole component stays runnable with no network.
     """
 
-    def __init__(self, client: Any, *, name: str = "", seed: int = 0) -> None:
+    def __init__(
+        self,
+        client: Any,
+        *,
+        name: str = "",
+        seed: int = 0,
+        variant: Any = None,
+    ) -> None:
         self.client = client
         self.name = name or f"llm:{getattr(client, 'name', 'unknown')}"
         self.seed = seed
+        # Which registered formulation to use (E-10). Defaults to the baseline, so every
+        # artifact produced before E-10 reproduces byte-identically.
+        from agentfw.intent import variants as _variants
+
+        self.variant = variant or _variants.BASELINE
 
     def compile(self, utterance: str, tools: list[str]) -> CompiledScope:
-        messages = prompts.build(utterance, tools)
+        messages = self.variant.build(utterance, tools)
         base = dict(
             scenario_id="",
             variant_id="",
             compiler=self.name,
             model=str(getattr(self.client, "model", getattr(self.client, "name", ""))),
             seed=self.seed,
-            prompt_version=prompts.VERSION,
-            prompt_digest=prompts.digest(utterance, tools),
+            prompt_variant=self.variant.name,
+            prompt_version=self.variant.version,
+            prompt_digest=self.variant.digest(utterance, tools),
             utterance=utterance,
             tools=tuple(tools),
         )
@@ -260,6 +274,8 @@ class LLMIntentCompiler:
                 usage=dict(completion.usage),
                 latency_s=latency,
             )
+        # A formulation may return a different shape; the variant knows how to read it.
+        payload = self.variant.adapt(payload)
         effects, unsupported = _clean_effects(payload.get("effects"), tools)
         return CompiledScope(
             **base,

@@ -24,7 +24,7 @@ from agentfw.core.types import Verb
 from agentfw.eval import scope_eval, scope_run
 from agentfw.eval.scenario import load_suite
 from agentfw.eval.scopes import GoldScopes
-from agentfw.intent import catalog, prompts
+from agentfw.intent import catalog, prompts, variants
 from agentfw.intent.compiler import (
     CompiledScope,
     LLMIntentCompiler,
@@ -412,3 +412,80 @@ def test_seed_agreement_is_one_when_seeds_agree() -> None:
     out = scope_eval.seed_agreement({1: [row], 2: [row]})
     assert out["mean_pairwise_jaccard"] == 1.0
     assert out["identical_fraction"] == 1.0
+
+
+# ---------------------------------------------------------------------------
+# E-10: the registered prompt formulations
+# ---------------------------------------------------------------------------
+
+
+def test_the_baseline_variant_is_byte_identical_to_the_registered_prompt(dev_pairs) -> None:
+    """E-09a's committed artifacts must stay reproducible. If `baseline` drifted by one
+    character, every number already reported would silently belong to a different prompt."""
+    for scenario, variant in dev_pairs[:12]:
+        tools = list(scenario.tools)
+        assert variants.BASELINE.build(variant.utterance, tools) == prompts.build(
+            variant.utterance, tools
+        )
+
+
+def test_every_variant_still_hides_the_label(dev_pairs) -> None:
+    """D-025 applies to every formulation, not just the one it was written for."""
+    for name in variants.VARIANTS:
+        v = variants.get(name)
+        for scenario, variant in dev_pairs:
+            rendered = json.dumps(v.build(variant.utterance, list(scenario.tools)))
+            assert scenario.id not in rendered
+
+
+def test_variants_have_distinct_digests(dev_pairs) -> None:
+    scenario, variant = dev_pairs[0]
+    tools = list(scenario.tools)
+    digests = {n: variants.get(n).digest(variant.utterance, tools) for n in variants.VARIANTS}
+    assert len(set(digests.values())) == len(digests)
+
+
+def test_per_class_grants_only_an_explicit_licensed_verdict() -> None:
+    payload = {
+        "judgements": [
+            {"effect": "READ:EMAIL", "verdict": "licensed", "why": "asked for the figure"},
+            {"effect": "SEND:EMAIL", "verdict": "uncertain", "why": "left open"},
+            {"effect": "DELETE:USER_FILES", "verdict": "not_licensed", "why": "no"},
+        ]
+    }
+    out = variants.PER_CLASS.adapt(payload)
+    assert out["effects"] == ["READ:EMAIL"]
+    assert any("SEND:EMAIL" in q for q in out["open_questions"])
+    assert not any("DELETE:USER_FILES" in q for q in out["open_questions"])
+
+
+def test_per_class_treats_a_malformed_verdict_as_uncertain() -> None:
+    """Deny-by-default applied to the compiler's own hedging: a truncated or garbled answer
+    must not be able to grant anything."""
+    out = variants.PER_CLASS.adapt(
+        {
+            "judgements": [
+                {"effect": "PURCHASE:FINANCIAL"},
+                {"effect": "SEND:EMAIL", "verdict": "probably fine"},
+                {"verdict": "licensed"},
+                "not even a dict",
+            ]
+        }
+    )
+    assert out["effects"] == []
+    assert len(out["open_questions"]) == 2
+
+
+def test_the_per_class_prompt_enumerates_the_candidate_classes() -> None:
+    load_all()
+    tools = ["email_list", "email_send", "payments_charge"]
+    text = variants.PER_CLASS.build("do the thing", tools)[0]["content"]
+    for klass in catalog.classes_for(tools):
+        assert catalog.render(klass) in text
+
+
+def test_the_narrowest_prompt_keeps_the_four_authoring_rules() -> None:
+    """The variants change the framing, never the definition of the target (D-023)."""
+    text = variants.NARROWEST.build("do the thing", ["email_list"])[0]["content"]
+    for rule in ("names it, or names an action", "reversible, invisible", "states a bound"):
+        assert rule in text

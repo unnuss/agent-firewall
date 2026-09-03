@@ -187,7 +187,7 @@ def cmd_compile_scopes(args: argparse.Namespace) -> int:
     """
     from agentfw.eval import scope_eval, scope_run
     from agentfw.eval.scopes import GoldScopes
-    from agentfw.intent import prompts
+    from agentfw.intent import variants as prompt_variants
     from agentfw.intent.store import CompiledScopeStore
 
     cfg_path = Path(args.config)
@@ -222,14 +222,16 @@ def cmd_compile_scopes(args: argparse.Namespace) -> int:
             compiler = scope_run.build_compiler(arm, seed)
             workers = arm.max_workers or cfg.max_workers
             records = scope_run.compile_all(compiler, pairs, max_workers=workers)
-            # LLM artifacts carry the prompt version in the filename. A prompt change
+            # LLM artifacts carry the prompt's identity in the filename. A prompt change
             # produces a different experiment, and two runs of different prompts must not
             # be able to land on the same path and quietly overwrite each other (R-16).
-            stem = (
-                f"{arm.label}.p{prompts.VERSION}.s{seed}"
-                if arm.kind == "llm"
-                else f"{arm.label}.s{seed}"
-            )
+            # The *variant's* version, not the module-level one: an E-10 arm running
+            # `per-class` v1 must not be filed as though it were baseline v2.
+            if arm.kind == "llm":
+                variant = prompt_variants.get(arm.prompt)
+                stem = f"{arm.label}.{variant.name}-v{variant.version}.s{seed}"
+            else:
+                stem = f"{arm.label}.s{seed}"
             store_path = out_dir / f"{stem}.jsonl"
             CompiledScopeStore.write(records, store_path)
             rows = scope_eval.compare_all(records, scenarios, gold)
@@ -240,7 +242,12 @@ def cmd_compile_scopes(args: argparse.Namespace) -> int:
                 rows,
                 out_dir / stem,
                 label=f"{arm.label} (seed {seed})"
-                + (f", prompt v{prompts.VERSION}" if arm.kind == "llm" else ""),
+                + (
+                    f", prompt {prompt_variants.get(arm.prompt).name}"
+                    f" v{prompt_variants.get(arm.prompt).version}"
+                    if arm.kind == "llm"
+                    else ""
+                ),
                 extra={"usage": usage, "compile_failures": failed, "arm": arm.model_dump()},
             )
             print(

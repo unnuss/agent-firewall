@@ -34,6 +34,10 @@ class CompilerConfig(BaseModel):
     kind: str = "llm"  # llm | tool-ceiling | read-only
     model: ModelConfig | None = None
     seeds: list[int] = [1, 2, 3]
+    # Which registered prompt formulation this arm uses (E-10). Arms differ in exactly one
+    # thing, and for the cross-vendor arm that thing is the model, so the prompt is pinned
+    # to the baseline there rather than to whichever variant looks best.
+    prompt: str = "baseline"
     # Per-arm concurrency, overriding the run-level default. It exists because of a real
     # failure: six workers against a CPU-bound local server queue behind each other, every
     # request blows the provider timeout, and 25 of 86 compilations came back as *empty
@@ -83,7 +87,13 @@ def build_compiler(cfg: CompilerConfig, seed: int) -> Compiler:
         extra_body={"response_format": {"type": "json_object"}, **m.extra_body},
         extra_headers=m.extra_headers,
     )
-    return LLMIntentCompiler(client, name=f"llm:{m.id}", seed=seed)
+    # Imported as `prompt_variants` because this module already has a `variants()`
+    # function meaning something else entirely (scenario variants).
+    from agentfw.intent import variants as prompt_variants
+
+    return LLMIntentCompiler(
+        client, name=f"llm:{m.id}", seed=seed, variant=prompt_variants.get(cfg.prompt)
+    )
 
 
 def variants(suites: list[str], split: str) -> list[tuple[Scenario, Any]]:

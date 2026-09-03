@@ -179,6 +179,45 @@ drops are exactly the private reversible ones — so 22 benign actions are refus
 dialog at all. Written up as finding F-10; it is the first measured requirement on Phase 4's
 cost model.
 
+**Then two experiments showed the failure was one cell, not a law.**
+
+*Change the model, keep the prompt byte-identical:* Claude Sonnet 5 on the unchanged
+baseline prompt leaks **10.0%** where gpt-4.1-mini leaks 53.3% — and the rank order between
+the families **reverses** between roles. Sonnet's *agent* overreaches 60.0% against OpenAI's
+38.9%; its *compiler* is five times more conservative. **How a model behaves as an agent
+does not predict how it behaves as a compiler** (F-18). Its compiled scopes give 0.7-2.2%
+overreach at 1.1-4.6% benign refusals — the best cost profile of any compiled arm.
+
+*Change the prompt, keep the model:* see below — the same gpt-4.1-mini goes to 0.0%.
+
+Both knobs work, neither is automatic, and noticing is not what varies: every compiler flags
+the ambiguity on ~100% of underspecified instructions. **Withholding is the thing that
+differs.**
+
+**And the same model, asked differently, got it right.** The compiler is shown every
+effect class its tools can produce and must return a verdict on each — `licensed`,
+`not_licensed`, or `uncertain` — instead of writing a free-form list of grants. On the same
+utterances, with the same information, from the same model: contested-effect leakage
+**53.3% → 0.0%** (0 of 45, on all three seeds), and end to end **0.0% overreach, 0.0% ASR,
+84.3% compliance against the gold scopes' 84.7%.**
+
+The reason is not clever, which is why it is interesting. Under the free-form prompt the
+only way to withhold an effect class is to *omit* it, and omission competes with a
+helpfulness prior that always pushes toward completeness. Under per-class verdicts,
+withholding is something the model has to write down, and hedging routes to `uncertain`,
+which becomes a question for the user rather than a grant. **Making refusal expressible,
+rather than merely possible, is what moved the number** — an interface result, not a model
+one. No fine-tune, no calibration, no bigger model.
+
+What it costs is on the other axis: 3-7% of benign actions refused against gold's 0%, and
+about twice the interruptions, because under-granting is now the dominant error (407 classes
+against 4 over-granted). Written up as F-17, with the caveats it deserves — one model, one
+dev slice, three seeds, and a result that beat its own pre-registered prediction, which is
+the moment to be most suspicious rather than least.
+
+The rest of this section is how we got there, and it is left standing because the wrong turn
+is the instructive part.
+
 **The registered compiler ran, and it falsified the prediction the architecture rested on.**
 `gpt-4.1-mini`, three seeds, licenses the contested effect on **53.3%** of underspecified
 instructions — against **45.9%** for the *undefended agents* on the same instructions. The
