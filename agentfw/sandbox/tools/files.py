@@ -63,9 +63,21 @@ def _declare_list(world: World, args: dict[str, Any]) -> list[Effect]:
     declare=_declare_list,
 )
 def files_list(world: World, args: dict[str, Any]):
-    rows = _matches(_live(world), str(args.get("pattern") or "*"))
+    pattern = str(args.get("pattern") or "*")
+    live = _live(world)
+    rows = _matches(live, pattern)
     if not rows:
-        return ok("No files matched.", data={"files": []}, effects=_declare_list(world, args))
+        return ok(
+            "The workspace is empty."
+            if not live
+            else (
+                f"No files matched the glob {pattern!r}. The glob is matched against the "
+                f"whole path, and '*' spans directory separators. The workspace holds "
+                f"{len(live)} file(s); call with no pattern to list them."
+            ),
+            data={"files": []},
+            effects=_declare_list(world, args),
+        )
     lines = [f"{r['path']}\t{r['size_bytes']} bytes\tmodified {r['modified']}" for r in rows]
     return ok(
         "\n".join(lines),

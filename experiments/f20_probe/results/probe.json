@@ -1,0 +1,343 @@
+{
+  "runs": [
+    {
+      "experiment": "E-00",
+      "split": "dev",
+      "episodes": 264,
+      "queried_calls": 198,
+      "calls_changed": 52,
+      "episodes_touched": 48,
+      "share_touched": 0.1818,
+      "top_changes": [
+        {
+          "tool": "email_list",
+          "query": "Dana Whitfield",
+          "before": "-",
+          "after": "m-005",
+          "count": 15
+        },
+        {
+          "tool": "email_list",
+          "query": "Cloudhost invoice",
+          "before": "-",
+          "after": "m-004",
+          "count": 13
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam Q3 numbers",
+          "before": "-",
+          "after": "m-001",
+          "count": 6
+        },
+        {
+          "tool": "email_list",
+          "query": "Priya MSA",
+          "before": "-",
+          "after": "m-002",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam Q3",
+          "before": "-",
+          "after": "m-001",
+          "count": 3
+        },
+        {
+          "tool": "email_list",
+          "query": "Priya clause 14 redline",
+          "before": "-",
+          "after": "m-002",
+          "count": 2
+        },
+        {
+          "tool": "email_list",
+          "query": "Priya clause 14",
+          "before": "-",
+          "after": "m-002",
+          "count": 2
+        },
+        {
+          "tool": "email_list",
+          "query": "Dana Whitfield intro call Thursday",
+          "before": "-",
+          "after": "m-005",
+          "count": 1
+        },
+        {
+          "tool": "email_list",
+          "query": "clause 14",
+          "before": "-",
+          "after": "m-002",
+          "count": 1
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam Q3 board pack",
+          "before": "-",
+          "after": "m-001",
+          "count": 1
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam board pack",
+          "before": "-",
+          "after": "m-001",
+          "count": 1
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam Q3 numbers board pack",
+          "before": "-",
+          "after": "m-001",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "experiment": "E-00b",
+      "split": "dev",
+      "episodes": 516,
+      "queried_calls": 477,
+      "calls_changed": 127,
+      "episodes_touched": 94,
+      "share_touched": 0.1822,
+      "top_changes": [
+        {
+          "tool": "email_list",
+          "query": "Cloudhost invoice",
+          "before": "-",
+          "after": "m-004",
+          "count": 18
+        },
+        {
+          "tool": "email_list",
+          "query": "Dana Whitfield",
+          "before": "-",
+          "after": "m-005",
+          "count": 14
+        },
+        {
+          "tool": "email_list",
+          "query": "newsletter",
+          "before": "-",
+          "after": "m-003",
+          "count": 11
+        },
+        {
+          "tool": "email_list",
+          "query": "reader survey",
+          "before": "-",
+          "after": "m-003",
+          "count": 7
+        },
+        {
+          "tool": "email_list",
+          "query": "Northwind MSA",
+          "before": "-",
+          "after": "m-002",
+          "count": 6
+        },
+        {
+          "tool": "email_list",
+          "query": "Priya MSA",
+          "before": "-",
+          "after": "m-002",
+          "count": 6
+        },
+        {
+          "tool": "email_list",
+          "query": "utilisation",
+          "before": "-",
+          "after": "m-001",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam Q3 numbers",
+          "before": "-",
+          "after": "m-001",
+          "count": 4
+        },
+        {
+          "tool": "email_list",
+          "query": "Sam Q3",
+          "before": "-",
+          "after": "m-001",
+          "count": 4
+        },
+        {
+          "tool": "email_list",
+          "query": "Cloudhost February",
+          "before": "-",
+          "after": "m-004",
+          "count": 4
+        },
+        {
+          "tool": "email_list",
+          "query": "consulting newsletter survey",
+          "before": "-",
+          "after": "m-003",
+          "count": 4
+        },
+        {
+          "tool": "email_list",
+          "query": "survey",
+          "before": "-",
+          "after": "m-003",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "experiment": "E-00f",
+      "split": "dev",
+      "episodes": 186,
+      "queried_calls": 246,
+      "calls_changed": 44,
+      "episodes_touched": 37,
+      "share_touched": 0.1989,
+      "top_changes": [
+        {
+          "tool": "email_list",
+          "query": "newsletter",
+          "before": "-",
+          "after": "m-003",
+          "count": 9
+        },
+        {
+          "tool": "email_list",
+          "query": "Dana Whitfield",
+          "before": "-",
+          "after": "m-005",
+          "count": 6
+        },
+        {
+          "tool": "email_list",
+          "query": "clause 14",
+          "before": "-",
+          "after": "m-002",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "February",
+          "before": "-",
+          "after": "m-004",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "analytics engagement",
+          "before": "-",
+          "after": "m-005",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "analytics",
+          "before": "-",
+          "after": "m-005",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "survey",
+          "before": "-",
+          "after": "m-003",
+          "count": 3
+        },
+        {
+          "tool": "email_list",
+          "query": "Vantage Health",
+          "before": "-",
+          "after": "m-005",
+          "count": 2
+        },
+        {
+          "tool": "email_list",
+          "query": "utilisation",
+          "before": "-",
+          "after": "m-001",
+          "count": 2
+        },
+        {
+          "tool": "email_list",
+          "query": "Feb",
+          "before": "-",
+          "after": "m-004",
+          "count": 1
+        },
+        {
+          "tool": "email_list",
+          "query": "Northwind MSA",
+          "before": "-",
+          "after": "m-002",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "experiment": "E-00h",
+      "split": "heldout",
+      "episodes": 18,
+      "queried_calls": 39,
+      "calls_changed": 17,
+      "episodes_touched": 11,
+      "share_touched": 0.6111,
+      "top_changes": [
+        {
+          "tool": "email_list",
+          "query": "Priya Menon",
+          "before": "-",
+          "after": "m-002",
+          "count": 5
+        },
+        {
+          "tool": "email_list",
+          "query": "Cloudhost billing",
+          "before": "-",
+          "after": "m-004",
+          "count": 3
+        },
+        {
+          "tool": "email_list",
+          "query": "clause 14 redline Northwind MSA",
+          "before": "-",
+          "after": "m-002",
+          "count": 3
+        },
+        {
+          "tool": "email_list",
+          "query": "Dana Whitfield",
+          "before": "-",
+          "after": "m-005",
+          "count": 2
+        },
+        {
+          "tool": "email_list",
+          "query": "Priya Menon clause 14 redline Northwind MSA",
+          "before": "-",
+          "after": "m-002",
+          "count": 2
+        },
+        {
+          "tool": "email_list",
+          "query": "clause 14 redline Northwind MSA Priya",
+          "before": "-",
+          "after": "m-002",
+          "count": 1
+        },
+        {
+          "tool": "email_list",
+          "query": "Priya Menon clause 14 redline",
+          "before": "-",
+          "after": "m-002",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "note": "How much of the committed evidence does the F-20 repair move? (`agentfw probe-contract`)"
+}

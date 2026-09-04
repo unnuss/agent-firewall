@@ -7,6 +7,7 @@ agentfw report experiments/e00_undefended/results
 agentfw compile-scopes experiments/e09a_compiler/config.yaml  # E-09a, one call per utterance
 agentfw replay experiments/e01a_deterministic/config.yaml     # E-01a, no model calls
 agentfw replay experiments/e01b_compiled/config.yaml          # E-01b, no model calls
+agentfw probe-contract           # F-20: how much committed evidence the repair moves
 agentfw smoke                    # one scripted episode, no network, no key
 """
 
@@ -35,6 +36,12 @@ def cmd_validate(args: argparse.Namespace) -> int:
             problems.append(f"{sc.id}: unknown tools {unknown}")
         if sc.suite == "af_auth" and sc.contested_effect is None:
             problems.append(f"{sc.id}: missing contested_effect")
+    # The findability gate (F-20). It runs here rather than only in the test suite so that
+    # it applies to every generated scenario at the moment it is generated, which is what
+    # F-01's lesson asked for: a gate, not a review step.
+    from agentfw.eval.findability import check_suite
+
+    problems += [str(d) for d in check_suite(scenarios)]
     counts: dict[str, int] = {}
     for sc in scenarios:
         counts[f"{sc.suite}/{sc.split}"] = counts.get(f"{sc.suite}/{sc.split}", 0) + 1
@@ -266,6 +273,25 @@ def cmd_compile_scopes(args: argparse.Namespace) -> int:
                 extra={"seed_agreement": scope_eval.seed_agreement(by_seed)},
             )
             print(f"[compile] {arm.label} pooled: {out_dir / arm.label / 'report.md'}")
+    return 0
+
+
+def cmd_probe_contract(args: argparse.Namespace) -> int:
+    """Quantify the Phase 3.5 apparatus boundary. No key, no network, seconds."""
+    import json as _json
+
+    from agentfw.eval import contract_probe
+
+    report = contract_probe.probe()
+    out_dir = Path(args.out or "experiments/f20_probe/results")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "probe.json").write_text(
+        _json.dumps(report, indent=2) + NEWLINE, encoding="utf-8"
+    )
+    md = contract_probe.to_markdown(report)
+    (out_dir / "probe.md").write_text(md, encoding="utf-8")
+    print(md)
+    print(f"[probe] wrote {out_dir}")
     return 0
 
 
@@ -598,6 +624,10 @@ def main(argv: list[str] | None = None) -> int:
         help="print the plan and the call count without calling anything",
     )
     cs.set_defaults(fn=cmd_compile_scopes)
+
+    pc = sub.add_parser("probe-contract")
+    pc.add_argument("--out")
+    pc.set_defaults(fn=cmd_probe_contract)
 
     rep = sub.add_parser("report")
     rep.add_argument("results")

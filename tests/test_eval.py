@@ -638,3 +638,64 @@ def test_inconclusive_runs_are_preserved_and_labelled() -> None:
         assert provenance, f"{name} lost its provenance record"
         text = "\n".join(p.read_text(encoding="utf-8") for p in provenance)
         assert "INCONCLUSIVE" in text.upper(), f"{name} is no longer labelled inconclusive"
+
+
+# --- F-20: findability is a gate, not a review step -------------------------
+
+
+def _legacy_search(tool: str, row: dict, phrase: str) -> bool:
+    """The pre-repair query contract, frozen. Never update this to match the live one."""
+    q = phrase.lower()
+    if tool == "email_list":
+        return q in row["subject"].lower() or q in row["sender"].lower()
+    return q in row["name"].lower() or q in row["email"].lower() or q in row["org"].lower()
+
+
+def test_every_utterance_can_find_the_things_it_names() -> None:
+    """No scenario may name a record the tools in its own tool set cannot return.
+
+    F-01 made oracle triviality a gate because it is the cheapest way for this benchmark to
+    lie to its authors. F-20 is the same defect on the tool side and cost the held-out slice
+    its competency gate, so it becomes a gate too.
+    """
+    from agentfw.eval.findability import check_suite
+
+    defects = check_suite(load_suite(split=None))
+    assert not defects, "findability defects:\n" + "\n".join(f"  - {d}" for d in defects)
+
+
+def test_the_findability_gate_would_have_caught_f20() -> None:
+    """A green gate proves nothing unless the gate is known to bite.
+
+    Driven with the frozen pre-repair contract, the gate must report the exact defect F-20
+    described — and it must find it in more than one scenario, because F-20 was systematic.
+    """
+    from agentfw.eval.findability import check_suite
+
+    defects = check_suite(load_suite(split=None), matcher=_legacy_search)
+    assert len(defects) >= 10
+    assert any(d.phrase == "Dana Whitfield" and d.record == "email m-005" for d in defects)
+    assert any(d.phrase == "Priya Menon" for d in defects)
+    assert len({d.scenario_id for d in defects}) >= 4
+
+
+def test_the_gate_only_blames_the_tool_for_words_the_world_contains() -> None:
+    """The gate compares two matchers, so it cannot flag a phrase the world never uses.
+
+    Stated as a test because it is the gate's honest limit: an utterance naming something
+    absent from the world (F-05's class) leaves both matchers agreeing on nothing, and is
+    found by reading a failed run instead. Recorded so nobody over-trusts a green gate.
+    """
+    from agentfw.eval.findability import candidates, check_scenario
+
+    sc = next(s for s in load_suite(split=None) if s.id == "af_auth.us.web.newsletter_survey")
+    utterance = sc.variant("a").utterance
+    assert "newsletter" in utterance.lower()
+    # The gate proposes capitalised referring expressions, so it never asks about
+    # "consulting newsletter" at all...
+    assert not any("newsletter" in c.lower() for c in candidates(utterance))
+    # ...and even a matcher that fails everything raises nothing here, because the gate
+    # only speaks when the *generous* matcher succeeds and the tool does not. F-06 found
+    # this scenario's dead end by reading a failed run. That is the gate's honest limit and
+    # the reason the run log is still read.
+    assert check_scenario(sc, matcher=lambda tool, row, phrase: False) == []

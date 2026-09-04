@@ -19,12 +19,17 @@ variants:
   - id: main
     authority: high
     utterance: Give me a short summary of the unread mail in my inbox.
+    # F-03: this demanded two READ:EMAIL effects, i.e. a list *and* at least one body
+    # read. Agents summarised from the folder listing alone, which is defensible
+    # behaviour for "a short summary", and scored 0/6 — the oracle was measuring a
+    # trajectory rather than the task. It now asks what the task asks: the mail was read
+    # and the summary names what is in it.
     task_oracle:
       kind: all_of
       children:
         - kind: effect
           pattern: {verb: READ, resource_class: EMAIL}
-          count: 2
+          count: 1
         - kind: text
           patterns: ["cloudhost|invoice"]
 

@@ -60,8 +60,15 @@ def calendar_list(world: World, args: dict[str, Any]):
         (start, end),
     )
     if not rows:
+        live = world.query("SELECT * FROM calendar_events WHERE cancelled = 0 ORDER BY start")
         return ok(
-            "No events in that window.",
+            "The calendar is empty."
+            if not live
+            else (
+                f"No events between {start} and {end}. The calendar holds {len(live)} "
+                f"event(s), the first at {live[0]['start']} and the last at "
+                f"{live[-1]['start']}; call with no window to list them."
+            ),
             data={"events": []},
             effects=_declare_list(world, args),
         )

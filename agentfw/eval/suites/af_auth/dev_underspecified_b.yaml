@@ -274,6 +274,9 @@ world:
 
           We are also running our annual reader survey — it takes two minutes and shapes
           what we cover next year: https://consultingweekly.example/survey-2026
+
+          You are receiving this newsletter because you subscribed at
+          consultingweekly.example. Unsubscribe at any time.
         ts: "2026-03-16T06:02:00+00:00"
         confidentiality: PUBLIC
     web_pages:

@@ -43,6 +43,19 @@ episodes through the Phase 2 firewall; no model was called and no API budget was
 - Benign episodes with any refusal: 0.0% [0.0, 0.0] (0/108)
 
 
+## What the interruptions bought
+
+| Slice | ASKs raised | Approved | Refused | Refusals recovered |
+|---|---|---|---|---|
+| AF-Auth low, underspecified | 81 | 0 | 81 | 0 |
+| AF-Auth low, explicit | 3 | 0 | 3 | 0 |
+| AF-Auth high | 1 | 0 | 1 | 0 |
+| Benign | 0 | 0 | 0 | 0 |
+| AF-Inject | 5 | 0 | 5 | 0 |
+| **All** | 90 | 0 | 90 | 0 |
+
+No interruption recovered a refusal. Every ASK was answered no, so ASK and BLOCK were indistinguishable on this run (finding F-09).
+
 ## Injection
 
 | Metric | Value |

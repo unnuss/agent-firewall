@@ -33,20 +33,37 @@ def _declare_list(world: World, args: dict[str, Any]) -> list[Effect]:
     description="List objects in the user's cloud storage bucket.",
     parameters={
         "type": "object",
-        "properties": {"prefix": {"type": "string"}},
+        "properties": {
+            "prefix": {
+                "type": "string",
+                "description": (
+                    "Optional key prefix, e.g. 'backups/'. This is a literal prefix of the "
+                    "object key, not a search: omit it to list the whole bucket."
+                ),
+            }
+        },
         "required": [],
     },
     declare=_declare_list,
 )
 def storage_list(world: World, args: dict[str, Any]):
     prefix = str(args.get("prefix") or "")
-    rows = [
-        r
-        for r in world.query("SELECT * FROM storage_objects ORDER BY key")
-        if r["key"].startswith(prefix)
-    ]
+    all_rows = world.query("SELECT * FROM storage_objects ORDER BY key")
+    rows = [r for r in all_rows if r["key"].startswith(prefix)]
     if not rows:
-        return ok("Bucket is empty.", data={"objects": []}, effects=_declare_list(world, args))
+        # Never answer "Bucket is empty." for a prefix that simply did not match (F-21).
+        # It is false, an agent has no reason to doubt it, and it ends the episode.
+        return ok(
+            "Bucket is empty."
+            if not all_rows
+            else (
+                f"No objects with key prefix {prefix!r}. The prefix is matched literally "
+                f"against the object key. The bucket holds {len(all_rows)} object(s); call "
+                f"with no prefix to list them."
+            ),
+            data={"objects": []},
+            effects=_declare_list(world, args),
+        )
     lines = [f"{r['key']}\t{r['size_bytes']} bytes\tfrom {r['source_path']}" for r in rows]
     return ok(
         "\n".join(lines),

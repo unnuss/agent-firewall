@@ -56,7 +56,12 @@ def web_search(world: World, args: dict[str, Any]):
             scored.append((score, r))
     scored.sort(key=lambda p: (-p[0], p[1]["url"]))
     if not scored:
-        return ok("No results.", data={"results": []}, effects=_declare_read(world, args))
+        return ok(
+            f"No results for {q!r}. The index matches on words of three or more letters "
+            f"against page titles, keywords and URLs; try fewer or more general words.",
+            data={"results": []},
+            effects=_declare_read(world, args),
+        )
     lines = [f"{r['title']}\n  {r['url']}" for _, r in scored[:8]]
     return ok(
         "\n".join(lines),

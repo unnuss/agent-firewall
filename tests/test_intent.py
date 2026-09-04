@@ -489,3 +489,86 @@ def test_the_narrowest_prompt_keeps_the_four_authoring_rules() -> None:
     text = variants.NARROWEST.build("do the thing", ["email_list"])[0]["content"]
     for rule in ("names it, or names an action", "reversible, invisible", "states a bound"):
         assert rule in text
+
+
+# --- Phase 3.5: the committed artifacts must stay verifiable ----------------
+
+
+def _artifact_variant(path) -> tuple[str, int] | None:
+    """Recover (prompt variant, version) from an artifact's filename.
+
+    E-09a's files are named ``<arm>.p<version>.s<seed>.jsonl`` for the baseline prompt;
+    E-10's are ``<arm>.<variant>-v<version>.s<seed>.jsonl``.
+    """
+    import re
+
+    stem = path.stem
+    m = re.search(r"\.p(\d+)\.s\d+$", stem)
+    if m:
+        return ("baseline", int(m.group(1)))
+    m = re.search(r"\.([a-z-]+)-v(\d+)\.s\d+$", stem)
+    if m:
+        return (m.group(1), int(m.group(2)))
+    return None
+
+
+def test_every_committed_compiled_scope_still_verifies_its_own_prompt_digest() -> None:
+    """A tool description edit must never silently invalidate the E-09a/E-10 artifacts.
+
+    ``catalog.catalogue_lines`` feeds each tool's registry description into the compilation
+    prompt, and every record carries that prompt's digest. Phase 3.5 changes sandbox tools,
+    so this recomputes the digest for every committed record whose prompt variant is still
+    current and requires a match. A failure here means either the prompt moved or a tool
+    description did, and in both cases the affected arm must be recompiled rather than
+    quietly re-read. Records from a superseded prompt version (baseline v1) are skipped by
+    construction: their prompt no longer exists, which is what R-16 asks for.
+    """
+    from pathlib import Path
+
+    checked = 0
+    for path in sorted(Path("experiments").rglob("*.jsonl")):
+        ident = _artifact_variant(path)
+        if ident is None:
+            continue
+        name, version = ident
+        if name not in variants.VARIANTS or variants.get(name).version != version:
+            continue
+        variant = variants.get(name)
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = CompiledScope(**json.loads(line))
+            if not record.prompt_digest:
+                continue
+            recomputed = variant.digest(record.utterance, list(record.tools))
+            assert record.prompt_digest == recomputed, (
+                f"{path.name} :: {record.scenario_id}::{record.variant_id} no longer "
+                f"reproduces its prompt digest. A tool description or the prompt itself "
+                f"has moved; recompile that arm rather than reading it."
+            )
+            checked += 1
+    assert checked > 500, f"only {checked} records checked; the artifacts moved"
+
+
+def test_a_scenario_reworded_after_compilation_fails_loudly() -> None:
+    """A compiled scope is a function of the utterance; the store is keyed by id.
+
+    Phase 3.5 edits the benchmark, so the mismatch that would otherwise authorize an
+    episode from a scope compiled for a different sentence is an exception rather than a
+    result nobody notices.
+    """
+    from agentfw.intent.store import CompiledScopeStore, StaleCompiledScope
+
+    record = CompiledScope(
+        scenario_id="s",
+        variant_id="a",
+        compiler="test",
+        utterance="Draft a reply to Priya.",
+        tools=["email_draft"],
+        effects=["CREATE:EMAIL"],
+    )
+    store = CompiledScopeStore([record], label="test")
+    # Whitespace is not a rewording: YAML folding and JSON round-trips disagree about it.
+    store.scope_for("s", "a", "Draft a reply\n   to Priya.")
+    with pytest.raises(StaleCompiledScope):
+        store.scope_for("s", "a", "Reply to Priya.")

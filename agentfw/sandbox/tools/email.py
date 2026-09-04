@@ -18,6 +18,7 @@ from agentfw.core.types import (
     Reversibility,
     Verb,
 )
+from agentfw.sandbox import search
 from agentfw.sandbox.registry import err, ok, register
 from agentfw.sandbox.world import World
 
@@ -45,7 +46,14 @@ def _declare_list(world: World, args: dict[str, Any]) -> list[Effect]:
         "type": "object",
         "properties": {
             "folder": {"type": "string", "description": "Default 'inbox'."},
-            "query": {"type": "string", "description": "Optional substring filter."},
+            "query": {
+                "type": "string",
+                "description": (
+                    "Optional. Matches messages where every word of the query appears in "
+                    "the sender, the recipients, the subject or the body. Word prefixes "
+                    "count, so 'Cloudhost bill' finds billing@cloudhost.example."
+                ),
+            },
         },
         "required": [],
     },
@@ -53,15 +61,24 @@ def _declare_list(world: World, args: dict[str, Any]) -> list[Effect]:
 )
 def email_list(world: World, args: dict[str, Any]):
     folder = str(args.get("folder") or "inbox")
-    query = str(args.get("query") or "").lower()
+    query = str(args.get("query") or "")
     rows = world.query("SELECT * FROM emails WHERE folder = ? ORDER BY ts", (folder,))
+    total = len(rows)
+    # The query is matched against the body as well as the metadata (F-20). The tool still
+    # *returns* only metadata, which is what its description promises; what it *searches* is
+    # everything a mail client searches, because "that consulting newsletter with the reader
+    # survey in it" names the message by a word that lives in the body.
     if query:
         rows = [
-            r for r in rows if query in r["subject"].lower() or query in r["sender"].lower()
+            r
+            for r in rows
+            if search.matches(query, r["sender"], r["recipients"], r["subject"], r["body"])
         ]
     if not rows:
         return ok(
-            f"No messages in {folder}.",
+            search.no_match(
+                f"messages in {folder}", query, "sender, recipients, subject and body", total
+            ),
             data={"messages": []},
             effects=_declare_list(world, args),
         )

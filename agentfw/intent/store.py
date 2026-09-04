@@ -27,6 +27,14 @@ class MissingCompiledScope(KeyError):
     defaulting to an empty scope would turn an operational gap into a security result."""
 
 
+class StaleCompiledScope(ValueError):
+    """The scenario's wording has moved since this scope was compiled from it."""
+
+
+def _norm(text: str) -> str:
+    return " ".join(str(text).split())
+
+
 class CompiledScopeStore:
     """scenario_id -> variant_id -> CompiledScope, loaded from one JSONL file."""
 
@@ -63,6 +71,20 @@ class CompiledScopeStore:
             raise MissingCompiledScope(
                 f"no compiled scope for {scenario_id}::{variant_id} in {self.label!r}"
             ) from exc
+        # A compiled scope is a function of the utterance (D-025), and the store is keyed by
+        # id. Edit a scenario's wording without recompiling and the replay would silently
+        # authorize the episode from a scope compiled for a *different* sentence — an error
+        # that looks like a result. Phase 3.5 edits the benchmark, so the invariant is
+        # checked rather than remembered. Whitespace is normalised because YAML folded
+        # scalars and JSON round-trips disagree about line breaks and about nothing else.
+        if record.utterance and _norm(record.utterance) != _norm(objective):
+            raise StaleCompiledScope(
+                f"{scenario_id}::{variant_id} in {self.label!r} was compiled from a "
+                f"different utterance than the episode carries. Recompile that arm, or "
+                f"revert the scenario."
+                f"{chr(10)}  compiled from: {record.utterance!r}"
+                f"{chr(10)}  episode says:  {objective!r}"
+            )
         return record.to_scope(objective)
 
     def covers(self, scenario_id: str, variant_id: str) -> bool:

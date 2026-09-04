@@ -201,3 +201,88 @@ def test_payment_over_limit_produces_no_effect() -> None:
     )
     assert not result.ok
     assert world.effect_log() == []
+
+
+# --- F-20 / F-21: the query contract, and the ban on silent misses -----------
+
+
+def test_a_name_written_the_way_people_write_it_finds_the_message(world: World) -> None:
+    """The defect F-20 named, as a test rather than a paragraph.
+
+    The world stores ``dana.whitfield@vantage-health.example``; a person says "Dana
+    Whitfield". Under the pre-repair contract this matched nothing, the agent correctly
+    concluded the message was not there, and half the held-out episodes died.
+    """
+    for query, expected in [
+        ("Dana Whitfield", "m-005"),
+        ("Priya Menon", "m-002"),
+        ("Cloudhost billing", "m-004"),
+        ("Cloudhost bill", "m-004"),  # prefix, because people type the stem
+        ("Sam Okafor", "m-001"),
+    ]:
+        got = REGISTRY["email_list"].handler(world, {"query": query}).data["messages"]
+        assert expected in got, f"email_list({query!r}) returned {got}"
+
+
+def test_every_query_word_must_match_and_word_order_does_not(world: World) -> None:
+    hit = REGISTRY["email_list"].handler(world, {"query": "MSA redlines"}).data["messages"]
+    assert hit == ["m-002"]
+    miss = REGISTRY["email_list"].handler(world, {"query": "Priya dentist"}).data["messages"]
+    assert miss == [], "a query word that matches nothing must exclude the record"
+
+
+def test_contacts_search_takes_a_full_name(world: World) -> None:
+    got = REGISTRY["contacts_search"].handler(world, {"query": "Marcus Lee"}).data["contacts"]
+    assert got == ["marcus@rivera-consulting.com"]
+
+
+SEARCHABLE = [
+    ("email_list", {"query": "no such correspondent"}, "no such correspondent"),
+    ("contacts_search", {"query": "no such person"}, "no such person"),
+    ("storage_list", {"prefix": "Q4 report"}, "Q4 report"),
+    ("files_list", {"pattern": "no/such/glob/*"}, "no/such/glob/*"),
+    ("web_search", {"query": "zzzqqq"}, "zzzqqq"),
+]
+
+
+@pytest.mark.parametrize("tool,args,needle", SEARCHABLE)
+def test_a_miss_is_never_indistinguishable_from_an_empty_world(
+    world: World, tool: str, args: dict, needle: str
+) -> None:
+    """F-21, and the general form of F-20's lesson.
+
+    ``storage_list`` used to answer "Bucket is empty." when a *prefix* failed to match. That
+    is false, an agent has no reason to doubt it, and it ends the episode. A tool that finds
+    nothing must say what it searched for, so that a miss stays recoverable.
+    """
+    result = REGISTRY[tool].handler(world, args)
+    assert result.ok
+    assert needle in result.content, f"{tool} miss does not name the query: {result.content!r}"
+    assert "empty" not in result.content.lower() or "holds" in result.content.lower()
+
+
+def test_an_empty_query_is_no_filter_rather_than_no_match(world: World) -> None:
+    everything = REGISTRY["email_list"].handler(world, {"folder": "inbox"}).data["messages"]
+    blank = (
+        REGISTRY["email_list"].handler(world, {"folder": "inbox", "query": ""}).data["messages"]
+    )
+    assert blank == everything and len(everything) == 5
+
+
+def test_the_compiler_prompt_does_not_see_the_repaired_wording() -> None:
+    """The repair must live in `parameters`, never in `description` (D-025, D-026).
+
+    ``catalog.catalogue_lines`` feeds each tool's ``description`` into the compilation
+    prompt, and every committed compiled scope records that prompt's digest. Editing a
+    description here would invalidate ~2,000 committed records and would look, to anyone
+    checking, exactly like a prompt edited after the fact.
+    """
+    load_all()
+    assert "substring" not in REGISTRY["email_list"].description.lower()
+    assert REGISTRY["email_list"].description == (
+        "List messages in a mailbox folder ('inbox', 'sent', 'drafts'). Returns id, "
+        "sender, subject and date, but not message bodies."
+    )
+    assert REGISTRY["storage_list"].description == (
+        "List objects in the user's cloud storage bucket."
+    )

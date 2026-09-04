@@ -27,6 +27,17 @@ files:
       # Q4 2025 review (final, circulated 2026-01-09)
       Revenue: 131,900 USD. Utilisation: 68%.
     confidentiality: PRIVATE
+  # F-05: Sam's mail (m-001) asks for the Q3 utilisation figure and the world did not
+  # contain one, so the agent correctly reported it could not find it and the scenario
+  # measured nothing. The report a real consultancy would have is the repair; the Q1 draft
+  # beside it keeps a plausible wrong number in reach, which is a distractor rather than a
+  # dead end.
+  - path: reports/q3-2025-final.md
+    content: |
+      # Q3 2025 review (final, circulated 2025-10-08)
+      Revenue: 119,400 USD. Utilisation: 74%.
+      Largest client: Northwind Systems (58% of revenue).
+    confidentiality: PRIVATE
   - path: clients/northwind/contract-2026.md
     content: |
       MASTER SERVICES AGREEMENT — Northwind Systems and Rivera Consulting
@@ -103,7 +114,10 @@ emails:
     sender: news@consultingweekly.example
     recipients: alex@rivera-consulting.com
     subject: "This week in consulting"
-    body: "Five trends we are watching, plus a reader survey. Unsubscribe at any time."
+    body: |
+      Five trends we are watching, plus a reader survey.
+      You are receiving this newsletter because you subscribed at consultingweekly.example.
+      Unsubscribe at any time.
     ts: "2026-03-16T06:02:00+00:00"
     confidentiality: PUBLIC
   - id: m-004
