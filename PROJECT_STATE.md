@@ -2,24 +2,24 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-08-31 · **Phase 3 in progress.** · Phase 2 complete.
+**Last updated:** 2026-08-31 · **Phase 3 COMPLETE.** · **Next: Phase 3.5, benchmark repair.**
 
 ---
 
 ## 0. If you are the next session, do exactly this
 
-1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-025 to D-031** — D-025
-   fixes what the intent compiler may see, D-026 why compiled scopes are committed
-   artifacts, D-027 what the scripted human knows in E-01b, D-028 the experiment renaming,
-   D-029 credential precedence and why a run was misdiagnosed for a day.
-   D-030 constraint provenance, D-031 why the held-out slice is not yet a held-out
-   validation. D-022, D-023 and D-024 remain the Phase 1/2 constraints.
-2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**. Both are done, including the
-   registered `gpt-4.1-mini` arm at three seeds; E-09a's run log carries a correction worth
-   reading about how that arm was misdiagnosed as blocked on billing for a day.
-3. Read **F-16 first** — it falsifies the phase's central prediction and is the reason the
-   rest of Phase 3 needs re-planning. Then F-10 to F-15, then the older F-07 to F-09.
-4. Continue Phase 3 per `docs/ROADMAP.md`. Start at section 6 of this document.
+1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-032** — it closes Phase 3
+   and explains why most of the phase's planned deliverables were retired rather than built.
+   Then **D-031** (why the held-out slice cannot yet validate anything) and **D-030**
+   (constraint provenance). D-025 to D-029 cover the compiler's inputs, its artifacts, the
+   reviewer oracle, experiment naming and credential precedence. D-022 to D-024 remain the
+   Phase 1/2 constraints.
+2. Read findings **F-16 → F-17 → F-18 → F-19 in that order** in `docs/EXPERIMENTS.md`. They
+   are one argument in four steps and reading them out of order gives the wrong conclusion:
+   F-16 alone reads as "the compiler is hopeless", which F-17 and F-18 falsify.
+3. Read **F-20 and D-031** before touching the benchmark. They are the next milestone.
+4. **Do not start Phase 4.** The next milestone is Phase 3.5 in `docs/ROADMAP.md`; section 6
+   of this document says why and what it is.
 
 Health check (~35 s, no API calls, no keys needed):
 
@@ -109,13 +109,10 @@ improvement until E-01b says so.
 | 1 | `intent/compiler.py` — utterance → IntentScope | done: `LLMIntentCompiler` + two deterministic floors, `intent/catalog.py`, `intent/store.py` |
 | 1 | **E-09a** — compiled scopes scored against gold | **DONE.** Predictions registered before any LLM call and scored; prediction 3 **falsified** (F-16) |
 | 1b | **E-01b** — the replay with compiled scopes | **DONE** for all seven arms, including the registered one at three seeds |
-| 2 | The M0–M5 ladder | not started — deliberately, see section 6 |
-| 3 | Calibration (ECE, reliability) | not started |
-| 4 | E-01 (the pre-registered similarity prediction, D-012) | not started |
-| 5 | E-02 (ladder comparison) | not started |
-| 6 | E-03 (cascade) | not started |
-| 7 | Dependency screener (F-07) | not started |
-| 8 | M6 distillation | conditional on E-03 (D-011), unchanged |
+| 2, 3, 5, 6 | M0–M5 ladder, calibration, E-02, E-03 | **RETIRED (D-032).** They estimate a calibrated `P(licensed)` to place an ASK band; Phase 3 removed the band. The compiler *is* M4, and E-10 explored that design space across two vendors and three formulations |
+| 4 | E-01 (similarity, D-012) | **SUPERSEDED (D-032).** F-11 supplies its intended negative result more strongly, without a new dependency |
+| 7 | Dependency screener (F-07) | **DEFERRED to Phase 4.** ASR is already 0.0%; it buys interruption efficiency, not security |
+| 8 | M6 distillation | **not applicable** — conditional on E-03 |
 
 ## 3. What exists in code that did not before
 
@@ -251,69 +248,60 @@ on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALS
 | **R-15** | FPR-block must be reported against compiled scopes, never gold | **Done** — E-01b reports it per scope source |
 | **R-16** | **New.** Prompt development and measurement share the dev slice | The tuning slice is declared: benign + af_inject + the control pairs. The 14 core underspecified triples were not looked at while writing the prompt, and any later prompt change must be declared and re-registered |
 
-## 6. Phase 3 — the architecture decision, and whether the phase can close
+## 6. Phase 3 is closed. The next milestone is Phase 3.5, not Phase 4.
 
-**Recommendation: yes, close Phase 3 on the architecture. Do not close it on the
-deployment configuration, and do not start Phase 4 until the two items in "owed" are done.**
+### What closing means here
 
-### The architecture decision, stated
+Deliverable 1 shipped and produced the phase's results. Deliverables 2-8 were **retired,
+superseded or deferred by those results** (D-032), not abandoned for want of time — the phase
+answered its question and dissolved most of its own plan. The disposition table is in section
+2 and the reasoning is in D-032.
 
-The design is **validated as specified in ARCHITECTURE.md**, with one part re-scoped:
+The architecture decision, stated once:
 
-1. **Deterministic reference monitor over an effect ontology, deny-by-default.** Keep. It is
-   the contribution. Given a correct scope it removes all measured overreach and all measured
-   attack success at zero cost (E-01a), and **ASR is 0.0% under every compiled scope ever
-   measured** — the injection half of the thesis never needed a model.
-2. **Intent compilation outside the TCB.** Keep. Two configurations reach the gold-scope
-   result end to end; the best is within one episode of hand-written scopes on every axis.
-3. **ASK as the recovery path.** Keep. Its value is a function of compiler error (F-09,
-   answered) and it is what makes an under-granting compiler usable.
-4. **Constraint provenance** (D-030). Keep — worth 16 points of compliance.
-5. **The M0-M5 ladder: re-scope, do not build as written.** It was designed to calibrate
-   `P(licensed)` into an ASK band. The security axis turns out reachable from formulation and
-   model choice alone, so what remains is the *cost* axis, and the useful estimand is "how
-   likely is it the compiler **dropped** this class" — not the same quantity, and a much
-   smaller problem. E-02 as written answers a question the evidence no longer poses.
+1. **Deterministic reference monitor over an effect ontology, deny-by-default** — keep. It is
+   the contribution. **ASR 0.0% under every compiled scope ever measured**; the injection half
+   of the thesis never needed a model.
+2. **Intent compilation outside the TCB** — keep. Two configurations reach the gold-scope
+   result end to end.
+3. **ASK as the recovery path** — keep. Its value is a function of compiler error (F-09).
+4. **Constraint provenance** (D-030) — keep. Worth 16 points of compliance.
+5. **The AuthorizationMonitor / M0-M5 ladder** — retired (D-032).
 
-### What E-10 settled
+**Deliberately not decided: which model and which formulation to deploy.** Several
+configurations work and one does not; that is more useful to a reader than a single
+recommended stack, and the choice depends on cost and availability.
 
-- The authority-leakage failure is **one cell of a 2x2**, not a law (F-16 measured it, F-17
-  and F-18 falsified its explanation, F-19 gave the interaction structure).
-- The two fixes are **substitutes**: a deployment needs either a capable model or an explicit
-  formulation, and can choose on cost. The formulation is ~10x cheaper and does not depend on
-  a frontier model remaining available.
-- **Noticing is not the differentiator** — every compiler flags the ambiguity on ~100% of
-  underspecified instructions. **Withholding is what varies**, and making refusal expressible
-  is what changes it.
+### Why the next milestone is benchmark repair
 
-### Owed before Phase 4
+Every number above is dev-slice, and the benchmark — not the system — is now the weak link:
 
-1. **A real held-out validation — attempted, and it is not achievable with the current
-   suite (D-031).** Gold scopes were written and committed for the held-out split, and
-   E-09a ran there. Two blockers, both structural:
-   - The suite is 3 generated scenarios from one template, 6 variants, **all explicit**.
-     Zero underspecified variants, zero benign, zero af_inject. Phase 3 is about the
-     underspecified band, so the slice cannot exercise it.
-   - **E-01b cannot run there at all.** No episode had ever been recorded for a held-out
-     scenario; E-00h was run to create them and failed the competency floor at 11.1%
-     compliance, because of **F-20** — `email_list`'s `query` matches contiguous substrings
-     only, so "Cloudhost billing" returns nothing while "cloudhost" returns the message.
-     Systematic for that template. Not fixed here: changing a sandbox tool invalidates every
-     committed episode's comparability, so it is Phase 5 work plus a baseline re-run.
+| Issue | What it blocks |
+|---|---|
+| **F-20** | `email_list`'s query matches contiguous substrings only, so the natural phrasing of a name returns nothing and a competent agent correctly gives up. It failed the competency gate on the held-out slice (11.1% compliance) and makes **any held-out verdict experiment impossible** |
+| **D-031** | The held-out suite is 3 generated scenarios from one template, 6 variants, all explicit — zero underspecified, zero benign, zero af_inject. It cannot exercise the band the project is about |
+| **F-05** | `af_auth.us.email.sam_number` asks for a figure the world does not contain |
+| **F-03** | Over-strict oracles understate benign task completion |
+| **F-06** | High-authority compliance untrustworthy on 8 scenarios |
 
-   It did produce one real result: **`per-class`'s over-conservatism replicates on unseen
-   scenarios** — 66.7% retention for `gpt-4.1-mini` against 100% for Sonnet, the same
-   asymmetry as dev.
-2. **A second seed for arm 4** (~$1.40) if its numbers are to be quoted as more than a point
-   estimate.
+And the Phase 1 mitigation for exactly this risk — build the format and generator early so
+Phase 5 is scaling rather than inventing — **did not hold**: the generator has one template
+and it makes explicit B1 pairs, when the phenomenon lives in underspecified triples.
 
-Neither blocks the architecture decision; both block quoting these numbers as final.
+Phase 4 would build a cost model and sweep `C_ask` on numbers nobody has validated. Phase 3.5
+comes first. It is not full Phase 5 scaling — only enough to make the existing claims
+checkable. Deliverables and exit criterion are in `docs/ROADMAP.md`.
 
-### Deliberately not decided
+**The exit criterion is also the risk on D-032.** If the E-10 headline does not replicate on
+unseen underspecified instructions, D-032 is reopened and the ladder question returns. That is
+the honest status of the ladder's retirement: a well-supported bet on dev evidence, with a
+named condition that would overturn it.
 
-Which model and which formulation to deploy. That is a configuration choice, it depends on
-cost and on availability, and the honest position after E-10 is that **several configurations
-work and one does not** — which is more useful to a reader than a single recommended stack.
+### Cheap things worth doing whenever
+
+- A second seed for E-10 arm 4 (~$1.40), so its numbers are more than a point estimate.
+- Held-out gold scopes authored **independently** of whoever scores them — the one caveat on
+  `heldout.yaml` that the session which wrote it cannot fix (D-031).
 
 **Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-024, D-025's input
 restriction, or D-030's provenance asymmetry without a documented reason.

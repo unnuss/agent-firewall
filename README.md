@@ -135,7 +135,7 @@ is now the first thing Phase 3 does. Written up as
 
 Reproduce: `agentfw replay experiments/e01a_deterministic/config.yaml` (~40 s, no API key).
 
-## Phase 3: what happens when the scope is compiled rather than written by hand
+## Phase 3 (complete): what happens when the scope is compiled rather than written by hand
 
 The scope is what the whole design rests on, so Phase 3 starts by asking how wrong it gets.
 `intent/compiler.py` turns an utterance into an `IntentScope` from two inputs and no others:
@@ -231,6 +231,12 @@ about twice the interruptions, because under-granting is now the dominant error 
 against 4 over-granted). Written up as F-17, with the caveats it deserves — one model, one
 dev slice, three seeds, and a result that beat its own pre-registered prediction, which is
 the moment to be most suspicious rather than least.
+
+Phase 3 closed here. Most of its planned ML work — the M0-M5 ladder, calibration, the
+cascade — was **retired rather than built** (D-032): it existed to calibrate a probability
+that places an ASK boundary, and the compiler turned out to place that boundary correctly on
+its own. The next milestone is not Phase 4 but a benchmark repair, because every number above
+is from the development split and the held-out suite cannot currently validate any of it.
 
 The rest of this section is how we got there, and it is left standing because the wrong turn
 is the instructive part.

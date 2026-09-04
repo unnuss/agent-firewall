@@ -986,3 +986,61 @@ and af_inject held-out scenarios so FPR-block and ASR are measurable; (d) have t
 by someone other than the session that will score them.
 
 **Revisit if.** Phase 5 rebuilds the suite, which is where this belongs.
+
+---
+
+### D-032 — Retire the M0-M5 ladder; the compiler is M4 and the question it answered is gone
+**Date:** 2026-08-31 · **Status:** accepted · **Closes Phase 3**
+
+**Decision.** Phase 3 deliverables 2, 3, 5 and 6 — the M0-M5 ladder, calibration, E-02 and
+E-03 — are **retired**, not deferred. E-01 (deliverable 4) is **superseded**. The dependency
+screener (deliverable 7) is **deferred to Phase 4**. M6 (deliverable 8) was conditional on
+E-03 and lapses with it. Phase 3 closes on deliverable 1.
+
+**Why the ladder's question no longer exists.** ARCHITECTURE section 4.3 specifies the ladder
+as estimating a *calibrated* `P(licensed | scope, effect, context)`, because "the combinator
+needs a probability rather than a score", and D-022 justified it: the value is concentrated
+in the ambiguous band, so calibration matters more than accuracy at the extremes.
+
+E-10 removed the band. A compiled scope from either a capable model or an explicit
+formulation reaches **0.0% overreach and 0.0% ASR** — the gold-scope result — with no
+probability anywhere in the system. There is no uncertain middle left for a calibrated score
+to arbitrate. Building a calibration apparatus to place a boundary that the compiler already
+places correctly would be machinery in search of a problem, and CLAUDE.md's third failure
+mode is exactly that shape.
+
+**And the ladder has already been climbed at its expensive end.** M4 is "LLM judge with a
+structured authorization rubric". That is precisely what `LLMIntentCompiler` is, and E-10
+spent four registered arms exploring its design space across two vendors and three
+formulations. What remains unexplored is the *cheap* end — M1 bi-encoder, M2 cross-encoder,
+M3 guard model — whose entire purpose (per M5, the cascade) is to avoid paying for M4. That
+saving is not worth having: compilation is **one call per episode**, against the agent's own
+ten to fifteen. The cascade would optimise a rounding error.
+
+**Why E-01 is superseded rather than retired.** D-012 registered it as a prediction worth
+making because a clean negative result on goal-action similarity *motivates the effect
+ontology*. F-11 now supplies that motivation empirically and far more strongly: a
+tool-allowlist scope — authority derived from what the tools can do rather than from what the
+user asked — reproduces undefended overreach **exactly**, 62 of the same 135 episodes. That
+is a better argument for ranking effects than an AUC near 0.5 would have been. Running E-01
+would also add a `sentence-transformers` dependency (D-002) for a result already in hand.
+
+**Why the dependency screener moves rather than dies.** F-07 narrowed the structural
+integrity rule to public destinations, and the screener was to un-narrow it. But ASR is
+**0.0% under every compiled scope measured**, so what the screener buys is not security — it
+is not spending a human interruption on an exfiltration to a *named* third party. That is an
+interruption-efficiency question, which is the cost model's subject, so it belongs to Phase 4.
+
+**What this decision is not.** It is not a claim that intent compilation needs no ML, and not
+a claim that calibration is useless in general. It is a claim about *this* system on *this*
+evidence: the specific estimand the ladder was designed around stopped being the bottleneck.
+
+**The risk, stated plainly.** All of the above rests on dev-slice evidence. The held-out
+suite cannot currently validate it (D-031) and a held-out verdict experiment is blocked on
+F-20. **If Phase 3.5 shows the E-10 result does not replicate on unseen underspecified
+instructions, this decision is reopened and the ladder question returns.** That is the exit
+criterion on Phase 3.5 and it is written there.
+
+**Revisit if.** Phase 3.5 fails to replicate; or a deployment context appears where
+compilation cost is material (many short episodes, or a compiler call per *step* rather than
+per episode), which is the one condition under which the cascade would earn its keep.

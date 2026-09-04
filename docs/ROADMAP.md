@@ -91,62 +91,45 @@ finding instead; Phase 3 is where intelligence goes.
 
 ---
 
-## Phase 3 — Intent compilation and the authorization model (the ML core) — IN PROGRESS
+## Phase 3 — Intent compilation and the authorization model ✅ complete (2026-08-31)
 
-**Status, 2026-08-31 (E-10 complete, 2x2 filled).** All four arms done. The failure is one
-cell of a 2x2 and the two fixes are **substitutes** (F-19): either a capable model or an
-explicit formulation suffices. The best arm matches gold on every security axis. **Phase 3
-can close on the architecture** — deterministic core, compiled scopes, ASK, constraint
-provenance — with **M0-M5 re-scoped rather than built as written**, because the security axis
-no longer needs it and the remaining problem is the cost axis. Two things are owed before
-Phase 4: held-out gold scopes and a re-run there, and a second seed for arm 4. See
-PROJECT_STATE section 6.
+**Outcome.** Deliverable 1 shipped and produced the phase's results; **deliverables 2-8 were
+retired, superseded or deferred by those results** rather than skipped for want of time
+(D-032). The phase answered its question and dissolved most of its own plan.
 
-**Status, 2026-08-31 (final for the phase).** All three E-10 arms are done. The
-authority-leakage failure is **one cell of a 2x2, not a law**: changing the formulation moves
-it 53.3% → 0.0% (F-17) and changing the model moves it 53.3% → 10.0% (F-18), and agent-side
-behaviour does not predict compiler-side behaviour. Two configurations reach the gold result
-end to end. **Phase 3 has enough to close the architecture decision and not enough to choose
-a deployment configuration** — that needs the empty 2x2 cell and held-out gold scopes. See
-PROJECT_STATE section 6. The M0-M5 ladder should be re-scoped: the security axis is reachable
-without it, and what remains is the cost axis.
+*What was built.* `agentfw/intent/` — an intent compiler whose inputs are restricted by
+signature to the user's turn and the tool catalogue (D-025); three registered prompt
+formulations; committed compiled-scope artifacts (D-026); E-09a scoring compiled scopes
+against gold labels; E-01b turning those scopes into real ALLOW/ASK/BLOCK verdicts over 702
+committed episodes at zero API cost.
 
-**Status, 2026-08-31 (latest).** E-10 answered the question the re-plan was for: **the
-compiler's authority prior is formulation-dependent** (F-17). A per-class-verdict prompt on
-the same model takes contested leakage 53.3% → 0.0% and reaches the gold-scope result end to
-end (0.0% overreach, 0.0% ASR, 84.3% vs 84.7% compliance). Deliverable 1 is done and the
-security axis is no longer the open problem; the cost axis is (3-7% benign FPR-block, doubled
-ASK burden, 407 under-granted classes). The M0-M5 ladder should be re-scoped around that
-smaller and different estimand — "how likely is it the compiler dropped this class" — rather
-than the calibrated `P(licensed)` it was designed for. One arm of E-10 is still unrun.
+*What was learned, in order.* The registered arm **falsified the phase's central prediction**
+(F-16): the baseline compiler licensed the contested effect on 53.3% of underspecified
+instructions, worse than the undefended agents' 45.9%. E-10 then falsified the *explanation*
+twice — changing the formulation moves it to 0.0% (F-17), changing the model moves it to
+10.0% (F-18) — leaving **one bad cell in a 2x2 whose two fixes are substitutes** (F-19). The
+best configuration matches the hand-written gold scopes on every security axis: 0.0%
+overreach, 0.0% ASR, compliance within one episode of gold.
 
-**Status, 2026-08-31 (later).** Deliverable 1 is **complete**, and the registered
-`gpt-4.1-mini` arm **falsified prediction 3** — the compiler licenses the contested effect on
-53.3% of underspecified instructions against the undefended agents' 45.9%, because it is the
-same model carrying the same authority bias (F-16). Deliverables 2-8 were designed assuming
-the compiler would be roughly right and the remaining work was calibration; that assumption is
-now measured and false. **The ladder should not proceed as written** — see PROJECT_STATE
-section 6 for the three re-plan options. ASR under compiled scopes is 0.0%, so the injection
-half of the thesis is unaffected.
+*What the deterministic core did throughout.* **ASR 0.0% under every compiled scope ever
+measured.** The injection half of the thesis never needed a model.
 
-**Status, 2026-08-31 (earlier).** Deliverable 1 is built and measured on every compiler that
-can be run without an API budget: two deterministic floors and a local LLM arm on two prompt
-versions. Findings F-10 to F-15. The one that changes how the rest of the phase is run:
-**prompt v2 improved every scope-level metric and made the deployed system substantially
-worse**, so a compiler change is not an improvement until E-01b says so. F-13 (an invented
-constraint fires a hard gate no interruption can repair) is now the largest single source of
-utility loss and should be fixed before any ladder is built.
+*Disposition of the planned deliverables (D-032).*
 
-**Status, 2026-08-30.** Deliverable 1 is built and half-measured. `intent/compiler.py`
-exists with three arms; E-09a's two deterministic floors and E-01b's floor arms have run at
-zero cost, and they already produce two findings (F-10, F-11) and the first measurement of
-what the ASK primitive is worth (269 refusals recovered under an under-granting scope,
-against 0 under gold). **The registered LLM arm has not run yet** — it was misdiagnosed as
-blocked on billing for a day when the real cause was credential precedence (D-029), now
-fixed — and
-nothing in deliverables 2-8 should start before it runs, for the reason the re-ordering note
-below already gives: the ladder's size should be a response to the compiler's error profile,
-not a plan made before seeing it.
+| # | Planned | Disposition |
+|---|---|---|
+| 1 | `intent/compiler.py` + E-09a/E-01b | **done** — the phase's result |
+| 2, 3, 5, 6 | M0-M5 ladder, calibration, E-02, E-03 | **retired.** They estimate a calibrated `P(licensed)` to place an ASK band; the security axis turned out reachable from formulation and model choice alone, so there is no uncertain middle left to arbitrate. The compiler *is* M4, and E-10 spent four arms exploring that design space |
+| 4 | E-01 (similarity, D-012) | **superseded.** Its purpose was a negative result motivating the effect ontology; F-11 supplies a stronger one empirically — a tool-allowlist scope reproduces undefended overreach exactly |
+| 7 | Dependency screener (F-07) | **deferred to Phase 4.** ASR is already 0.0%; the screener buys interruption efficiency, not security, so it belongs with the cost model |
+| 8 | M6 distillation | **not applicable** — conditional on E-03 (D-011), which is retired |
+
+*Owed, and it is the next milestone rather than a footnote.* Every number above is from the
+dev slice. The held-out suite cannot validate them (D-031) and a held-out verdict experiment
+is impossible until F-20 is fixed. See Phase 3.5.
+
+Original plan follows.
+
 
 **Goal:** the intellectually strongest part of the project.
 
@@ -177,6 +160,43 @@ Deliverables:
 8. M6 distillation **only if** E-03 justifies it (D-011).
 
 ---
+
+## Phase 3.5 — Benchmark repair and held-out validation (NEXT)
+
+**Why this exists as its own milestone.** Phase 3's results are good and entirely
+unvalidated: every number is dev-slice. Four findings say the benchmark, not the system, is
+now the weak link — F-20 (a tool contract that silently kills well-formed scenarios), D-031
+(the held-out suite is 3 scenarios from one template, all explicit, so it cannot exercise the
+underspecified band the project is about), F-05 (a dev scenario asks for a figure the world
+does not contain), F-03 and F-06 (over-strict oracles, untrustworthy compliance on 8
+scenarios).
+
+The Phase 1 mitigation for exactly this risk — "build the scenario format and the generator
+early, so Phase 5 is scaling rather than inventing" — **did not hold.** The generator has one
+template and it produces the wrong shape: explicit B1 pairs, when the phenomenon lives in
+underspecified triples. Better to find that here than in Phase 5.
+
+Building Phase 4's cost model on unvalidated dev numbers would compound the problem, so this
+comes first. It is deliberately *not* full Phase 5 scaling — only enough to make the existing
+claims checkable.
+
+Deliverables:
+1. **Fix F-20** — `email_list`'s query contract — and re-run the undefended baselines.
+   Everything downstream needs episodes that a competent agent could actually complete.
+2. **An underspecified-triple generator template.** The missing piece; today's template makes
+   explicit pairs only.
+3. **A real held-out slice**: underspecified triples, plus benign and af_inject scenarios so
+   FPR-block and ASR are measurable there at all. Hand-audited, with the oracle-triviality
+   gate from F-01 applied to every generated scenario.
+4. **Held-out gold scopes authored independently** of whoever scores them — the one caveat on
+   `heldout.yaml` that cannot be fixed by the session that wrote it (D-031).
+5. **Re-run E-09a and E-01b on it.** This is the first genuine validation of any Phase 3
+   claim, and it is what decides whether D-032's retirement of the ladder was right.
+6. Fix F-05, F-03 and F-06 while in there.
+
+**Exit criterion.** The E-10 headline — a compiled scope reaching gold-level security — either
+replicates on unseen underspecified instructions or it does not. If it does not, D-032 is
+reopened and the ladder question returns.
 
 ## Phase 4 — Cost model, flow control, and full integration
 

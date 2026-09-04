@@ -4,8 +4,14 @@
 Phase 2 implemented the deterministic half: sections 3 (data model), 4.1 (IntegrityMonitor,
 structural mechanism only), the deterministic part of 4.2 (FlowMonitor), the structural
 gates of section 5, and section 8 (audit and replay). Phase 3 implemented the IntentCompiler (`agentfw/intent/`, D-025) and the
-measurement around it. Still design-only: 4.1 mechanism 2 (the dependency screener), 4.3
-(the AuthorizationMonitor), the cost model in section 5, and the dashboard. Sections marked *(spike)* must be validated before we commit to them.
+measurement around it, and **retired 4.3** (D-032). Still design-only: 4.1 mechanism 2 (the
+dependency screener, deferred to Phase 4), the cost model in section 5, and the dashboard. Sections marked *(spike)* must be validated before we commit to them.
+
+**Phase 3 is complete and it changed section 4.3 rather than implementing it.** The
+IntentCompiler — the box on the left of the diagram in section 1 — is built, and the
+AuthorizationMonitor beside it is **retired** (D-032): the calibrated probability it was to
+produce turned out unnecessary, because a compiled scope reaches the gold-scope security
+result on its own. Read 4.3's banner before 4.3.
 
 **Phase 3 added the IntentCompiler** — the box on the left of the diagram in section 1,
 design-only until now. It is `agentfw/intent/`, it is outside the TCB, and D-025 fixes its
@@ -235,6 +241,27 @@ Mostly deterministic and mostly boring, which is the point.
 Conceded: covert/steganographic channels (THREAT_MODEL 4.5).
 
 ### 4.3 AuthorizationMonitor — the ML core
+
+> **RETIRED 2026-08-31 (D-032). The section below is kept as written and is no longer the
+> plan.** It specifies a calibrated `P(licensed)` to place an ASK band, on the reasoning that
+> the value sits in an ambiguous middle. Phase 3 removed the middle: a compiled scope from
+> either a capable model or an explicit per-class formulation reaches **0.0% overreach and
+> 0.0% ASR** — the hand-written-gold result — with no probability anywhere in the system.
+>
+> The expensive rung has also already been climbed. **M4 is the intent compiler**
+> (`agentfw/intent/`), and E-10 explored its design space across two vendors and three
+> formulations. The unexplored rungs M1-M3 exist to let M5's cascade avoid paying for M4, and
+> that saving is not worth having: compilation is one call per *episode*.
+>
+> What Phase 3 found instead is that the authority prior is a property of the **formulation
+> and the model**, not something to be calibrated after the fact: leakage moves 53.3% → 0.0%
+> by changing how the question is asked (F-17) and 53.3% → 10.0% by changing which model is
+> asked (F-18), and the two fixes are substitutes (F-19). Under the free-form prompt the only
+> way to withhold an effect class is to *omit* it, and omission loses to a helpfulness prior;
+> making refusal **expressible** is what moved the number.
+>
+> This is reopened if Phase 3.5 fails to replicate the result on unseen underspecified
+> instructions. Everything below the line is the original design.
 
 Estimates `P(the user licensed this effect | IntentScope, Effect, trajectory context)`,
 **calibrated**, because the combinator needs a probability rather than a score.

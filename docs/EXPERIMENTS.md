@@ -1310,7 +1310,12 @@ agent actually took.
 ---
 
 ## E-01 — Pre-registered: is goal–action semantic similarity useful?
-**Phase:** 3 · **Status:** planned (prediction registered 2026-08-28, D-012)
+**Phase:** 3 · **Status:** **SUPERSEDED 2026-08-31 (D-032), not run.** Its purpose was a
+negative result motivating the effect ontology; F-11 supplies a stronger one empirically — a
+tool-allowlist scope reproduces undefended overreach exactly, 62 of the same 135 episodes.
+Running it would also add a dependency (D-002) for a conclusion already in hand. The
+prediction below stays registered and unscored; it was a good prediction that events
+outran.
 
 **Question.** How much discriminative power does embedding/cross-encoder similarity between
 the user objective and the proposed action carry, separately for hijacking and overreach?
@@ -1336,7 +1341,11 @@ prediction fails, the architecture gets simpler and we say so.
 ---
 
 ## E-02 — The authorization-model ladder
-**Phase:** 3 · **Status:** planned
+**Phase:** 3 · **Status:** **RETIRED 2026-08-31 (D-032), not run.** It compares approaches to
+estimating a calibrated `P(licensed)`. Phase 3 removed the uncertain band that quantity was
+to arbitrate — a compiled scope reaches 0.0% overreach and 0.0% ASR with no probability in
+the system — and M4, the expensive rung, *is* the intent compiler, whose design space E-10
+explored across two vendors and three formulations.
 
 **Question.** Which approach best estimates `P(user licensed this effect)`, per unit cost?
 
@@ -1357,7 +1366,10 @@ across seeds.
 ---
 
 ## E-03 — Cascade: where does the LLM judge earn its tokens?
-**Phase:** 3 · **Status:** planned
+**Phase:** 3 · **Status:** **RETIRED 2026-08-31 (D-032), not run.** The cascade exists to
+avoid paying for M4. Compilation is one call per *episode*, against the agent's own ten to
+fifteen, so the saving is a rounding error. Revisit only if a deployment compiles per
+*step*.
 
 **Question.** Can a cascade (M0 gate → M2 → M4 only inside an uncertainty band) retain
 M4-level accuracy at a fraction of the cost?
