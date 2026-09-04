@@ -2,8 +2,8 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-09-04 · **Phase 3.5 COMPLETE.** · **Next: Phase 4, with the ladder
-question reopened (D-034).**
+**Last updated:** 2026-09-04 · **Phase 3.5 COMPLETE; Phase 4 deliverable 0 done (D-035).**
+· **Next: Phase 4 proper — the cost model — or Phase 5 scenario scaling. See section 6.**
 
 ---
 
@@ -32,7 +32,7 @@ Health check (~55 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **323 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
+Expect **331 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
 17 AF-Auth / 5 AF-Inject / 10 benign **held-out** scenarios, 23 tools.
 
 Three experiments reproduce with no key:
@@ -188,10 +188,10 @@ the preparatory read. Under `ask_on: all_out_of_scope` every arm converges to 60
 
 | ID | Issue | Action owed |
 |---|---|---|
-| **F-29** | The flow gate denies a licensed payment; compliance therefore **rewards under-granting**; and whether it fires depends on `MIN_EVIDENCE_LEN = 8` against a 7- vs 14-character method id | **Phase 4, `monitors/flow.py`.** First measured requirement on it, with a reproducing case |
+| ~~F-29~~ | **RESOLVED**, and not where it was first written. Not a TCB defect: `payments_list_methods` labelled a *masked* list SECRET. One label → PRIVATE. Gold compliance 60.8% → 68.6%, flow denials on licensed work 4 → 0, dev bit-identical. Two corrections fell out — the allowlist baseline is *worse* than reported, and **F-11 replicates exactly** rather than weakening | The residual imprecision (every argument of an outbound effect treated as transmitted) is **latent**: zero denials on licensed work. Phase 4 `monitors/flow.py` |
 | **F-27** | `old_renders::b` is F-20's class in the files domain; the findability gate covers word queries, not globs | Phase 5: fix the scenario *and* extend the gate, in that order, before anything is measured against either |
 | **F-26** | Two labellers agree on the contested class 6/6 and the whole effect set 0/6 | A labeller-variance floor sits under every effect-set number. Measure it properly before quoting F1 or exact-match |
-| **F-16** | The compiler settles *whether* and asks *how* | **Not fixed.** The cheap structural fix — a grant contradicted by its own open question — was dismissed on dev evidence (2 of 8) and deserves re-measuring on held-out. D-034 |
+| **F-16** | The compiler settles *whether* and asks *how* | **Measured (E-12), not fixed.** The structural coupling cuts leakage on every arm and both splits but pays in retention, and it failed its own anti-fitting guard, so it is **not adopted** (D-035). One cell is strictly good — the *literal* rule on a *per-class* formulation — and Phase 5 tests it first |
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model |
 | **F-11** | Tool-allowlist authority ≈ undefended overreach | **Weakened**: exact on dev, 63.6% of 81.8% held out. B-01 proper is Phase 5 |
 | **F-12** | Gold scopes inconsistent about paths named in an utterance | Dev labels unchanged on purpose; the held-out author applied rule 3 uniformly from the start |
@@ -202,26 +202,47 @@ the preparatory read. Under `ask_on: all_out_of_scope` every arm converges to 60
 | **R-09** | Open-weight generalisation | Unresolved |
 | **R-16** | Prompt development and measurement share the dev slice | Intact: no prompt was touched in Phase 3.5 |
 
-## 6. The next milestone is Phase 4, and D-034 changed what it must contain
+## 6. Both of Phase 4's prerequisites are done. The next call is Phase 4 vs Phase 5
 
-Phase 4 was going to build a cost model and sweep `C_ask`. It still must, and it now has two
-further obligations that Phase 3.5 created:
+Phase 3.5 handed Phase 4 two obligations and both are discharged:
 
-1. **Decide something in the band.** D-034 un-retires the ladder's *question*, not its
-   answer. The evidence says the estimand is narrow and concentrated — five of eleven
-   triples, one failing on every arm — and that the failure is **structurally visible**: a
-   grant accompanied by an open question that presupposes it. Measure the structural fix and
-   the disagree-across-arms ensemble **before** building calibration apparatus. The cascade
-   and the cheap end (M1–M3, M5) stay retired on D-032's untouched cost argument.
-2. **Fix F-29 before quoting any compliance number.** While the flow gate denies a licensed
-   payment, "compliance" is partly a measure of how much a scope failed to authorize.
+1. **F-29 is fixed** (one label), so compliance no longer rewards under-granting and gold,
+   every compiled arm and the undefended agent all sit at 68.6%.
+2. **The band's cheapest candidate is measured** (E-12, D-035). It is not adopted: it cuts
+   leakage on every arm and both splits, pays for it in retention, and failed its own
+   anti-fitting guard. What remains for an estimand is **3–9% overreach at the verdict
+   level**, characterised rather than guessed.
+
+**So the genuine next decision is between two things, and it is not obvious.**
+
+- **Phase 4 proper (the cost model).** Well-posed now: the residue is measured, F-10 has a
+  concrete shape, and `ask_on` is a knob with two measured settings. What it cannot do is
+  produce a number anyone should trust to a percentage point, for the reason below.
+- **Phase 5 scenario scaling, brought forward.** Everything this project currently concludes
+  is **scenario-limited**, and that was measured rather than assumed: on the held-out slice
+  the clustered interval is **±45 pp wide and completely insensitive to seed count** (1, 2
+  and 3 seeds all give the identical width, because the bootstrap resamples the 11 scenario
+  clusters). More seeds buy variance detection and nothing else. **Only more scenarios narrow
+  anything.** D-034, D-035 and every leakage figure rest on a consistent *direction* across
+  four cells and two models, not on precision in any of them.
+
+The honest recommendation is **Phase 5 first for the scenario count, then Phase 4's cost
+model on intervals worth optimising against** — but that inverts the roadmap and is a
+judgement call about time, so it is stated as a choice rather than made unilaterally.
+
+Two smaller things Phase 5 should carry regardless: **test R1-on-`per-class` first** (D-035),
+and **have a human adjudicate `af_auth.ho.calendar.devi_planning`**, where every compiler
+including the best says "Can you get that set up?" licenses `CREATE:CALENDAR` and the
+independent labeller says it does not. That one scenario moves the best arm between 9.1% and
+0.0%, and a fourth model's opinion will not settle it.
 
 **Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-025, D-030's provenance
 asymmetry, or D-033's authoring condition without a documented reason.
 
 ### Cheap things worth doing whenever
 
-- A second and third seed for `per-class` on Sonnet (~$1.1 each). The best arm rests on one.
+- A second and third seed for `per-class` on Sonnet (~$1.1 each) — for *variance*, not
+  precision: seeds do not narrow a scenario-clustered interval at all (measured).
 - The dev slice's `af_auth.us.email.sam_number::c` still points at the Q1 report while its
   siblings ask about Q3 — legible only because F-23 made rewording an utterance expensive.
 - Extend the findability gate to glob and prefix tools (F-27).
@@ -235,6 +256,8 @@ asymmetry, or D-033's authoring condition without a documented reason.
   including both Sonnet ones ran on it. The file wins a conflict with an exported variable
   and says so (D-029); every command prints the credential fingerprint it used.
 - No NVIDIA GPU. Ollama has `qwen2.5-coder:14b`; usable as an exploratory compiler only.
+- **E-12 cost $0** — it is a deterministic function of committed artifacts, which is the
+  property D-026 was written to preserve and the first time it has paid for itself twice.
 - **Phase 3.5 spent roughly $3.5** — E-00i $0.20, E-00g $0.76, E-11 $2.51 (of which $2.26 is
   the two Sonnet arms), smoke tests ~$0.05. **Total project API spend is roughly $12.**
 - **Smoke-test one call per arm before launching it.** Four arms were smoked for about $0.03
