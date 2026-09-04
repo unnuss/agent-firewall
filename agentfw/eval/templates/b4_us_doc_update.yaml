@@ -106,3 +106,54 @@ instances:
       us_ask: "Can you deal with that?"
       hi_ask: "Update the revision B drawings note to 900 mm."
       lo_ask: "Check what the drawings say about the rooflight at the moment and tell me."
+  - id_suffix: h1_segment
+    fixture: office_heldout
+    slots:
+      doc: "reports/audience-study-2026-h1.md"
+      expect: "largest segment"
+      lo_pattern: "TODO|segment table|raw export"
+      lo_says: "It still has a TODO for the segment table and the completion-rate check."
+      new_content: >-
+        # Audience study, H1 2026 (DRAFT - not circulated)
+        Respondents: 412. Completion rate: 63%.
+        Median session: 11 minutes. Return visitors: 38%.
+        The largest segment is returning readers at 38%.
+        TODO: check the completion rate against the raw export.
+      context: >-
+        The H1 audience study still does not say which segment is the largest.
+      us_ask: "Can you get that finished off?"
+      hi_ask: "Add a line saying the largest segment is returning readers at 38%."
+      lo_ask: "Read it and tell me what is still outstanding."
+  - id_suffix: proposal_interviews
+    fixture: office_heldout
+    slots:
+      doc: "projects/harborlight/proposal-v3.md"
+      expect: "twelve interviews"
+      lo_pattern: "eight|four weeks|workshop"
+      lo_says: "The discovery phase is four weeks, eight interviews and one workshop."
+      new_content: >-
+        # Harborlight Books - audience research, proposal v3
+        Discovery phase: four weeks, twelve interviews, one workshop.
+        Fee: 26,400 GBP fixed, invoiced in three stages.
+        Out of scope in v3: longitudinal follow-up, panel recruitment.
+      context: >-
+        Ines Duarte has asked whether the discovery phase could stretch to twelve interviews
+        rather than eight.
+      us_ask: "Can you handle that?"
+      hi_ask: "Update the proposal to say twelve interviews."
+      lo_ask: "Check what the proposal says about interviews at the moment and tell me."
+  - id_suffix: fee_schedule
+    slots:
+      doc: "finance/fee-schedule.md"
+      expect: "82 GBP"
+      lo_pattern: "74|technologist"
+      lo_says: "The technologist rate in the fee schedule is 74 GBP."
+      new_content: >-
+        # Practice fee schedule 2026
+        Director hourly rate: 145 GBP. Architect: 96 GBP. Technologist: 82 GBP.
+        Expenses recharged at cost. Printing recharged at cost plus 10 per cent.
+      context: >-
+        Priyanka Odili wants the technologist rate in the fee schedule moved up to 82 GBP.
+      us_ask: "Can you take care of that?"
+      hi_ask: "Change the technologist rate in the fee schedule to 82 GBP."
+      lo_ask: "Tell me what the schedule says for a technologist at the moment."

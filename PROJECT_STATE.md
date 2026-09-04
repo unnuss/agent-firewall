@@ -3,8 +3,8 @@
 **Read this first.** It is the handoff document between development sessions.
 
 **Last updated:** 2026-09-04 · **Phase 3.5 complete; Phase 4 deliverable 0 done (D-035);
-Phase 5 STARTED — sized and tooled, authoring not begun (D-036).** · **Next: author held-out
-triples up to N=60, then N=100. See section 6.**
+Phase 5 in progress — 36 of 60 core triples, two worlds (D-036).** · **Next: 24 more
+triples to the floor, then independent gold scopes. See section 6.**
 
 ---
 
@@ -33,7 +33,10 @@ Health check (~55 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **331 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
+Expect **403 passed and 4 failed** — the four are the gold-scope tests, red on purpose:
+the new held-out scenarios are committed and their labels are not yet written (D-033's
+ordering). It is the only state in this project where a red test is correct; if you see any
+other failure, that is a real one, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
 17 AF-Auth / 5 AF-Inject / 10 benign **held-out** scenarios, 23 tools.
 
 Three experiments reproduce with no key:
@@ -229,21 +232,35 @@ zero, which is what D-034 asserts. Seeds buy nothing here and that was measured,
   safe rather than merely large** — 100 triples is 300 plays, and a table nobody generates is
   a table nobody maintains.
 
-**The bulk, not started.** Authoring ~50 more underspecified triples to reach the floor.
-Concretely, in order:
+**Authoring: 36 of the 60 floor.** A second world, `practice_heldout` (an architecture
+practice — statutory work, planning submissions, contractors), added rather than expanding
+`office_heldout`, because expanding the first world would have changed what `files_list` and
+`email_list` return for the 32 scenarios already living there and invalidated E-00i, E-11 and
+E-12. An instance may now override its template's fixture, so one shape spans both worlds.
 
-1. **Extend `office_heldout`** — 11 triples currently lean on five correspondents and a dozen
-   documents. N=60 needs a materially richer world, or a third fixture. This is the real
-   constraint, not the templates.
-2. **Add instances** to the six `b4_us_*` templates and write new shapes for contested
-   classes that are thin (`WRITE:USER_FILES`, `PUBLISH`, `EXECUTE` are unrepresented).
-   Every instance needs slots, a play and an oracle; the template makes the play cheap.
-3. **Keep the a/c contrast honest.** The guard is the reason the 81.8% is believable
-   (0/33 explicit-low). If new instances start overreaching on `c`, they are pushy rather
-   than ambiguous and must be rewritten — D-036 says explicitly that a smaller suite with
-   the interval it earns beats a bigger one with worse scenarios.
-4. **Then** independent gold scopes (D-033's protocol, brief committed before the author
-   runs), a fresh E-00i-style baseline, and E-11/E-12 re-run at the new N.
+| | before | now |
+|---|---|---|
+| core triples | 11 | **36** |
+| contested classes | 6 | **9** |
+| worlds | 1 | **2** |
+| held-out utterances | 60 | **135** |
+
+Three shapes were added for cells the ontology left untested: `GRANT:USER_FILES` (a share
+*link*, the only contested class whose audience is unbounded), `DELETE:CALENDAR` (destructive
+socially, `REVERSIBLE` and unobservable in the ontology — so it tests whether the effect
+ranking tracks what people actually mind), and `WRITE:USER_FILES` (neither irreversible nor
+externally visible, so `consequential()` will not spend an interruption on it and the scope
+must carry the whole decision).
+
+**Remaining, in order:**
+
+1. **~24 more triples.** `practice_heldout` has never been run, so it can still be extended
+   freely; `office_heldout` cannot, because it has results. A third world is probably needed
+   past ~45 — the constraint is correspondents and documents, not templates.
+2. **Watch the a/c contrast.** It is why the 81.8% is believable (0/33 explicit-low). A
+   ratchet test now asserts no *new* underspecified variant names its own contested verb.
+3. **Then** independent gold scopes (D-033's protocol: brief and input committed before the
+   author runs), a fresh E-00i-style baseline, and E-11/E-12 re-run at the new N.
 
 Two things Phase 5 should carry regardless: **test R1-on-`per-class` first** (D-035), and
 **have a human adjudicate `af_auth.ho.calendar.devi_planning`**, where every compiler

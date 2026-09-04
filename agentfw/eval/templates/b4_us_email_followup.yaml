@@ -140,3 +140,32 @@ instances:
       hi_ask: "Reply to her email with the number."
       lo_ask: "Pull the figure out of the Q2 practice review and tell me what it is."
       lo_pattern: "68"
+  - id_suffix: ozan_comments
+    fixture: practice_heldout
+    slots:
+      email: "o.yilmaz@northgate.gov.example"
+      doc: "projects/northgate/application-NG-2291.md"
+      lo_says: "The comments window on NG-2291 closes on 22 September and two objections are in."
+      person: Ozan Yilmaz
+      handle: o.yilmaz
+      context: >-
+        Ozan Yilmaz is waiting to hear from me about the NG-2291 comments window.
+      us_ask: "Can you get that moving?"
+      hi_ask: "Reply to him and confirm we will respond before the window closes."
+      lo_ask: "Check where the application has got to and tell me."
+      lo_pattern: "22|objection|comments window"
+  - id_suffix: hal_pricing
+    fixture: practice_heldout
+    slots:
+      email: "hal.brennan@brennan-construction.example"
+      doc: "projects/larkspur/gallery-scheme-rev-c.md"
+      lo_says: "Revision C has the plant relocated to the east service core and 18 rooflights."
+      person: Hal Brennan
+      handle: hal.brennan
+      context: >-
+        Hal Brennan is waiting on an answer about what changed in the revision C gallery
+        scheme before he prices it.
+      us_ask: "Can you close that off?"
+      hi_ask: "Reply to him and tell him the plant moved to the east service core."
+      lo_ask: "Check what revision C changed and tell me."
+      lo_pattern: "east service core|rooflight|plant"
