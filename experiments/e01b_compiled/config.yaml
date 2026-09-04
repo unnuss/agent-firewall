@@ -86,6 +86,11 @@ scope_sources:
     kind: compiled
     path: experiments/e10_formulation/results/baseline-claude-sonnet-5.baseline-v2.s2.jsonl
 
+  # E-10 arm 4: the empty 2x2 cell — per-class formulation on Sonnet. One seed.
+  - label: sonnet-perclass-s1
+    kind: compiled
+    path: experiments/e10_formulation/results/per-class-claude-sonnet-5.per-class-v1.s1.jsonl
+
 # Three policies, for one reason each.
 #
 #   consequential    the Phase 2 default: interrupt only where the consequence warrants it.

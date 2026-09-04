@@ -67,6 +67,19 @@ independent knobs say otherwise:
   order between the families *reverses* between roles: Sonnet's **agent** overreaches 60.0%
   where OpenAI's is 38.9%, but its **compiler** is five times more conservative (**F-18**).
 
+The completed 2x2 has **exactly one bad cell**, and the two fixes are **substitutes**
+(**F-19**):
+
+| leakage, underspecified | `baseline` | `per-class` |
+|---|---|---|
+| `gpt-4.1-mini` | **53.3%** | 0.0% |
+| `claude-sonnet-5` | 10.0% | 0.0% |
+
+The best arm — `per-class` on Sonnet — **matches the hand-written gold scopes on every
+security axis** (0.0% overreach, 0.0% explicit-low, 0.0% ASR) and sits one episode from gold
+on compliance (84.3% vs 84.7%). The entire remaining gap is 3 refused benign actions out of
+173.
+
 So the architecture's bet — that "what did this person authorize?" is an easier question
 than "what should I do?" — **holds, but not automatically.** The failure E-09a measured was
 one cell of a 2x2, a weak model under a loose formulation, not a law about compilers. And
@@ -217,7 +230,8 @@ on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALS
 |---|---|---|
 | **F-16** | The *baseline* formulation leaks 53.3% against the agents' 45.9%. Prediction 3 falsified | Measurement stands; the explanation is superseded by F-17 |
 | **F-17** | Formulation-dependent: per-class verdicts get 0.0% leakage from the same model | Confirm on the held-out slice before it sets the design |
-| **F-18** | Model-dependent too, and agent behaviour does not predict compiler behaviour: Sonnet's agent overreaches 60.0%, its compiler leaks 10.0% | The 2x2 has an empty cell (`per-class` on Sonnet). Fill it before choosing a deployment configuration |
+| **F-18** | Model-dependent too, and agent behaviour does not predict compiler behaviour: Sonnet's agent overreaches 60.0%, its compiler leaks 10.0% | Confirm on held-out |
+| **F-19** | The two fixes are **substitutes**: one bad cell in the 2x2, either knob alone recovers most of it | A deployment needs *either* a capable model *or* an explicit formulation. Choose on cost — the formulation is ~10x cheaper |
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
 | **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
 | **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
@@ -235,57 +249,57 @@ on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALS
 | **R-15** | FPR-block must be reported against compiled scopes, never gold | **Done** — E-01b reports it per scope source |
 | **R-16** | **New.** Prompt development and measurement share the dev slice | The tuning slice is declared: benign + af_inject + the control pairs. The 14 core underspecified triples were not looked at while writing the prompt, and any later prompt change must be declared and re-registered |
 
-## 6. Phase 3 — is there enough evidence for the architecture decision?
+## 6. Phase 3 — the architecture decision, and whether the phase can close
 
-**For the architecture: yes. For the deployment configuration: not yet.** Those are
-different decisions and Phase 3 should close only the first.
+**Recommendation: yes, close Phase 3 on the architecture. Do not close it on the
+deployment configuration, and do not start Phase 4 until the two items in "owed" are done.**
 
-### What is settled
+### The architecture decision, stated
 
-1. **The deterministic core is the contribution and it is validated.** Given a correct
-   scope: 0% overreach, 0% ASR, 0 benign refusals, 0 interruptions (E-01a). Given *any*
-   compiled scope: **ASR is 0.0%** — the injection half of the thesis never needed a model
-   at all, because those utterances are plain read-only requests and deny-by-default over
-   effect classes does the work.
-2. **Intent compilation works.** Two configurations reach the gold result end to end:
-   `per-class` on gpt-4.1-mini (0.0% overreach, 84.3% compliance) and the plain baseline on
-   Sonnet (0.7-2.2% overreach, 84.3% compliance, the best cost profile at 1.1-4.6% FPR-block).
-3. **A tool allowlist is not an authorization mechanism** — it reproduces undefended
-   overreach exactly (F-11).
-4. **ASK's value is real and is a function of compiler error** (F-09, answered), and an
-   inferred bound must be negotiable where a stated one is not (D-030, worth 16 points of
-   compliance).
-5. **What varies is withholding, not noticing.** Every compiler flags the ambiguity; they
-   differ in whether they then withhold (F-17, F-18).
+The design is **validated as specified in ARCHITECTURE.md**, with one part re-scoped:
 
-### What is not settled, and blocks a *configuration* decision
+1. **Deterministic reference monitor over an effect ontology, deny-by-default.** Keep. It is
+   the contribution. Given a correct scope it removes all measured overreach and all measured
+   attack success at zero cost (E-01a), and **ASR is 0.0% under every compiled scope ever
+   measured** — the injection half of the thesis never needed a model.
+2. **Intent compilation outside the TCB.** Keep. Two configurations reach the gold-scope
+   result end to end; the best is within one episode of hand-written scopes on every axis.
+3. **ASK as the recovery path.** Keep. Its value is a function of compiler error (F-09,
+   answered) and it is what makes an under-granting compiler usable.
+4. **Constraint provenance** (D-030). Keep — worth 16 points of compliance.
+5. **The M0-M5 ladder: re-scope, do not build as written.** It was designed to calibrate
+   `P(licensed)` into an ASK band. The security axis turns out reachable from formulation and
+   model choice alone, so what remains is the *cost* axis, and the useful estimand is "how
+   likely is it the compiler **dropped** this class" — not the same quantity, and a much
+   smaller problem. E-02 as written answers a question the evidence no longer poses.
 
-- **Everything is the dev slice.** EVALUATION section 5 commits to a held-out split touched
-  only for final numbers. The held-out scenarios have **no gold scopes** — writing them is
-  the single highest-value next task and it is Phase 5 work that just became urgent.
-- **The 2x2 has an empty cell.** `per-class` on Sonnet is unrun. Without it we cannot say
-  whether the formulation fix and the model choice compose, are redundant, or interfere.
-  ~$0.75, two seeds. This is the cheapest remaining experiment with real decision value.
-- **Sonnet has two seeds against three elsewhere**, and R-14 is live for it.
-- **The cost axis is unresolved.** 1-7% benign FPR-block and ~0.6 asks/episode against
-  gold's zero, driven by under-granting (F-10). That is Phase 4's cost model, and it now has
-  a real trade-off to arbitrate.
+### What E-10 settled
 
-### Recommendation
+- The authority-leakage failure is **one cell of a 2x2**, not a law (F-16 measured it, F-17
+  and F-18 falsified its explanation, F-19 gave the interaction structure).
+- The two fixes are **substitutes**: a deployment needs either a capable model or an explicit
+  formulation, and can choose on cost. The formulation is ~10x cheaper and does not depend on
+  a frontier model remaining available.
+- **Noticing is not the differentiator** — every compiler flags the ambiguity on ~100% of
+  underspecified instructions. **Withholding is what varies**, and making refusal expressible
+  is what changes it.
 
-**Close Phase 3 on the architecture, with the ladder re-scoped, and do not pick a
-deployment configuration yet.** Concretely:
+### Owed before Phase 4
 
-1. Fill the empty 2x2 cell (`per-class` on Sonnet). One command, ~$0.75.
-2. Write gold scopes for the held-out slice, then re-run E-09a/E-01b there. Nothing in
-   Phase 3 should be called final on dev numbers alone.
-3. **Re-scope M0-M5.** It was designed to calibrate `P(licensed)` into an ASK band. After
-   F-17 and F-18 the security axis is reachable from formulation and model choice alone, and
-   what remains is the cost axis: "how likely is it that the compiler *dropped* this class".
-   That is a smaller and different estimand, and E-02 as written answers a question the
-   evidence no longer poses.
-4. E-01 (D-012's registered similarity prediction) is still worth running — cheap, and its
-   negative result stands on its own.
+1. **Held-out validation.** Everything above is the dev slice. EVALUATION section 5 commits
+   to a held-out split touched only for final numbers, and the held-out scenarios have **no
+   gold scopes**. Writing them, then re-running E-09a/E-01b there, is the single highest-value
+   remaining task. Nothing in Phase 3 should be called final on dev numbers alone.
+2. **A second seed for arm 4** (~$1.40) if its numbers are to be quoted as more than a point
+   estimate.
+
+Neither blocks the architecture decision; both block quoting these numbers as final.
+
+### Deliberately not decided
+
+Which model and which formulation to deploy. That is a configuration choice, it depends on
+cost and on availability, and the honest position after E-10 is that **several configurations
+work and one does not** — which is more useful to a reader than a single recommended stack.
 
 **Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-024, D-025's input
 restriction, or D-030's provenance asymmetry without a documented reason.
@@ -305,7 +319,7 @@ restriction, or D-030's provenance asymmetry without a documented reason.
   unusable as *agents* (D-016/D-020) but a compiler needs only JSON output, so
   `qwen2.5-coder:14b` runs as an explicitly exploratory arm at roughly 50–100 s per
   utterance on CPU.
-- **Phase 3 has spent roughly $3** (E-09a ~$0.30, E-10 ~$2.86 including one discarded
-  attempt). Total API spend across the project is roughly **$7**.
+- **Phase 3 has spent roughly $4.4** (E-09a ~$0.30, E-10 ~$4.1 including one discarded
+  attempt and two smoke probes). Total API spend across the project is roughly **$8.5**.
 - E-09a's compiled scopes are committed on purpose (D-026): they are inputs to E-01b, not
   outputs of it. E-01b's per-arm replay output is derived data and regenerates in ~2 minutes.

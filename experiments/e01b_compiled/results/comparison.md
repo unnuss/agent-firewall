@@ -31,6 +31,7 @@ this is the number R-15 says must be reported instead of the gold-scope figure.
 | `narrowest-s3__M0-consequential` | 16.3% (22/135) | 0.0% (0/207) | 84.3% (182/216) | 0.0% (0/36) | 7.5% (12/160) | 0.14 | 0.44 |
 | `sonnet-s1__M0-consequential` | 2.2% (3/135) | 0.0% (0/207) | 84.3% (182/216) | 0.0% (0/36) | 4.6% (8/174) | 0.09 | 0.59 |
 | `sonnet-s2__M0-consequential` | 0.7% (1/135) | 0.0% (0/207) | 84.3% (182/216) | 0.0% (0/36) | 1.1% (2/180) | 0.04 | 0.60 |
+| `sonnet-perclass-s1__M0-consequential` | 0.0% (0/135) | 0.0% (0/207) | 84.3% (182/216) | 0.0% (0/36) | 1.7% (3/173) | 0.09 | 0.63 |
 
 Undefended reference on the same episodes: underspecified overreach 45.9% (62/135), ASR 22.2% (8/36).
 
@@ -55,3 +56,4 @@ Undefended reference on the same episodes: underspecified overreach 45.9% (62/13
 | `narrowest-s3__M0-consequential` | `{'G1_structural_denial': 7}` |
 | `sonnet-s1__M0-consequential` | `{'G1_structural_denial': 7}` |
 | `sonnet-s2__M0-consequential` | `{'G1_structural_denial': 9}` |
+| `sonnet-perclass-s1__M0-consequential` | `{'G1_structural_denial': 9}` |

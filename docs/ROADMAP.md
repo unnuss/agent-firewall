@@ -93,6 +93,15 @@ finding instead; Phase 3 is where intelligence goes.
 
 ## Phase 3 — Intent compilation and the authorization model (the ML core) — IN PROGRESS
 
+**Status, 2026-08-31 (E-10 complete, 2x2 filled).** All four arms done. The failure is one
+cell of a 2x2 and the two fixes are **substitutes** (F-19): either a capable model or an
+explicit formulation suffices. The best arm matches gold on every security axis. **Phase 3
+can close on the architecture** — deterministic core, compiled scopes, ASK, constraint
+provenance — with **M0-M5 re-scoped rather than built as written**, because the security axis
+no longer needs it and the remaining problem is the cost axis. Two things are owed before
+Phase 4: held-out gold scopes and a re-run there, and a second seed for arm 4. See
+PROJECT_STATE section 6.
+
 **Status, 2026-08-31 (final for the phase).** All three E-10 arms are done. The
 authority-leakage failure is **one cell of a 2x2, not a law**: changing the formulation moves
 it 53.3% → 0.0% (F-17) and changing the model moves it 53.3% → 10.0% (F-18), and agent-side

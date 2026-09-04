@@ -1463,7 +1463,7 @@ nothing (D-028).
 
 ## E-10 — Can the compiler's authority prior be changed at all?
 **Phase:** 3 · **Status:** arms and predictions registered 2026-08-31 before any arm ran;
-all three arms done. **Yes — and the model matters as much as the formulation (F-17, F-18).**
+all four arms done, 2x2 complete. **Yes — and the two knobs are substitutes (F-17, F-18, F-19).**
 
 **Question.** F-16 found the registered compiler licensing the contested effect on 53.3% of
 underspecified instructions against the undefended agents' 45.9% — the same authority bias,
@@ -1733,6 +1733,97 @@ verbosity — median completion **469 tokens against gpt-4.1-mini's 51**, at fiv
 output price. The registered estimate scaled the baseline arm's token counts by call volume
 and did not account for either. Project total API spend is now roughly **$7**.
 
+### Arm 4 — the empty cell: registration (written 2026-08-31, before it ran)
+
+The first three arms move **one knob each** and leave a 2x2 with a hole in it: `per-class`
+has only been tried on `gpt-4.1-mini`, and Sonnet has only been tried on `baseline`. Without
+the fourth cell we cannot say whether the two interventions are **complementary** (each fixes
+something the other does not) or **redundant** (both fix the same failure, and either alone
+suffices). That distinction decides whether a deployment needs both, and it is the last
+question E-10 can answer cheaply.
+
+Arm 4 is `per-class` on `claude-sonnet-5`. Nothing else changes: same registered prompt
+variant as arm 1, same model and endpoint as arm 3, two seeds as arm 3.
+
+**Predictions, registered before the arm ran.**
+
+| # | Prediction |
+|---|---|
+| 7 | **Leakage lands at or below Sonnet's baseline 10.0%**, most likely 0.0-6.7% |
+| 8 | **The two knobs are largely redundant, not additive.** The marginal improvement over Sonnet-baseline will be small — a few points at most — because Sonnet-baseline is already near the floor and both interventions address the same failure: withholding not being expressible. Formally: `leakage(sonnet, per-class)` is closer to `leakage(sonnet, baseline)` than to zero *minus* what per-class bought on gpt-4.1-mini (53.3 points) |
+| 9 | **Retention holds at or above 88.9%** — the value per-class cost gpt-4.1-mini. Sonnet held 100% on baseline and is the stronger reader, so if per-class has an over-conservatism cost it should show up here or nowhere |
+| 10 | **This arm has the best cost profile of any compiled arm** on benign FPR-block, beating Sonnet-baseline's 1.1-4.6% |
+
+Prediction 8 is the one that matters for the architecture: if the knobs are redundant, a
+deployment picks *either* a capable model *or* an explicit formulation, and the cheaper of
+the two wins. If they are additive, it needs both.
+
+### Arm 4 — the empty cell, and the completed 2x2 (2026-08-31)
+
+`per-class` on `claude-sonnet-5`. One seed (a declared budget decision — this arm costs
+~$1.4 a seed, roughly ten times the gpt-4.1-mini arms, because the model writes a
+justification for every candidate class), 86 compilations, **0 failures**.
+
+| Measure | value |
+|---|---|
+| Gate: retention | **100%** (24/24) |
+| Leakage, underspecified | **0.0%** (0/15) |
+| Leakage, explicit low | 8.7% |
+| Contrast fidelity | **91.7%** (22/24) — the highest of any arm |
+| micro F1 / precision / recall | **0.806** / 0.990 / 0.680 — the highest F1 of any arm |
+| over / under granted classes | **2** / 91 |
+
+**The completed 2x2.** Contested-effect leakage on underspecified instructions:
+
+| | `baseline` formulation | `per-class` formulation |
+|---|---|---|
+| **`gpt-4.1-mini`** | **53.3%** | 0.0% |
+| **`claude-sonnet-5`** | 10.0% | **0.0%** |
+
+And the same cells at the verdict level (E-01b overreach, `M0-consequential`):
+
+| | `baseline` | `per-class` |
+|---|---|---|
+| `gpt-4.1-mini` | 25.2% | 0.0% |
+| `claude-sonnet-5` | 0.7-2.2% | **0.0%** |
+
+**One bad cell out of four.** Either knob alone recovers most of the failure; the two
+together reach the floor. They are **substitutes, not complements** — which is the answer
+prediction 8 was registered to get, and it is the one that matters for deployment: a system
+needs *either* a capable model *or* an explicit formulation, not both.
+
+### Full comparison, every arm, `M0-consequential`
+
+| Scope source | Overreach | Expl.-low | Compliance | ASR | Benign FPR-block | ASKs/ep benign |
+|---|---|---|---|---|---|---|
+| *(undefended)* | 45.9% | 1.4% | 84.7% | 22.2% | — | — |
+| **gold (hand-written)** | **0.0%** | 0.0% | 84.7% | 0.0% | **0.0%** | 0.00 |
+| `tool-ceiling` | 45.9% | 1.4% | 84.7% | 16.7% | 0.0% | 0.00 |
+| `read-only` | 0.0% | 0.0% | 78.2% | 0.0% | 12.1% | 0.11 |
+| gpt `baseline` | 25.2% | 0.0% | 84.3% | 0.0% | 7.5% | 0.14 |
+| gpt `narrowest` | 20.0% | 0.0% | 84.3% | 0.0% | 7.5% | 0.08 |
+| gpt `per-class` | 0.0% | 1.4% | 84.3% | 0.0% | 6.8% | 0.11 |
+| sonnet `baseline` s1/s2 | 2.2% / 0.7% | 0.0% | 84.3% | 0.0% | 4.6% / 1.1% | 0.09 / 0.04 |
+| **sonnet `per-class`** | **0.0%** | **0.0%** | 84.3% | **0.0%** | **1.7%** | 0.09 |
+
+**Arm 4 matches the hand-written gold scopes on every security axis** — 0.0% overreach,
+0.0% explicit-low overreach, 0.0% ASR — and is within one episode of gold on compliance
+(84.3% vs 84.7%). The whole remaining difference is 1.7% benign FPR-block against gold's
+0.0%: **3 refused benign actions out of 173**, recoverable at `ask_on: all_out_of_scope`.
+
+### Predictions 7-10, scored
+
+| # | Prediction | Outcome |
+|---|---|---|
+| 7 | Leakage at or below 10.0%, likely 0.0-6.7% | **held** — 0.0% |
+| 8 | The knobs are largely redundant, not additive | **held.** Sonnet gains 10.0 → 0.0 points from per-class where gpt-4.1-mini gained 53.3; the marginal effect is a fifth the size, and the verdict-level gain is 0.7-2.2% → 0.0% |
+| 9 | Retention holds at or above 88.9% | **held** — 100%, and notably per-class cost Sonnet *no* retention where it cost gpt-4.1-mini 11 points. The over-conservatism price of the formulation is itself model-dependent |
+| 10 | Best cost profile of any arm, beating sonnet-baseline's 1.1-4.6% | **not established.** 1.7% sits inside that range rather than below it, and arm 4 has one seed against arm 3's two. Comparable, not better |
+
+Across E-10 as a whole: **six of the ten registered predictions were wrong**, and the four
+that were wrong about direction were all wrong pessimistically. Registering them first is
+what makes that statement worth anything.
+
 ### Run log
 
 | Date | Event |
@@ -1742,6 +1833,7 @@ and did not account for either. Project total API spend is now roughly **$7**.
 | 2026-08-31 | Arm 3 blocked: `OPENROUTER_API_KEY` present in the operator's shell but not in `.env.local`, so the harness could not see it — the mirror image of D-029, caught in seconds by the credential fingerprint line |
 | 2026-08-31 | Key added; **arm 3 attempt 1 discarded — instrument defect, not a result.** 23/86 and 34/86 compilations failed: HTTP 429 from six concurrent workers, and truncation against `max_tokens: 900`. That cap was copied from the gpt-4.1-mini arm, whose median completion is **51** tokens; Sonnet's is **469** (p90 769, max 890, i.e. sitting on the cap). A truncated answer parses as no JSON and scores as an empty scope, and **an empty scope cannot leak** — so the arm's apparent 0.0% leakage was measuring the token cap. Fixed: `max_tokens` 2400, `max_workers` 2. Neither touches the prompt, model, seeds or metrics |
 | 2026-08-31 | Arm 3 attempt 2, capacity fixed | **done** — 172 compilations, 0 failures, $1.47. Prediction 4 falsified and inverted |
+| 2026-08-31 | Arm 4 (`per-class` on claude-sonnet-5) registered with predictions 7-10, then run | **done** — 86 compilations, 0 failures, $1.38. A 4000-token probe truncated first and was caught by a smoke test *before* the arm ran, not after: `max_tokens` sized to 8000 by measurement. One seed, declared, on budget grounds |
 
 ---
 
@@ -2049,6 +2141,37 @@ and did not account for either. Project total API spend is now roughly **$7**.
   (it bites less than usual here — leakage and contrast read the scenario's structural
   ground truth, not gold prose — but it is not zero). The 2x2 has one empty cell: `per-class`
   on Sonnet has not been run.
+- **F-19 — the two fixes are substitutes, and the failure needed both a weak model and a
+  loose formulation.** The completed 2x2 has exactly one bad cell:
+
+  | leakage, underspecified | `baseline` | `per-class` |
+  |---|---|---|
+  | `gpt-4.1-mini` | **53.3%** | 0.0% |
+  | `claude-sonnet-5` | 10.0% | 0.0% |
+
+  Either intervention alone recovers most of the failure; together they reach the floor. The
+  marginal value of the formulation fix on the stronger model is a fifth of its value on the
+  weaker one (10.0 → 0.0 points against 53.3 → 0.0), and at the verdict level 0.7-2.2% →
+  0.0%. **They are substitutes, not complements.**
+
+  The deployment consequence is concrete and is the reason the cell was worth $1.40: a system
+  needs *either* a capable model *or* an explicit formulation — not both — and can choose on
+  cost. The explicit formulation is the cheaper of the two here by an order of magnitude
+  (per-class on `gpt-4.1-mini`: ~$0.10 per 86 utterances, against ~$1.40 for Sonnet), and it
+  is also the one that does not depend on a frontier model staying available.
+
+  **Arm 4 matches the hand-written gold scopes on every security axis** — 0.0% overreach,
+  0.0% explicit-low overreach, 0.0% ASR — and sits within one episode of gold on compliance
+  (84.3% vs 84.7%). The entire remaining gap is **3 refused benign actions out of 173**
+  (1.7% FPR-block against gold's 0.0%), which `ask_on: all_out_of_scope` recovers.
+
+  **One asymmetry worth keeping.** `per-class` cost `gpt-4.1-mini` 11 points of retention
+  (100% → 88.9%) and cost Sonnet **nothing** (100% → 100%). The over-conservatism price of
+  an explicit formulation is itself model-dependent, so "make refusal expressible" is not
+  free on every model and should be measured, not assumed, when the model changes.
+
+  **Limits.** One seed for arm 4 against two for arm 3 and three for the gpt arms; dev slice
+  throughout; R-14 live for both Claude arms.
 
 ## Backlog (ideas, not commitments)
 

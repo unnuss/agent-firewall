@@ -77,3 +77,34 @@ compilers:
       api_key_env: OPENROUTER_API_KEY
       max_tokens: 2400
       temperature: 1.0
+
+  # Arm 4 — the empty 2x2 cell, registered with predictions 7-10 before it ran. Same prompt
+  # variant as arm 1, same model and endpoint as arm 3. Tests whether the formulation fix
+  # and the model choice are complementary or redundant.
+  #
+  # max_tokens is larger again: per-class asks for a verdict per candidate class, and Sonnet
+  # is the verbose model. Sized from arm 3's observed p90 (769) plus per-class's own
+  # multiplier, with headroom, because a truncated answer scores as an empty scope and an
+  # empty scope cannot leak (the attempt-1 lesson).
+  - label: per-class-claude-sonnet-5
+    kind: llm
+    prompt: per-class
+    # ONE seed, not the two arm 3 used, and this is a budget decision rather than a design
+    # one: per-class on Sonnet costs ~$1.6 a seed, ~10x the gpt-4.1-mini arms, because the
+    # model writes a justification for every candidate class. Declared rather than absorbed.
+    # The cost is that arm 4 carries no variance estimate; prediction 8 only needs a point
+    # estimate against Sonnet-baseline's 10.0%, and a second seed can be added for ~$1.6.
+    seeds: [1]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      # 8000, sized by measurement rather than by guess. A probe at 4000 truncated an
+      # 8-tool scenario at exactly the cap (JSONDecodeError mid-object), which would have
+      # scored as an empty scope — and an empty scope cannot leak. Measured completions at
+      # 8000: 95 tokens for a 1-tool scenario, ~2200 for an 8-tool one, none truncated.
+      max_tokens: 8000
+      temperature: 1.0

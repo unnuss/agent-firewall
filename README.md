@@ -179,6 +179,23 @@ drops are exactly the private reversible ones — so 22 benign actions are refus
 dialog at all. Written up as finding F-10; it is the first measured requirement on Phase 4's
 cost model.
 
+**The completed picture: one bad cell out of four.** Two knobs, each of which alone recovers
+most of the failure:
+
+| contested-effect leakage | free-form prompt | per-class verdicts |
+|---|---|---|
+| `gpt-4.1-mini` | **53.3%** | 0.0% |
+| `claude-sonnet-5` | 10.0% | **0.0%** |
+
+The best configuration — per-class verdicts on Sonnet — **matches the hand-written gold
+scopes on every security axis**: 0.0% overreach, 0.0% attack success, and compliance within
+one episode of gold (84.3% vs 84.7%). What separates it from a human-written scope is three
+refused benign actions out of 173.
+
+The two fixes are **substitutes, not complements**: a deployment needs *either* a capable
+model *or* an explicit formulation, and can pick on cost — the formulation is about ten times
+cheaper and does not depend on a frontier model staying available.
+
 **Then two experiments showed the failure was one cell, not a law.**
 
 *Change the model, keep the prompt byte-identical:* Claude Sonnet 5 on the unchanged
