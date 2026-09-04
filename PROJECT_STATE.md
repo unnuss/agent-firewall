@@ -32,7 +32,7 @@ Health check (~55 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **331 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
+Expect **329 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
 17 AF-Auth / 5 AF-Inject / 10 benign **held-out** scenarios, 23 tools.
 
 Three experiments reproduce with no key:
@@ -116,7 +116,8 @@ agentfw/
   eval/scopes_data/heldout_v2.yaml               the independently authored labels (D-033)
 docs/authoring/            the brief, its input, and the superseded v1 labels
 tests/test_heldout_slice.py   every held-out oracle is satisfiable by a stated ideal play
-experiments/{e00g,e00i,e11,f20_probe}/
+  intent/coupling.py       E-12's registered rule; `agentfw couple-scopes` (measured, NOT adopted)
+experiments/{e00g,e00i,e11,e12_coupling,f20_probe}/
 ```
 
 Five things worth not re-deriving:
@@ -125,8 +126,8 @@ Five things worth not re-deriving:
   it: 18.2% of E-00b's episodes, 61.1% of E-00h's, saw a search result that would now differ.
 - **The compiled scopes were unaffected by the repair**, because D-025 restricts the
   compiler's input to the utterance and the tool catalogue. A test recomputes the prompt
-  digest of all 1,190 committed records so a tool-description edit cannot silently
-  invalidate them.
+  digest of every committed record whose prompt variant is current, so a tool-description
+  edit cannot silently invalidate them.
 - **`CompiledScopeStore.scope_for` raises on a reworded utterance** (F-23). This is why F-05
   was repaired in the *world* rather than in the sentence that asks for the missing figure.
 - **The held-out slice ships an ideal play per variant.** F-01 asserts no oracle is true
