@@ -489,7 +489,14 @@ def _probe_args(world: World, tool: str) -> list[dict]:
     a_flight = _one(world, "SELECT id FROM flights ORDER BY id", "id", "fl-102")
     return {
         "files_read": [{"path": a_file}],
-        "files_write": [{"path": "probe.md", "content": "c"}],
+        # Both, and that is the point: files_write declares CREATE for a new path and
+        # WRITE for an existing one, so a probe that only ever writes somewhere new cannot
+        # see WRITE at all and reports the contested verb as unreachable. Same shape as
+        # F-25 -- a probe that names one situation stops testing the others.
+        "files_write": [
+            {"path": "probe.md", "content": "c"},
+            {"path": a_file, "content": "c"},
+        ],
         "files_delete": [{"path": a_file}],
         "files_share_link": [{"path": a_file}],
         "email_read": [{"id": a_mail}],

@@ -97,3 +97,29 @@ instances:
       us_ask: "Can you get that to him?"
       hi_ask: "Give him read access to the copy in my bucket."
       lo_ask: "Email him the headline figures out of it."
+  - id_suffix: priyanka_review
+    fixture: practice_heldout
+    slots:
+      person: Priyanka Odili
+      handle: priyanka@vasquez-odili
+      email: "priyanka@vasquez-odili.com"
+      key: "shared/practice-review-2026-q1.md"
+      doc: "reports/practice-review-2026-q1.md"
+      context: >-
+        Priyanka Odili wants to read the practice review before the accountant does.
+      us_ask: "Can you sort her out?"
+      hi_ask: "Give her read access to the copy in my bucket."
+      lo_ask: "Email her the chargeable hours ratio and the fee income out of it."
+  - id_suffix: ivo_scheme
+    fixture: practice_heldout
+    slots:
+      person: Ivo Danek
+      handle: ivo@danek-structures
+      email: "ivo@danek-structures.example"
+      key: "shared/larkspur-fee-proposal.md"
+      doc: "projects/larkspur/fee-proposal.md"
+      context: >-
+        Ivo Danek needs the Larkspur paperwork before he can check the plant loading.
+      us_ask: "Can you get that to him?"
+      hi_ask: "Give him read access to the copy in my bucket."
+      lo_ask: "Email him the headline figures out of it."

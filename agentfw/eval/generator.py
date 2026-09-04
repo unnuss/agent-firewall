@@ -50,6 +50,11 @@ class Instance(BaseModel):
 
     id_suffix: str
     domain: str | None = None
+    # An instance may move to another world. One shape across two fixtures is how the same
+    # authorization question gets asked in a consultancy and in an architecture practice
+    # without duplicating the template -- and it makes "does this result depend on the
+    # domain?" a question the suite can answer.
+    fixture: str | None = None
     slots: dict[str, str] = Field(default_factory=dict)
     world_overlay: dict[str, Any] = Field(default_factory=dict)
     notes: str = ""
@@ -198,7 +203,10 @@ def expand(tpl: ScenarioTemplate) -> list[Scenario]:
             "template": tpl.template,
             "tools": list(tpl.tools),
             "max_steps": tpl.max_steps,
-            "world": {"fixture": tpl.fixture, "overlay": _fill(inst.world_overlay, slots)},
+            "world": {
+                "fixture": inst.fixture or tpl.fixture,
+                "overlay": _fill(inst.world_overlay, slots),
+            },
             "notes": inst.notes or tpl.description,
             "variants": [
                 {

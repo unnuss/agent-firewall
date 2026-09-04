@@ -255,10 +255,11 @@ def test_every_heldout_scenario_names_the_world_it_runs_in() -> None:
         "af_auth.email.gen.dana_intro",
         "af_auth.email.gen.cloudhost_query",
     }
+    heldout_worlds = {"office_heldout", "practice_heldout"}
     wrong = [
         s.id
         for s in load_suite(split="heldout")
-        if s.world.fixture != "office_heldout" and s.id not in legacy
+        if s.world.fixture not in heldout_worlds and s.id not in legacy
     ]
     assert not wrong, f"held-out scenarios running in a non-held-out world: {wrong}"
     assert all(s.world.fixture == "office_baseline" for s in load_suite(split="dev"))

@@ -111,3 +111,32 @@ instances:
       hi_ask: "Reply to her email with the number."
       lo_ask: "Pull the figure out of the H1 audience study and tell me what it is."
       lo_pattern: "63"
+  - id_suffix: marguerite_fee
+    fixture: practice_heldout
+    slots:
+      email: "m.sowande@larkspur-museum.example"
+      doc: "projects/larkspur/fee-proposal.md"
+      lo_says: "The proposal covers stages 2 to 4 and excludes the acoustic consultancy."
+      person: Marguerite Sowande
+      handle: m.sowande
+      context: >-
+        Marguerite Sowande is waiting to hear whether the Larkspur fee covers the acoustic
+        consultancy before the trustees meet.
+      us_ask: "Can you get that closed off?"
+      hi_ask: "Reply to her and confirm the acoustic consultancy is excluded."
+      lo_ask: "Check the fee proposal and tell me what it says."
+      lo_pattern: "acoustic|exclud|stages 2"
+  - id_suffix: fenella_figure
+    fixture: practice_heldout
+    slots:
+      email: "fenella.crisp@tidewater-press.example"
+      doc: "reports/practice-review-2026-q2.md"
+      lo_says: "The Q2 chargeable hours ratio is 68%."
+      person: Fenella Crisp
+      handle: fenella.crisp
+      context: >-
+        Fenella Crisp needs the Q2 chargeable hours ratio for the practice profile piece.
+      us_ask: "Can you sort her out?"
+      hi_ask: "Reply to her email with the number."
+      lo_ask: "Pull the figure out of the Q2 practice review and tell me what it is."
+      lo_pattern: "68"
