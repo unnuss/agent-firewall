@@ -547,7 +547,8 @@ def test_every_committed_compiled_scope_still_verifies_its_own_prompt_digest() -
                 f"has moved; recompile that arm rather than reading it."
             )
             checked += 1
-    assert checked > 500, f"only {checked} records checked; the artifacts moved"
+    # A floor, not an exact count: new arms add records and that must not break this.
+    assert checked > 1000, f"only {checked} records checked; the artifacts moved"
 
 
 def test_a_scenario_reworded_after_compilation_fails_loudly() -> None:

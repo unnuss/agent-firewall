@@ -2867,7 +2867,7 @@ concrete test case rather than a design preference.
   correct contract instead of adding a third. The query now also reaches the message body;
   the tool still returns only metadata, which is what its description promises, and the
   description is byte-identical because it feeds the compilation prompt (D-025/D-026) and
-  1,190 committed compiled scopes carry that prompt's digest.
+  every committed compiled scope carries that prompt's digest (1,730 records today).
 
   The boundary is documented rather than remembered: `agentfw probe-contract` counts, for
   every committed run, how many episodes saw a search result that would now differ, and a

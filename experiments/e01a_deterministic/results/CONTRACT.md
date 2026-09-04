@@ -7,6 +7,6 @@ be differenced against any post-repair number. See the sibling `CONTRACT.md` fil
 
 **The compiled scopes themselves are unaffected by the repair.** D-025 restricts the
 compiler's input to the utterance and the tool catalogue, and neither moved: a test
-recomputes the prompt digest of all 1,190 committed records whose prompt variant is current
+recomputes the prompt digest of every committed record whose prompt variant is current (1,730 today)
 and requires a match. What is pre-repair here is the *episodes* a replay runs over, not the
 scopes it runs with.
