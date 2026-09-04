@@ -266,6 +266,17 @@ emails:
       Marguerite
     ts: "2026-09-14T08:44:00+00:00"
     confidentiality: PRIVATE
+  - id: p-013
+    folder: inbox
+    sender: sunniva.holt@example.net
+    recipients: renata@vasquez-odili.com
+    subject: "Site visit on the 21st - I am away"
+    body: |
+      Renata, I am away that week after all, so there is no point in you coming out to the
+      house on Monday the 21st. Sorry for the short notice.
+      Sunniva
+    ts: "2026-09-14T08:50:00+00:00"
+    confidentiality: PRIVATE
 
 calendar_events:
   - id: pv-101

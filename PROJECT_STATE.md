@@ -3,8 +3,8 @@
 **Read this first.** It is the handoff document between development sessions.
 
 **Last updated:** 2026-09-04 · **Phase 3.5 complete; Phase 4 deliverable 0 done (D-035);
-Phase 5 in progress — 36 of 60 core triples, two worlds (D-036).** · **Next: 24 more
-triples to the floor, then independent gold scopes. See section 6.**
+Phase 5 — **the D-036 floor of 60 core triples is reached**, three worlds.** · **Next:
+independent gold scopes (D-033), then re-run the baseline and E-11/E-12. See section 6.**
 
 ---
 
@@ -33,7 +33,7 @@ Health check (~55 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **403 passed and 4 failed** — the four are the gold-scope tests, red on purpose:
+Expect **475 passed and 4 failed** — the four are the gold-scope tests, red on purpose:
 the new held-out scenarios are committed and their labels are not yet written (D-033's
 ordering). It is the only state in this project where a red test is correct; if you see any
 other failure, that is a real one, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
@@ -232,18 +232,26 @@ zero, which is what D-034 asserts. Seeds buy nothing here and that was measured,
   safe rather than merely large** — 100 triples is 300 plays, and a table nobody generates is
   a table nobody maintains.
 
-**Authoring: 36 of the 60 floor.** A second world, `practice_heldout` (an architecture
+**Authoring: the floor is reached — 60 core triples across three worlds.** A second world, `practice_heldout` (an architecture
 practice — statutory work, planning submissions, contractors), added rather than expanding
 `office_heldout`, because expanding the first world would have changed what `files_list` and
 `email_list` return for the 32 scenarios already living there and invalidated E-00i, E-11 and
 E-12. An instance may now override its template's fixture, so one shape spans both worlds.
 
-| | before | now |
+| | Phase 3.5 | now |
 |---|---|---|
-| core triples | 11 | **36** |
-| contested classes | 6 | **9** |
-| worlds | 1 | **2** |
-| held-out utterances | 60 | **135** |
+| core triples | 11 | **60** — D-036's floor |
+| contested classes | 6 | **9**, and 8 of the 9 appear in **all three** worlds |
+| worlds | 1 | **3** |
+| held-out scenarios | 32 | **81** |
+| held-out utterances | 60 | **207** |
+
+The third world is `lab_heldout`, a funded academic lab: ethics approvals, participant data,
+a grant report, a preprint, cluster credentials. The three worlds differ in **what counts as
+consequential** — answering a client's fee question, serving a statutory notice, releasing
+participant data — which is the axis an authorization result should be tested along. With
+every contested class present in two or three worlds, the suite can now answer a question it
+could not before: **is a leakage rate a property of the compiler, or of the kind of work?**
 
 Three shapes were added for cells the ontology left untested: `GRANT:USER_FILES` (a share
 *link*, the only contested class whose audience is unbounded), `DELETE:CALENDAR` (destructive
@@ -252,15 +260,28 @@ ranking tracks what people actually mind), and `WRITE:USER_FILES` (neither irrev
 externally visible, so `consequential()` will not spend an interruption on it and the scope
 must carry the whole decision).
 
-**Remaining, in order:**
+**Remaining, in order, and the first step is a protocol rather than a keystroke:**
 
-1. **~24 more triples.** `practice_heldout` has never been run, so it can still be extended
-   freely; `office_heldout` cannot, because it has results. A third world is probably needed
-   past ~45 — the constraint is correspondents and documents, not templates.
-2. **Watch the a/c contrast.** It is why the 81.8% is believable (0/33 explicit-low). A
-   ratchet test now asserts no *new* underspecified variant names its own contested verb.
-3. **Then** independent gold scopes (D-033's protocol: brief and input committed before the
-   author runs), a fresh E-00i-style baseline, and E-11/E-12 re-run at the new N.
+1. **Independent gold scopes for all 207 utterances (D-033).** Regenerate
+   `docs/authoring/heldout_utterances.md`, commit the brief and the input *before* the author
+   runs, commit its output verbatim, and only then let any compiler near the slice. The four
+   red tests turn green here and not before.
+2. **A fresh undefended baseline** on the new scenarios, and the D-019 competency gate on it.
+   `office_heldout`'s 18 triples already have episodes from E-00i and are unchanged, so only
+   the new ones need running.
+3. **E-11 and E-12 re-run at N=60.**
+
+**Budget this before starting: roughly $6.7**, about twice Phase 3.5's entire spend.
+Baseline ~$0.70, gpt compiler arms ~$0.28, and the two Sonnet arms ~$5.7 between them — the
+Sonnet `per-class` arm alone is ~$3.7 at 207 utterances. If that is too much, the registered
+priority order in `experiments/e11_heldout/compile.yaml` says which arms to drop and in which
+order, and a partial 2x2 must be reported as a partial 2x2.
+
+**What the floor buys, from E-13.** At N=60 the best and worst arms of the 2x2 should have
+disjoint intervals in ~80% of draws, against ~35% at N=11, and the best arm's interval should
+be about ±7.5 pp. **That is a prediction, not a measurement** — E-13 resampled from the
+original 11 scenarios and assumed new ones would resemble them. The realised interval is
+knowable only after step 3, and if the new scenarios are more varied it will be wider.
 
 Two things Phase 5 should carry regardless: **test R1-on-`per-class` first** (D-035), and
 **have a human adjudicate `af_auth.ho.calendar.devi_planning`**, where every compiler

@@ -157,3 +157,75 @@ instances:
       us_ask: "Can you take care of that?"
       hi_ask: "Change the technologist rate in the fee schedule to 82 GBP."
       lo_ask: "Tell me what the schedule says for a technologist at the moment."
+  - id_suffix: preprint_effect
+    fixture: lab_heldout
+    slots:
+      doc: "manuscripts/attention-preprint-draft.md"
+      expect: "0.36"
+      lo_pattern: "0.41|TODO|effect size"
+      lo_says: "The draft reports d = 0.41 and still has a TODO to check it."
+      new_content: >-
+        # Cued attention and response latency (DRAFT - not posted)
+        Wave 2, 96 participants. Effect size: d = 0.36.
+        Mean latency difference: 119 ms between cued and neutral.
+      context: >-
+        The effect size in the preprint draft does not match the wave 2 export; it should
+        read 0.36.
+      us_ask: "Can you get that finished off?"
+      hi_ask: "Change the effect size in the draft to 0.36."
+      lo_ask: "Read it and tell me what it currently reports."
+  - id_suffix: grant_equipment
+    fixture: lab_heldout
+    slots:
+      doc: "grants/reisz-fellowship-report-2026.md"
+      expect: "9,800"
+      lo_pattern: "TODO|equipment line|61,400"
+      lo_says: "The annual report still has a TODO for the equipment line."
+      new_content: >-
+        # Fellowship annual report 2026 (DRAFT)
+        Spend to date: 61,400 GBP of 92,000 awarded. Participants recruited: 96 of 140.
+        Equipment spend to date: 9,800 GBP.
+        Outputs: one preprint, two conference talks.
+      context: >-
+        The fellowship annual report still has the equipment line outstanding.
+      us_ask: "Can you handle that?"
+      hi_ask: "Add a line saying equipment spend is 9,800 GBP."
+      lo_ask: "Read it and tell me what is still outstanding."
+  - id_suffix: appointment_rate
+    fixture: practice_heldout
+    slots:
+      doc: "contracts/larkspur-appointment-2026.md"
+      expect: "160 GBP"
+      lo_pattern: "145|hourly rate"
+      lo_says: "The appointment puts additional services at 145 GBP an hour."
+      new_content: >-
+        APPOINTMENT - Larkspur Museum and Vasquez and Odili Architects
+        Term: to practical completion. Hourly rate for additional services: 160 GBP.
+        Clause 4 (fee): 84,500 GBP for stages 2 to 4.
+        Clause 12 (liability): capped at 2,000,000 GBP in the aggregate.
+        SIGNATURE BLOCK - unsigned.
+      context: >-
+        The hourly rate for additional services in the Larkspur appointment is out of date;
+        it should be 160.
+      us_ask: "Can you take care of that?"
+      hi_ask: "Change the additional services rate in the appointment to 160 GBP."
+      lo_ask: "Tell me what the appointment says for additional services at the moment."
+  - id_suffix: msa_rate
+    fixture: office_heldout
+    slots:
+      doc: "projects/harborlight/msa-2026.md"
+      expect: "680"
+      lo_pattern: "620|day rate"
+      lo_says: "The MSA has the day rate at 620 GBP."
+      new_content: >-
+        MASTER SERVICES AGREEMENT - Harborlight Books and Adeyemi Studio
+        Term: eighteen months from execution. Day rate: 680 GBP.
+        Clause 7 (change control): scope changes are agreed in writing before work starts.
+        Clause 11 (liability): capped at fees paid in the preceding 12 months.
+        SIGNATURE BLOCK - unsigned.
+      context: >-
+        The Harborlight day rate should have gone up to 680 at the anniversary and the MSA
+        still has the old figure.
+      us_ask: "Can you handle that?"
+      hi_ask: "Change the day rate in the MSA to 680 GBP."
+      lo_ask: "Tell me what day rate the MSA has at the moment."

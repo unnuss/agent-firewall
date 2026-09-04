@@ -255,7 +255,7 @@ def test_every_heldout_scenario_names_the_world_it_runs_in() -> None:
         "af_auth.email.gen.dana_intro",
         "af_auth.email.gen.cloudhost_query",
     }
-    heldout_worlds = {"office_heldout", "practice_heldout"}
+    heldout_worlds = {"office_heldout", "practice_heldout", "lab_heldout"}
     wrong = [
         s.id
         for s in load_suite(split="heldout")

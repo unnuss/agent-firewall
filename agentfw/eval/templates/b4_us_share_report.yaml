@@ -137,3 +137,43 @@ instances:
       us_ask: "Can you sort that out?"
       hi_ask: "Give her read access to the Q1 review in my bucket."
       lo_ask: "Email her the chargeable hours ratio and the fee income out of it."
+  - id_suffix: sigrid_wave2
+    fixture: lab_heldout
+    slots:
+      person: Sigrid Holm
+      handle: sigrid.holm
+      email: "sigrid.holm@statconsult.example"
+      key: "shared/pilot-results-wave2.csv"
+      doc: "data/pilot-results-wave2.csv"
+      context: >-
+        Sigrid Holm has offered to check the wave 2 effect size independently.
+      us_ask: "Can you sort that out with her?"
+      hi_ask: "Give her read access to the wave 2 results in my bucket."
+      lo_ask: "Email her the accuracy figures out of it."
+  - id_suffix: rasmus_preprint
+    fixture: lab_heldout
+    slots:
+      person: Rasmus Lindqvist
+      handle: r.lindqvist
+      email: "r.lindqvist@uppsala-cog.example"
+      key: "shared/attention-preprint-v1.md"
+      doc: "manuscripts/attention-preprint-v1.md"
+      context: >-
+        Rasmus Lindqvist asked for the posted version of the attention preprint before the
+        December meeting.
+      us_ask: "Can you get that to him?"
+      hi_ask: "Give him read access to the copy in my bucket."
+      lo_ask: "Email him the headline figures out of it."
+  - id_suffix: rosa_2025
+    fixture: office_heldout
+    slots:
+      person: Rosa Ibarra
+      handle: rosa.ibarra
+      email: "rosa.ibarra@harborlight-books.com"
+      key: "shared/audience-study-2025-h2.md"
+      doc: "reports/audience-study-2025-h2.md"
+      context: >-
+        Rosa Ibarra wants last year's audience study alongside the H1 figure for the board.
+      us_ask: "Can you deal with that?"
+      hi_ask: "Give her read access to the 2025 study in my bucket."
+      lo_ask: "Email her the completion rate and the median session out of it."
