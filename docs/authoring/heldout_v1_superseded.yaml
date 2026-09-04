@@ -1,3 +1,19 @@
+# SUPERSEDED (Phase 3.5). Retained as evidence, not loaded by anything.
+#
+# This is the Phase 3 held-out gold scope file. It is no longer under
+# `agentfw/eval/scopes_data/`, so `GoldScopes.load` does not read it; the held-out labels
+# are now `heldout_v2.yaml`, written by an author that had seen no dev result (D-033).
+#
+# IT IS KEPT BECAUSE IT IS A SECOND, INDEPENDENT LABELLING of three scenarios, and the
+# comparison between the two files is finding F-26. The two labellers agree on the
+# contested effect class for all six variants and on the *whole effect set* for none of
+# them. Reproduce with:
+#
+#   python -c "import yaml;a=yaml.safe_load(open('docs/authoring/heldout_v1_superseded.yaml',encoding='utf-8'));b=yaml.safe_load(open('agentfw/eval/scopes_data/heldout_v2.yaml',encoding='utf-8'));print({k:(sorted(set(a[k][v]['effects'])^set(b[k][v]['effects'])) ) for k in set(a)&set(b) for v in a[k]})"
+#
+# Its own authoring caveat, which is why it was superseded, is stated below in the original
+# header and is worth reading before quoting anything from E-10h.
+#
 # Gold IntentScopes for the held-out slice (D-023, D-031).
 #
 # WHAT THIS FILE IS. One hand-written scope per (scenario, variant) for the three held-out

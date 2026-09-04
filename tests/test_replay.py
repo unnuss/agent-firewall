@@ -9,6 +9,8 @@ than what E-00b actually did, so the effects are compared against the source run
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from agentfw.core.scope import ec
@@ -384,35 +386,129 @@ def test_scope_files_may_not_redefine_each_other():
             seen[sid] = f.name
 
 
-def test_the_heldout_labels_follow_the_dev_label_for_the_same_template():
-    """All three held-out scenarios are `b1_draft_vs_send`, whose dev counterpart is
-    `af_auth.email.reply_sam`. The labels should be that one with the names changed — if
-    they are not, a judgement was made on the held-out slice that dev did not make, which
-    is exactly the freedom the authoring rule exists to remove."""
+def test_the_heldout_labels_carry_the_structural_ground_truth():
+    """The invariant that survives independent authorship, and the one E-09a measures.
+
+    This test used to require the held-out labels to be the dev label for the same template
+    with the names changed. That requirement was a *substitute* for independence (D-031):
+    the session writing them had seen every dev result, so mirroring removed a freedom it
+    could not be trusted with. D-033 supplies the real thing, and an independent author is
+    supposed to make its own judgements — so the mirroring requirement is retired and the
+    structural claim is asserted directly instead.
+
+    AF-Auth's ground truth is structural (D-010): the contested class is licensed on the
+    high-authority variant and on no low one. That is construction, not opinion, and it is
+    what leakage, retention and contrast fidelity read. It is asserted for every held-out
+    af_auth scenario rather than for three named ones.
+    """
     scopes = GoldScopes.load()
-    ref_a = set(scopes.data["af_auth.email.reply_sam"]["a"]["effects"])
-    ref_b = set(scopes.data["af_auth.email.reply_sam"]["b"]["effects"])
-    for sid in (
-        "af_auth.email.gen.cloudhost_query",
-        "af_auth.email.gen.dana_intro",
-        "af_auth.email.gen.priya_clause",
-    ):
-        assert set(scopes.data[sid]["a"]["effects"]) == ref_a, sid
-        assert set(scopes.data[sid]["b"]["effects"]) == ref_b, sid
-        # And the contested SEND is absent from `a` and present in `b`, which is what makes
-        # the pair minimal (D-010) and is asserted independently of the reference label.
-        assert "SEND:EMAIL" not in scopes.data[sid]["a"]["effects"]
-        assert "SEND:EMAIL" in scopes.data[sid]["b"]["effects"]
+    for sc in load_suite(split="heldout"):
+        if sc.suite != "af_auth" or sc.contested_effect is None:
+            continue
+        klass = f"{sc.contested_effect.verb.value}:{sc.contested_effect.resource_class.value}"
+        for v in sc.variants:
+            effects = scopes.data[sc.id][v.id]["effects"]
+            if v.authority == "high":
+                assert klass in effects, f"{sc.id}::{v.id} withholds the licensed {klass}"
+            else:
+                assert klass not in effects, f"{sc.id}::{v.id} licenses the contested {klass}"
 
 
-def test_no_heldout_scope_invents_a_constraint():
-    """Rule 3 applied uniformly (F-12): none of the six held-out utterances states a bound
-    in words, so none of the scopes carries one. Naming an addressee is not a bound."""
+def test_an_underspecified_variant_records_the_question_it_leaves_open():
+    """Authoring rule 4, asserted rather than trusted.
+
+    An underspecified variant whose scope names no open question has had its ambiguity
+    labelled away, and the phenomenon under study with it.
+    """
     scopes = GoldScopes.load()
-    for sid in (
-        "af_auth.email.gen.cloudhost_query",
-        "af_auth.email.gen.dana_intro",
-        "af_auth.email.gen.priya_clause",
-    ):
-        for vid in ("a", "b"):
-            assert not scopes.data[sid][vid].get("constraints")
+    for sc in load_suite(split="heldout"):
+        for v in sc.variants:
+            if v.specificity != "underspecified":
+                continue
+            block = scopes.data[sc.id][v.id]
+            assert block.get("open_questions"), (
+                f"{sc.id}::{v.id} is underspecified and its gold scope records no open "
+                f"question. Rule 4 says the action the utterance left open is absent from "
+                f"the effect list and the question is written down."
+            )
+
+
+def test_the_two_independent_labellings_agree_where_the_measurement_reads(shared_labels):
+    """F-26. Two labellers, six variants, zero exact agreement — and it does not matter.
+
+    The three `af_auth.email.gen.*` controls were labelled twice: once in Phase 3 by a
+    session that had seen every dev result, once in Phase 3.5 by an author that had seen
+    nothing (D-033). They agree on the *whole effect set* for none of the six variants and
+    on the *contested class* for all six.
+
+    That split is the finding. The disagreement is entirely `READ:USER_FILES` — one labeller
+    reads "draft a reply saying X" as licensing a look at the file, the other says every word
+    of the output is already in the sentence — plus an open question on an explicit variant
+    that should not have carried one. Both are rule-2 and rule-4 judgement calls, and both
+    move micro-F1 and exact-match, which E-09a already says are not the metric. Neither moves
+    leakage, retention or contrast fidelity, which are what every conclusion rests on.
+
+    So this asserts the half that has to hold. If a future labelling disagrees on the
+    contested class, the structural ground truth has become a matter of opinion and E-09a's
+    headline metrics stop meaning what they say.
+    """
+    v1, v2 = shared_labels
+    contested_disagreements = []
+    set_disagreements = []
+    for sid in sorted(set(v1) & set(v2)):
+        for vid in sorted(set(v1[sid]) & set(v2[sid])):
+            a = set(v1[sid][vid].get("effects", []))
+            b = set(v2[sid][vid].get("effects", []))
+            if ("SEND:EMAIL" in a) != ("SEND:EMAIL" in b):
+                contested_disagreements.append(f"{sid}::{vid}")
+            if a != b:
+                set_disagreements.append(f"{sid}::{vid}")
+    assert not contested_disagreements, (
+        f"the two labellings disagree on the contested class: {contested_disagreements}. "
+        f"AF-Auth ground truth is supposed to be structural, not a judgement call."
+    )
+    # Recorded, not required. If a future edit makes these agree, the finding is stale and
+    # the number in F-26 needs updating rather than the test needing a pass.
+    assert len(set_disagreements) == 6, (
+        f"F-26 records 6 whole-effect-set disagreements; found {len(set_disagreements)}: "
+        f"{set_disagreements}"
+    )
+
+
+@pytest.fixture
+def shared_labels():
+    """The two independent labellings of the scenarios they both cover."""
+    import yaml
+
+    v1 = yaml.safe_load(
+        Path("docs/authoring/heldout_v1_superseded.yaml").read_text(encoding="utf-8")
+    )
+    v2 = yaml.safe_load(
+        Path("agentfw/eval/scopes_data/heldout_v2.yaml").read_text(encoding="utf-8")
+    )
+    return v1, v2
+
+
+def test_no_heldout_scope_invents_a_constraint_the_utterance_does_not_state():
+    """Rule 3 applied uniformly (F-12), now over the whole held-out slice.
+
+    A constraint is licensed only where the utterance states a bound in words. Naming an
+    addressee is not a bound. The check that keeps this honest is directional: a gold scope
+    may not carry more constraints than the *dev* slice does per variant on average, and no
+    held-out variant may carry a constraint kind the utterance cannot possibly state.
+    """
+    scopes = GoldScopes.load()
+    heldout = [(sc.id, v.id) for sc in load_suite(split="heldout") for v in sc.variants]
+    per_variant = [
+        len(scopes.data[sid][vid].get("constraints", []) or []) for sid, vid in heldout
+    ]
+    assert max(per_variant) <= 2, "a gold scope with three bounds is almost certainly invented"
+    # Every constraint must name an effect class the same scope actually grants; a bound on
+    # an ungranted class is dead text that can only confuse the comparison.
+    for sid, vid in heldout:
+        block = scopes.data[sid][vid]
+        granted = set(block.get("effects", []))
+        for c in block.get("constraints", []) or []:
+            assert c.get("applies_to") in granted, (
+                f"{sid}::{vid} bounds {c.get('applies_to')}, which it does not grant"
+            )

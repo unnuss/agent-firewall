@@ -946,6 +946,51 @@ for it.
 
 ---
 
+### D-033 — The held-out gold scopes are authored by someone who has seen no result
+**Date:** 2026-09-04 · **Status:** accepted · **Supersedes:** the authoring caveat in D-031
+
+**Decision.** `agentfw/eval/scopes_data/heldout_v2.yaml` is the held-out gold scope file. It
+was written by an author given exactly two things — the 60 utterances with their tool sets,
+and D-023's four authoring rules — and nothing else in this repository. The brief and its
+input are committed at `docs/authoring/`, *before* the author ran, so what it was and was not
+given is checkable rather than asserted. The Phase 3 file is retired to
+`docs/authoring/heldout_v1_superseded.yaml`, out of the loader's path and kept as evidence.
+
+**What D-031 said, and why this is the answer to it.** "`dev.yaml` was written in Phase 2 when
+no compiler existed, so its author could not have tuned toward an output. `heldout.yaml` was
+written by a session that had already seen every dev compiler result across four arms.
+Commit-before-run, mechanical rule application, and mirroring the dev label for the same
+template stand in for that, and they are weaker." Those three stand-ins are now unnecessary
+for the reason that matters: the author could not have tuned toward an output because it did
+not know an output exists. It was never told that a compiler is part of this project.
+
+**And the mirroring requirement is retired, not merely satisfied.** A test used to demand
+that a held-out label equal the dev label for the same template with the names changed. That
+was a substitute for independence and it is incompatible with the real thing — an independent
+author is supposed to make its own judgements, and this one did (F-26). What replaces it is
+the structural claim the benchmark actually rests on: the contested class is licensed on the
+high-authority variant and on no low one (D-010), asserted for every held-out af_auth
+scenario rather than for three named ones.
+
+**What this does not fix, stated plainly.** R-14. The author is a Claude model, the scenarios
+are Claude-authored, and the compiler arms include a Claude model. Context independence is
+not authorship independence; what EVALUATION section 5 asks for is a different vendor or a
+human, and this is not that. The improvement is real and it is one axis of two.
+
+**The author's own criticism is kept in the file and two items are owed.** It reports that
+`READ:SECRETS` is offered as a candidate class in eight scenarios because `files_read` can
+reach a credential, while no utterance names one — a property of the tool leaking into the
+label space. And that rule 2 gives no stopping rule for instrumental reads, so `READ:CONTACTS`
+on report-only variants is a judgement call worth ~12 entries. Neither is acted on inside
+Phase 3.5, because changing the rule after seeing which labels it produces is the exact
+failure the ordering exists to prevent. Both are recorded for Phase 5, when the rule can be
+revised before anything is labelled against it.
+
+**Revisit if.** A human or a non-Claude author becomes available, which closes R-14 rather
+than this.
+
+---
+
 ### D-031 — The held-out slice is not yet a held-out validation, and says so
 **Date:** 2026-08-31 · **Status:** accepted
 
