@@ -2279,6 +2279,114 @@ is a function of the utterance and the tool catalogue and of nothing in the worl
 
 ---
 
+### E-12 — result: the rule works everywhere, closes nothing, and fails its own guard
+
+**Ran 2026-09-04, $0.** Both rules, all four arms, both splits, applied offline to committed
+artifacts. Run after F-29's repair, so gold compliance is 68.6%.
+
+#### Scope level
+
+| held-out | uncoupled | **+R1** | **+R2** |
+|---|---|---|---|
+| | *leakage / retention* | | |
+| `baseline` gpt-4.1-mini | 36.4% / 100.0% | 33.3% / 98.0% | **27.3% / 88.2%** |
+| `per-class` gpt-4.1-mini | 21.2% / 88.2% | **12.1% / 82.4%** | 12.1% / 76.5% |
+| `baseline` claude-sonnet-5 | 18.2% / 100.0% | 18.2% / 100.0% | **13.6% / 100.0%** |
+| `per-class` claude-sonnet-5 | 9.1% / 100.0% | **9.1% / 100.0%** | 9.1% / 82.4% |
+
+| dev *(the anti-fitting guard)* | uncoupled | +R1 | +R2 |
+|---|---|---|---|
+| `baseline` gpt-4.1-mini | 53.3% / 100.0% | 51.1% / 98.6% | **35.6% / 88.9%** |
+| `per-class` gpt-4.1-mini | 0.0% / 88.9% | 0.0% / 81.9% | 0.0% / 68.1% |
+| `baseline` claude-sonnet-5 | 10.0% / 100.0% | 10.0% / 100.0% | 6.7% / 100.0% |
+| `per-class` claude-sonnet-5 | 0.0% / 100.0% | 0.0% / 100.0% | 0.0% / 100.0% |
+
+#### Verdict level, held-out (`M0-consequential`)
+
+| arm | overreach | compliance | ASR | benign FPR-block |
+|---|---|---|---|---|
+| gold | 0.0% | 68.6% | 0.0% | 0.0% |
+| `baseline` gpt **+R2**, 3 seeds | **3.0% / 3.0% / 18.2%** | 68.6 / 68.6 / 62.7% | 0.0% | 0.0% |
+| `per-class` gpt **+R2**, 3 seeds | 9.1 / 18.2 / 9.1% | 68.6% | 0.0% | 0.0% |
+| `per-class` gpt **+R1** | 9.1% | 68.6% | 0.0% | 0.0% |
+| `baseline` Sonnet +R2 | 9.1% | 68.6% | 0.0% | 5.5% |
+| `per-class` Sonnet +R2 | 9.1% | 62.7% | 0.0% | 0.0% |
+| `per-class` Sonnet **+R1** | 9.1% | **68.6%** | 0.0% | 0.0% |
+| *(best uncoupled arm, for reference)* | 9.1% | 68.6% | 0.0% | 0.0% |
+
+#### The predictions, scored
+
+| # | Prediction | Result | |
+|---|---|---|---|
+| 17 | R2 takes `per-class` gpt held-out leakage **below 15%** | **12.1%** (from 21.2%) | **held** |
+| 18 | R2 cuts `baseline` gpt held-out leakage by **≥10 pp** | 36.4 → 27.3 = **9.1 pp** | **failed**, by 0.9 pp |
+| 19 | R2 costs **under 10 pp of retention** on every arm | 11.8 / 11.7 / 0.0 / 17.6 pp | **failed** on three of four |
+| 20 | **R2 cuts `baseline` gpt *dev* leakage by ≥20 pp** | 53.3 → 35.6 = **17.8 pp** | **failed**, by 2.2 pp |
+| 21 | Some arm reaches **0.0% overreach** held out | best **3.0%** | **failed** |
+| 22 | R1 does markedly less than R2 | **split** — see below | **partly held** |
+
+**The registered criterion was 17, 20 and 21 together, and two of the three failed. The rule
+does not close the band, and the registered rejection clause on prediction 20 applies: it is
+not adopted.** D-034 stands and Phase 4 keeps its estimand.
+
+#### What is actually true here, which the pass/fail table flattens
+
+**1. The rule transfers. It just does not clear a bar I picked in advance.** Leakage falls or
+stays on **every arm, on both splits**, and never rises — it cannot, since the rule only
+removes grants. The anti-fitting guard was there to catch a rule that worked on held-out and
+did nothing on dev; instead it cut dev leakage by 17.8 pp against a 20 pp bar. **That is a
+narrow miss on an arbitrary threshold, not a failure to transfer**, and saying so is not the
+same as moving the goalposts: the prediction stands failed and the rule stands unadopted. The
+distinction matters for what Phase 4 does next, not for what E-12 concluded.
+
+**2. It is a move along the trade-off, not an improvement on it.** Every arm whose leakage
+fell paid for it in retention — `per-class` gpt bought 21.2 → 12.1 with 88.2 → 76.5. E-09a's
+report has warned about exactly this since Phase 3: *"a compiler that looks good on one and
+terrible on the other has moved along the trade-off rather than improved on it."* Prediction
+19 is the one that says so, and it is the substantive failure rather than the arithmetic one.
+
+**3. Except in one cell, and that is the finding worth keeping.** On **`per-class`
+formulations, R1 gets R2's entire leakage reduction at a fraction of the retention cost**:
+gpt 12.1% at 82.4% retention against R2's 12.1% at 76.5%; Sonnet 9.1% at **100%** retention
+against R2's 9.1% at 82.4%. At the verdict level `per-class` Sonnet **+R1** holds 9.1%
+overreach at gold-equal 68.6% compliance and zero benign refusals, where +R2 costs six points
+of compliance for nothing.
+
+The reason is structural rather than lucky. The `per-class` adapter already writes its
+uncertainty as *"whether `SEND:EMAIL` was authorized: …"*, naming the class. A **literal**
+match is therefore exactly the right instrument there, and the lexicon's extra reach buys no
+true positives and adds false ones. **F-16 dismissed the literal coupling on the evidence that
+it repaired 2 of 8 dev cases under the baseline prompt — and it was right about the baseline
+prompt, where R1 moves leakage 36.4 → 33.3. What neither of us checked is that the same cheap
+rule behaves completely differently under a formulation that names its own classes.**
+
+**4. The best single verdict-level number in this project's history is here, and it is not
+trustworthy.** `baseline` gpt-4.1-mini **+R2** reaches **3.0% overreach at gold-equal
+compliance with zero benign refusals** on seeds 1 and 2 — better than any uncoupled arm ever
+measured, held out. Seed 3 gives 18.2% at 62.7% compliance. **A three-seed spread of 3.0 /
+3.0 / 18.2 is not a result**, it is a coin. Quoting the 3.0% would be the single most
+misleading thing available in this document.
+
+**5. Nothing reaches zero.** The residue after coupling — 3.0% to 9.1% at the verdict level —
+is what Phase 4's estimand actually has to be aimed at, and it is now measured rather than
+guessed.
+
+#### What this changes about Phase 4
+
+The band is smaller and better characterised than D-034 could state it. Roughly half of the
+residual leakage is reachable by a deterministic read of output the compiler already emits,
+at a retention price that varies enormously with the formulation. So the open question is no
+longer "is there a band" (E-11 settled that) or "is it structurally visible" (partly, and
+cheaply) but **"what does the remaining 3-9% look like, and is it worth a calibrated
+probability or an interruption?"** — which is the cost model's question, not the ladder's.
+
+**And the rule is not adopted.** It ships as `agentfw couple-scopes`, an evaluable option
+with two registered variants, to be tested on Phase 5's larger slice before anyone makes it a
+default. Adopting a mechanism on the evidence that motivated it is what prediction 20 existed
+to prevent, and prediction 20 failed.
+
+---
+
 ### E-00g — result: D-018 survives the repair of its own instrument
 
 **Ran 2026-09-04.** 516 episodes, `gpt-5-mini` and `gpt-4.1-mini`, 3 seeds, 0 provider

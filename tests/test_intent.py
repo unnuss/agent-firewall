@@ -573,3 +573,81 @@ def test_a_scenario_reworded_after_compilation_fails_loudly() -> None:
     store.scope_for("s", "a", "Draft a reply\n   to Priya.")
     with pytest.raises(StaleCompiledScope):
         store.scope_for("s", "a", "Reply to Priya.")
+
+
+# --- E-12: the coupling rule ------------------------------------------------
+
+
+def _scope(effects, questions):
+    return CompiledScope(
+        scenario_id="s",
+        variant_id="a",
+        compiler="test",
+        utterance="u",
+        tools=["email_send"],
+        effects=list(effects),
+        open_questions=list(questions),
+    )
+
+
+def test_coupling_withholds_a_grant_the_scope_itself_questions() -> None:
+    """E-12's rule, on F-16's actual failure shape."""
+    from agentfw.intent.coupling import couple
+
+    r = _scope(
+        ["READ:EMAIL", "SEND:PUBLIC_WEB"],
+        ["What answers should be submitted for the poll questions?"],
+    )
+    out = couple(r, "r2")
+    assert "SEND:PUBLIC_WEB" not in out.effects
+    assert "READ:EMAIL" in out.effects
+    assert any("SEND:PUBLIC_WEB" in q for q in out.open_questions)
+
+
+def test_coupling_can_only_ever_remove_a_grant() -> None:
+    """The property that keeps this outside the TCB argument (D-006, D-007).
+
+    A rule that could add a grant would be authorizing, and would belong to a different
+    conversation entirely. This one is monotone downward by construction, and it is asserted
+    over every committed artifact rather than on a hand-built example.
+    """
+    from pathlib import Path
+
+    from agentfw.intent.coupling import RULES, couple
+    from agentfw.intent.store import CompiledScopeStore
+
+    checked = 0
+    for path in sorted(Path("experiments").rglob("*.jsonl")):
+        if "__" in path.name or ".coupled-" in path.name:
+            continue
+        first = next(
+            (ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()), ""
+        )
+        if not first or "compiler" not in json.loads(first):
+            continue
+        for record in CompiledScopeStore.load(path).records:
+            for rule in RULES:
+                out = couple(record, rule)
+                assert set(out.effects) <= set(record.effects), (
+                    f"{path.name} {record.scenario_id}::{record.variant_id} rule {rule} "
+                    f"ADDED a grant: {set(out.effects) - set(record.effects)}"
+                )
+                checked += 1
+    assert checked > 2000, f"only {checked} (record, rule) pairs checked"
+
+
+def test_the_literal_rule_is_strictly_weaker_than_the_lexicon_one() -> None:
+    """R1 ⊆ R2 by construction, and a test says so rather than the docstring alone."""
+    from agentfw.intent.coupling import couple
+
+    r = _scope(["SEND:EMAIL"], ["Should I reply to her, or leave it to you?"])
+    assert "SEND:EMAIL" in couple(r, "r1").effects, "r1 must not match a bare synonym"
+    assert "SEND:EMAIL" not in couple(r, "r2").effects, "r2 must match 'reply'"
+
+
+def test_a_scope_with_no_open_questions_is_untouched() -> None:
+    from agentfw.intent.coupling import couple
+
+    r = _scope(["SEND:EMAIL", "READ:EMAIL"], [])
+    for rule in ("r1", "r2"):
+        assert couple(r, rule).effects == r.effects

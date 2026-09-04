@@ -946,6 +946,61 @@ for it.
 
 ---
 
+### D-035 — The coupling rule is measured, not adopted; the band narrows and stays open
+**Date:** 2026-09-04 · **Status:** accepted · **Depends on:** D-034 · **Closes** Phase 4
+deliverable 0
+
+**Decision.** E-12's coupling rule — withhold a granted effect class that the compiler's own
+open questions call into doubt — is **not adopted as a default**. It ships as
+`agentfw couple-scopes`, an evaluable option with two registered variants, to be tested on
+Phase 5's larger slice before any adoption decision. **D-034 stands**: the band is open and
+Phase 4 keeps its estimand.
+
+**Why not adopted, when it demonstrably helps.** It failed two of the three predictions that
+formed its own criterion, and one of those was **prediction 20, the anti-fitting guard**. The
+registered rejection clause is explicit — *"if 20 fails, the rule is rejected regardless of 17
+and 21"* — and it exists because the hypothesis was formed by reading which E-11 cases leaked.
+A rule invented from the failures it is then measured on has to clear a bar set in advance or
+it does not count, and 17.8 pp against a 20 pp bar does not clear it.
+
+**That is a narrow miss and not a failure to transfer, and both halves of that sentence are
+load-bearing.** Leakage fell on every arm on both splits and rose on none — it cannot rise,
+the rule only removes grants. So the mechanism is real. It is also, on prediction 19's
+evidence, **a move along the trade-off rather than an improvement on it**: every arm that lost
+leakage paid in retention, `per-class` gpt-4.1-mini buying 21.2% → 12.1% with 88.2% → 76.5%.
+E-09a's report has said since Phase 3 that this is the failure mode to watch for, and here it
+is.
+
+**The one strictly-good cell, and it is a design finding rather than a tuning result.** On a
+**`per-class` formulation the literal rule R1 delivers R2's entire leakage reduction at a
+fraction of the retention cost** — Sonnet at 9.1% leakage and **100%** retention, against
+R2's 9.1% at 82.4%; at the verdict level, gold-equal compliance and zero benign refusals. The
+reason is structural: `per-class` writes its own uncertainty as *"whether `SEND:EMAIL` was
+authorized"*, naming the class, so literal matching is the correct instrument and a lexicon
+only adds false positives. **F-16 dismissed literal coupling after measuring it under the
+*baseline* prompt, where it does indeed do very little. Nobody checked whether a formulation
+that names its own classes changes that. It does.** This is recorded as the thing Phase 5
+should test first, and it is deliberately *not* switched on now.
+
+**What Phase 4 inherits, sharper than D-034 could put it.** Roughly half the residual leakage
+is reachable by a deterministic read of output the compiler already emits, at a retention price
+that depends heavily on the formulation. What remains is **3-9% at the verdict level**, and the
+open question is no longer *"is there a band"* (E-11 settled that) or *"is it structurally
+visible"* (partly, and cheaply) but **"is the remainder worth a calibrated probability or an
+interruption?"** — the cost model's question rather than the ladder's.
+
+**One number in E-12 must not be quoted, and it is the best one.** `baseline` gpt-4.1-mini
+under R2 reaches **3.0% overreach at gold-equal compliance and zero benign refusals** on two
+of three seeds; the third gives 18.2% at 62.7%. A 3.0 / 3.0 / 18.2 spread is a coin, not a
+result. It is in the report because suppressing it would be worse, and it is fenced here
+because it is exactly the number a reader would otherwise carry away.
+
+**Revisit if.** Phase 5's slice is large enough to test R1-on-`per-class` with intervals worth
+having — which is the same scenario-count constraint that limits everything else this project
+currently concludes.
+
+---
+
 ### D-034 — D-032 is reopened: the band exists after all, and it is narrow and concentrated
 **Date:** 2026-09-04 · **Status:** accepted · **Reopens:** D-032 · **Closes Phase 3.5**
 

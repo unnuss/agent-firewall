@@ -8,6 +8,7 @@ agentfw compile-scopes experiments/e09a_compiler/config.yaml  # E-09a, one call 
 agentfw replay experiments/e01a_deterministic/config.yaml     # E-01a, no model calls
 agentfw replay experiments/e01b_compiled/config.yaml          # E-01b, no model calls
 agentfw probe-contract           # F-20: how much committed evidence the repair moves
+agentfw couple-scopes            # E-12: withhold grants the compiler itself questioned
 agentfw smoke                    # one scripted episode, no network, no key
 """
 
@@ -311,11 +312,75 @@ def cmd_probe_contract(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_couple_scopes(args: argparse.Namespace) -> int:
+    """E-12: apply the registered coupling rule to committed compiled scopes.
+
+    A pure function of files already in the repository — no model, no key, no dollars. Reads
+    every compiled-scope artifact under ``--in``, writes a coupled copy under ``--out``, and
+    scores each against the gold labels exactly as `compile-scopes` does.
+    """
+    import json as _json
+
+    from agentfw.eval import scope_eval, scope_run
+    from agentfw.eval.scopes import GoldScopes
+    from agentfw.intent import coupling
+    from agentfw.intent.store import CompiledScopeStore
+
+    src, out_dir = Path(args.source), Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    gold = GoldScopes.load()
+    scenarios = {
+        s.id: s for s, _ in scope_run.variants(["af_auth", "af_inject", "benign"], args.split)
+    }
+
+    artifacts = []
+    for path in sorted(src.glob("*.jsonl")):
+        if "__" in path.name or ".coupled-" in path.name:
+            continue  # replay output, or a coupled artifact from an earlier run
+        first = next(
+            (ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()), ""
+        )
+        if first and "compiler" in _json.loads(first):
+            artifacts.append(path)
+    if not artifacts:
+        print(f"no compiled-scope artifacts under {src}")
+        return 1
+
+    print(f"[couple] rule={args.rule} split={args.split} {len(artifacts)} artifact(s)")
+    for path in artifacts:
+        store = CompiledScopeStore.load(path)
+        coupled = coupling.couple_all(store.records, args.rule)
+        removed = coupling.withheld_count(store.records, coupled)
+        stem = f"{path.stem}.coupled-{args.rule}"
+        CompiledScopeStore.write(coupled, out_dir / f"{stem}.jsonl")
+        rows = scope_eval.compare_all(coupled, scenarios, gold)
+        rep = scope_eval.write(
+            rows,
+            out_dir / stem,
+            label=f"{path.stem} + coupling {args.rule}",
+            extra={"coupling_rule": args.rule, "grants_withheld": removed, "source": str(path)},
+        )
+        print(
+            f"[couple] {path.stem:46} -{removed:4} grant(s)  "
+            f"leakage={rep['contested']['leakage_underspecified_low']['value'] * 100:5.1f}%  "
+            f"retention={rep['contested']['retention_high']['value'] * 100:5.1f}%  "
+            f"contrast={rep['contested']['contrast_fidelity']['value'] * 100:5.1f}%"
+        )
+    print(f"[couple] wrote {out_dir}")
+    return 0
+
+
 def cmd_report(args: argparse.Namespace) -> int:
     out_dir = Path(args.results)
     rep = report_mod.write(out_dir, title=args.title)
     print(report_mod.to_markdown(rep, args.title))
     return 0
+
+
+def coupling_rules() -> tuple[str, ...]:
+    from agentfw.intent.coupling import RULES
+
+    return RULES
 
 
 PREFLIGHT_TOOL = "email_list"
@@ -644,6 +709,13 @@ def main(argv: list[str] | None = None) -> int:
     pc = sub.add_parser("probe-contract")
     pc.add_argument("--out")
     pc.set_defaults(fn=cmd_probe_contract)
+
+    cp2 = sub.add_parser("couple-scopes")
+    cp2.add_argument("--source", required=True, help="directory of compiled-scope artifacts")
+    cp2.add_argument("--out", required=True)
+    cp2.add_argument("--rule", default="r2", choices=list(coupling_rules()))
+    cp2.add_argument("--split", default="heldout")
+    cp2.set_defaults(fn=cmd_couple_scopes)
 
     rep = sub.add_parser("report")
     rep.add_argument("results")

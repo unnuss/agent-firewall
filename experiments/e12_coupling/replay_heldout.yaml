@@ -1,0 +1,65 @@
+# E-12 verdict level, held-out: what the coupling rule does to real ALLOW/ASK/BLOCK.
+#
+#   agentfw replay experiments/e12_coupling/replay_heldout.yaml
+#
+# No model is called. The coupled scopes are a deterministic function of the committed
+# E-11 artifacts, which are themselves a function of the utterance and the tool catalogue
+# (D-025), so this whole experiment reproduces from files in the repository.
+#
+# Run AFTER F-29's repair, so gold compliance here is 68.6% rather than E-11's 60.8%.
+
+experiment: E-12
+sources:
+  - experiments/e00i_heldout_baseline/results/episodes.jsonl
+
+scope_sources:
+  - label: gold
+    kind: gold
+
+  - label: r2-baseline-gpt-s1
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/baseline-gpt-4.1-mini.baseline-v2.s1.coupled-r2.jsonl
+  - label: r2-baseline-gpt-s2
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/baseline-gpt-4.1-mini.baseline-v2.s2.coupled-r2.jsonl
+  - label: r2-baseline-gpt-s3
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/baseline-gpt-4.1-mini.baseline-v2.s3.coupled-r2.jsonl
+
+  - label: r2-perclass-gpt-s1
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/per-class-gpt-4.1-mini.per-class-v1.s1.coupled-r2.jsonl
+  - label: r2-perclass-gpt-s2
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/per-class-gpt-4.1-mini.per-class-v1.s2.coupled-r2.jsonl
+  - label: r2-perclass-gpt-s3
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/per-class-gpt-4.1-mini.per-class-v1.s3.coupled-r2.jsonl
+
+  - label: r2-baseline-sonnet-s1
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/baseline-claude-sonnet-5.baseline-v2.s1.coupled-r2.jsonl
+  - label: r2-perclass-sonnet-s1
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r2/per-class-claude-sonnet-5.per-class-v1.s1.coupled-r2.jsonl
+
+  - label: r1-perclass-gpt-s1
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r1/per-class-gpt-4.1-mini.per-class-v1.s1.coupled-r1.jsonl
+  - label: r1-perclass-sonnet-s1
+    kind: compiled
+    path: experiments/e12_coupling/results/heldout-r1/per-class-claude-sonnet-5.per-class-v1.s1.coupled-r1.jsonl
+
+policies:
+  - label: M0-consequential
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-ask-all
+    ask_on: all_out_of_scope
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
