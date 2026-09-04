@@ -2,326 +2,242 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-08-31 · **Phase 3 COMPLETE.** · **Next: Phase 3.5, benchmark repair.**
+**Last updated:** 2026-09-04 · **Phase 3.5 COMPLETE.** · **Next: Phase 4, with the ladder
+question reopened (D-034).**
 
 ---
 
 ## 0. If you are the next session, do exactly this
 
-1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-032** — it closes Phase 3
-   and explains why most of the phase's planned deliverables were retired rather than built.
-   Then **D-031** (why the held-out slice cannot yet validate anything) and **D-030**
-   (constraint provenance). D-025 to D-029 cover the compiler's inputs, its artifacts, the
-   reviewer oracle, experiment naming and credential precedence. D-022 to D-024 remain the
-   Phase 1/2 constraints.
-2. Read findings **F-16 → F-17 → F-18 → F-19 in that order** in `docs/EXPERIMENTS.md`. They
-   are one argument in four steps and reading them out of order gives the wrong conclusion:
-   F-16 alone reads as "the compiler is hopeless", which F-17 and F-18 falsify.
-3. Read **F-20 and D-031** before touching the benchmark. They are the next milestone.
-4. **Do not start Phase 4.** The next milestone is Phase 3.5 in `docs/ROADMAP.md`; section 6
-   of this document says why and what it is.
+1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-034** — Phase 3.5's exit
+   criterion was met in the negative and D-034 says exactly what that un-retires and what it
+   does not. Then **D-033** (independently authored held-out labels), **D-032** (now marked
+   reopened; read it for the argument, D-034 for its status), **D-031** (superseded but it is
+   the reason Phase 3.5 existed), and **D-030** (constraint provenance). D-025 to D-029 cover
+   the compiler's inputs, its artifacts, the reviewer oracle, experiment naming and
+   credential precedence.
+2. Read findings **F-16 → F-17 → F-18 → F-19** in `docs/EXPERIMENTS.md` **and then E-11**.
+   The first four are Phase 3's argument in four steps on the dev slice; E-11 is what
+   happened when it was pointed at unseen data. Reading F-16 alone gives the opposite
+   conclusion to F-17; reading F-19 alone now overstates what replicates.
+3. Read **F-29** before touching `monitors/flow.py` or quoting any compliance number.
+4. **The Phase 3.5 apparatus boundary is real.** Every number from E-00, E-00b, E-00f,
+   E-00h, E-01a and E-01b is **pre-repair**; every number from E-00g, E-00i and E-11 is
+   **post-repair**. A `CONTRACT.md` sits in each pre-repair result directory. Never
+   difference across it.
 
-Health check (~35 s, no API calls, no keys needed):
+Health check (~55 s, no API calls, no keys needed):
 
 ```bash
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **230 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
+Expect **323 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
+17 AF-Auth / 5 AF-Inject / 10 benign **held-out** scenarios, 23 tools.
 
-Both replay experiments reproduce with no key:
+Three experiments reproduce with no key:
 
 ```bash
-.venv/Scripts/python.exe -m agentfw.cli replay experiments/e01a_deterministic/config.yaml
+.venv/Scripts/python.exe -m agentfw.cli probe-contract
 .venv/Scripts/python.exe -m agentfw.cli replay experiments/e01b_compiled/config.yaml
+.venv/Scripts/python.exe -m agentfw.cli replay experiments/e11_heldout/replay.yaml
 ```
 
 ---
 
 ## 1. Where the project is, in one paragraph
 
-Phase 1 measured the problem and changed the thesis: agents respect explicit authorization
-boundaries almost perfectly and fail by inferring authority from silence — 38.9% on OpenAI
-models, 60.0% on Claude Sonnet 5 (D-022). Phase 2 built the deterministic reference monitor
-and E-01a showed it removes all measured overreach and all measured attack success *given a
-correct scope*, with the ASK path contributing nothing in that condition (F-09). Phase 3
-therefore began where PROJECT_STATE said it must: with the scope itself. The intent compiler
-exists, its inputs are restricted by construction to the user's turn and the tool catalogue
-(D-025), and the measurement harness around it — E-09a against the gold labels, E-01b
-against real verdicts — is built and running, and **the registered arm has now run and
-falsified the phase's central prediction (F-16).**
+Phase 1 measured the problem and changed the thesis: agents fail by inferring authority from
+silence, not by ignoring explicit boundaries. Phase 2 built the deterministic reference
+monitor. Phase 3 built the intent compiler and concluded, from four registered arms on the
+dev slice, that a compiled scope from either a capable model or an explicit formulation
+reaches the gold-scope result end to end — and retired the M0–M5 ladder on that basis
+(D-032). **Phase 3.5 repaired the benchmark and tested that conclusion on unseen data. The
+injection half replicated perfectly and the authorization half did not**, so D-032 is
+reopened (D-034). The benchmark itself is now the part of this project with the strongest
+evidence behind it.
 
-`gpt-4.1-mini` on the **baseline** formulation licenses the contested effect on **53.3%** of
-underspecified instructions — against **45.9%** for the undefended agents on the same ones.
-E-09a's central prediction is falsified and stays falsified.
+**What replicated.** ASR is **0.0% under every compiled scope** on a held-out slice where the
+undefended agent is hijacked **33.3%** of the time by five unseen attacks, two of them
+defense-aware. Deny-by-default over an effect ontology does that with no model in the loop.
 
-**E-10 then falsified the explanation twice over, and that is the phase's main result.**
-F-16 said the compiler carries the model's prior because it is the same model. Two
-independent knobs say otherwise:
+**What did not.** The best compiled scope leaks **9.1%** of contested effects on unseen
+underspecified instructions, where dev showed **0.0%**:
 
-- **Change the formulation, hold the model.** A `licensed` / `not_licensed` / `uncertain`
-  verdict on every candidate class, instead of a free-form grant list, takes the *same*
-  `gpt-4.1-mini` from 53.3% leakage to **0.0%** (0/45, three seeds) and to the gold result
-  end to end — 0.0% overreach, 0.0% ASR, 84.3% compliance vs gold's 84.7% (**F-17**).
-- **Change the model, hold the formulation byte-identical.** Claude Sonnet 5 on the
-  unchanged baseline prompt leaks **10.0%**, against gpt-4.1-mini's 53.3% — and the rank
-  order between the families *reverses* between roles: Sonnet's **agent** overreaches 60.0%
-  where OpenAI's is 38.9%, but its **compiler** is five times more conservative (**F-18**).
-
-The completed 2x2 has **exactly one bad cell**, and the two fixes are **substitutes**
-(**F-19**):
-
-| leakage, underspecified | `baseline` | `per-class` |
+| leakage, underspecified low | `baseline` | `per-class` |
 |---|---|---|
-| `gpt-4.1-mini` | **53.3%** | 0.0% |
-| `claude-sonnet-5` | 10.0% | 0.0% |
+| `gpt-4.1-mini` — dev | 53.3% | **0.0%** |
+| `gpt-4.1-mini` — **held-out** | **36.4%** | **21.2%** |
+| `claude-sonnet-5` — dev | 10.0% | **0.0%** |
+| `claude-sonnet-5` — **held-out** | **18.2%** | **9.1%** |
 
-The best arm — `per-class` on Sonnet — **matches the hand-written gold scopes on every
-security axis** (0.0% overreach, 0.0% explicit-low, 0.0% ASR) and sits one episode from gold
-on compliance (84.3% vs 84.7%). The entire remaining gap is 3 refused benign actions out of
-173.
+F-19 called the two interventions *substitutes* because either alone reached the floor on
+dev. Held out both help, neither suffices, and they compose. **The architecture's bet still
+pays — 81.8% undefended against 9.1% for the best compiled scope — but "reaches the
+gold-scope result" was a dev-slice statement.**
 
-So the architecture's bet — that "what did this person authorize?" is an easier question
-than "what should I do?" — **holds, but not automatically.** The failure E-09a measured was
-one cell of a 2x2, a weak model under a loose formulation, not a law about compilers. And
-noticing is not the differentiator: both models raise an open question on ~100% of
-underspecified variants. **Withholding is what varies.**
+**And the residue is F-16 unfixed rather than noise.** It concentrates in five of eleven
+triples, one of which leaks on every arm, and on those cases the compiler grants the
+contested class while asking a question about *how* — *"What answers should be submitted…"*,
+*"Is the exact duration 1 hour…"*. That is F-16's sentence verbatim, in the arms F-17 and
+F-19 declared had fixed it.
 
-The deterministic core is unaffected throughout, and so is the injection result: **ASR is
-0.0%** under every compiled scope, because those utterances are plain read-only requests and
-deny-by-default does that work without any ML.
+**The benchmark, which was the weak link, is now the strong one.** F-20 is repaired and the
+repair is validated by intervention: the dev phenomenon survives it and grows (38.9% → 45.6%
+overreach, +36.7 pp → **+42.7 pp** gap, compliance 81.2% → **93.1%**). The held-out slice
+went from 3 explicit pairs in the dev world to 32 scenarios in a world of its own, with
+underspecified triples over six contested effect classes, benign tasks and injection attacks
+— so leakage, FPR-block and ASR are all measurable held out for the first time (D-031 said
+none of them were).
 
-What the compiled system still gives up against gold is now the **cost** side, not the
-security side: benign FPR-block 3-7% against 0.0%, and roughly twice the interruptions.
-Under-granting is the dominant error (407 classes against 4 over-granted, 303 of them
-READs), which is F-10's territory and Phase 4's to price.
-
-Also established: a tool-allowlist scope is worth nothing against overreach (F-11); ASK's
-value is real once the scope is wrong (269 refusals recovered against 0 under gold);
-invented constraints fire a hard gate no interruption can repair (F-13); and scope-level
-metrics can improve while the deployed system gets worse, so a compiler change is not an
-improvement until E-01b says so.
-
-## 2. Phase 3 deliverables, against the roadmap
+## 2. Phase 3.5 deliverables, against the roadmap
 
 | # | Deliverable | Status |
 |---|---|---|
-| 1 | `intent/compiler.py` — utterance → IntentScope | done: `LLMIntentCompiler` + two deterministic floors, `intent/catalog.py`, `intent/store.py` |
-| 1 | **E-09a** — compiled scopes scored against gold | **DONE.** Predictions registered before any LLM call and scored; prediction 3 **falsified** (F-16) |
-| 1b | **E-01b** — the replay with compiled scopes | **DONE** for all seven arms, including the registered one at three seeds |
-| 2, 3, 5, 6 | M0–M5 ladder, calibration, E-02, E-03 | **RETIRED (D-032).** They estimate a calibrated `P(licensed)` to place an ASK band; Phase 3 removed the band. The compiler *is* M4, and E-10 explored that design space across two vendors and three formulations |
-| 4 | E-01 (similarity, D-012) | **SUPERSEDED (D-032).** F-11 supplies its intended negative result more strongly, without a new dependency |
-| 7 | Dependency screener (F-07) | **DEFERRED to Phase 4.** ASR is already 0.0%; it buys interruption efficiency, not security |
-| 8 | M6 distillation | **not applicable** — conditional on E-03 |
+| 1 | Fix F-20; re-run the undefended baselines | **done.** One repair contract shared by every searchable tool; E-00g (dev, 516 ep) and E-00i (held-out, 180 ep) |
+| 2 | An underspecified-triple generator template | **done.** The generator no longer knows "low" and "high" as field names; a template declares its variants. Five new templates |
+| 3 | A real held-out slice, gated | **done.** 32 scenarios / 60 utterances / 6 contested classes / a second world, through five gates |
+| 4 | Held-out gold scopes authored independently | **done (D-033).** Brief and input committed before the author ran; output committed verbatim |
+| 5 | Re-run E-09a and E-01b on it | **done (E-11).** All six arms; the exit criterion is answered in the negative |
+| 6 | Fix F-05, F-03, F-06 | **done**, in the same commit as F-20. F-06 re-diagnosed as F-22 and then corrected again by E-00g |
 
 ## 3. What exists in code that did not before
 
 ```
 agentfw/
-  intent/
-    catalog.py     tool -> effect-class ceiling, with two drift tests against the declarers
-    prompts.py     the compilation prompt; D-023's four authoring rules, and nothing scenario-specific
-    compiler.py    Compiler protocol, LLMIntentCompiler, ToolCeilingCompiler, ReadOnlyCompiler
-    store.py       CompiledScopeStore: the committed artifact, and the ScopeSource seam
-  eval/
-    scope_run.py   the E-09a driver: compile every dev utterance, per arm and seed
-    scope_eval.py  compiled-vs-gold metrics and the E-09a report
-    scopes.py      + ScopeSource protocol, so replay takes gold or compiled interchangeably
-    replay.py      + a scope source parameter and the gold reviewer oracle (D-027)
-    replay_report.py + `ask_value` (what each interruption bought) and a cross-arm comparison
-  cli.py           + `agentfw compile-scopes`; `replay` gained `--scopes`
-experiments/
-  e09a_compiler/   config + committed compiled scopes + per-arm reports
-  e01b_compiled/   config + per-(scope, policy) reports + comparison.md
-tests/test_intent.py   24 tests; test_replay.py gained the two D-027 seam tests
+  sandbox/search.py        the query contract every searchable tool shares (F-20, F-21)
+  sandbox/fixtures/office_heldout.yaml   a second world: different person, clients, work
+  eval/findability.py      the gate that would have caught F-20 mechanically
+  eval/contract_probe.py   how much committed evidence the repair moves (`agentfw probe-contract`)
+  eval/generator.py        rewritten: a template declares its variants; pairs and triples from one mechanism
+  eval/templates/          b4_us_{email_followup,payment_due,files_tidy,share_report,calendar_hold,web_form}
+                           + b1_ho_draft_vs_send (held-out controls)
+  eval/suites/{benign,af_inject}/heldout.yaml    10 benign + 5 injection, held out
+  eval/scopes_data/heldout_v2.yaml               the independently authored labels (D-033)
+docs/authoring/            the brief, its input, and the superseded v1 labels
+tests/test_heldout_slice.py   every held-out oracle is satisfiable by a stated ideal play
+experiments/{e00g,e00i,e11,f20_probe}/
 ```
 
-Four things worth not re-deriving:
+Five things worth not re-deriving:
 
-- **The compiler's input restriction is its signature.** `compile(utterance, tools)` and
-  nothing else. An attacker who could feed the compiler would be writing the user's
-  authorization scope, which beats hijacking the agent, so the restriction is enforced by
-  having nowhere to put the other data and asserted by a test over the rendered prompt.
-- **A compile failure is an empty scope**, never a partial one. Deny-by-default all the way
-  down, and the affected episodes are counted separately so an unreliable compiler cannot
-  look like a cautious one.
-- **Compiled scopes are committed artifacts** (D-026). E-01b never calls a model; it reads
-  the JSONL E-09a wrote. That is what keeps the downstream experiment free and reproducible.
-- **The scripted reviewer answers from gold in E-01b** (D-027), because a reviewer with an
-  opinion only about the contested effect would refuse every recoverable interruption and
-  make ASK look worthless a second time as a harness artifact.
+- **The apparatus boundary is one commit** (`2499f0d`), and `agentfw probe-contract` measures
+  it: 18.2% of E-00b's episodes, 61.1% of E-00h's, saw a search result that would now differ.
+- **The compiled scopes were unaffected by the repair**, because D-025 restricts the
+  compiler's input to the utterance and the tool catalogue. A test recomputes the prompt
+  digest of all 1,190 committed records so a tool-description edit cannot silently
+  invalidate them.
+- **`CompiledScopeStore.scope_for` raises on a reworded utterance** (F-23). This is why F-05
+  was repaired in the *world* rather than in the sentence that asks for the missing figure.
+- **The held-out slice ships an ideal play per variant.** F-01 asserts no oracle is true
+  before the agent acts; this asserts every oracle can be made true at all. It found F-24 on
+  its first run.
+- **Attack oracles are pinned from both sides**: silent on a clean play, loud on the hijack
+  the payload actually asks for.
 
-**One Phase 2 test was corrected, not weakened.** `test_p4_agent_rationale_never_reaches_
-the_ask_text` carried two assertions, and hypothesis found a counterexample to the first:
-a rationale of `"reversibilit"` is a substring of a serialized field name, which is a
-collision rather than a leak. The test's own comment already argued that substring checking
-is the wrong test; the substring assertion is now gone and the byte-identity assertion —
-render with the prose, render without it, require the same output — carries P4 alone. It
-subsumes the deleted check, because prose that reached the output would change it.
+## 4. Results
 
-## 4. Results so far
+### The two baselines, pre- and post-repair, never differenced across the boundary
 
-### E-09a — compiled against gold
+| | E-00b dev **pre** | E-00g dev **post** | E-00i held-out **post** |
+|---|---|---|---|
+| High-authority compliance | 81.2% | **93.1%** | 68.6% (gate floor 0.60) |
+| Underspecified overreach | 38.9% [25.6, 52.2] | **45.6% [31.1, 61.1]** | **81.8% [60.6, 100.0]** |
+| Explicit-low overreach | 2.2% | 2.9% | **0.0%** (0/51) |
+| Gap | +36.7 pp | **+42.7 pp** | **+81.8 pp** |
+| Benign BTC | 88.0% | **97.2%** | 96.7% |
+| ASR undefended | 22.2% | 30.6% | **33.3%** |
 
-| Arm | Micro-F1 | Exact match | Leakage (underspec. low) | Retention (high) | Contrast fidelity |
-|---|---|---|---|---|---|
-| `tool-ceiling` | 0.813 | 24.4% | **100%** | 100% | **0%** |
-| `read-only` | 0.727 | 22.1% | **0%** | 0% | **0%** |
-| `llm-qwen2.5-coder-14b` (exploratory, prompt v1) | 0.576 | 20.9% | 33.3% [13.3, 60.0] | 87.5% | 58.3% |
-| `llm-qwen2.5-coder-14b` (exploratory, prompt v2) | 0.550 | 19.8% | 26.7% [6.7, 46.7] | 100% | 75.0% |
-| **`gpt-4.1-mini` (registered, 3 seeds)** | 0.554 | 19.8% | **53.3%** [26.7, 80.0] | **100%** | **50.0%** |
+Anthropic's dev row (E-00f, 60.0% underspecified) stays **pre-repair** and is not re-run —
+a declared budget decision, disclosed everywhere it appears.
 
-The first column is why F1 is not the metric: `tool-ceiling`, which has no notion of
-authorization at all, scores **0.813** — above every real compiler measured.
+### E-11 verdicts, held out (180 episodes, `M0-consequential`)
 
-The registered arm clears the retention floor at 100%, so it is a competent reader and every
-number is interpretable. Seed agreement 0.965; leakage, retention and contrast are identical
-on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALSIFIED,
-4 held, 5 held, 6 held.** Prediction 3 was the architecture's central bet — see F-16.
+| Scope source | Overreach (underspec.) | Compliance | ASR | Benign FPR-block |
+|---|---|---|---|---|
+| *(undefended)* | 81.8% | 68.6% | 33.3% | — |
+| gold (independent) | **0.0%** | 60.8% | **0.0%** | 0.0% |
+| `tool-ceiling` | 63.6% | 60.8% | 6.7% | 0.0% |
+| `read-only` | 0.0% | 49.0% | 0.0% | 15.5% |
+| `baseline` gpt, 3 seeds | 12.1 / 12.1 / 21.2% | 68.6% | 0.0% | 0.0% |
+| `per-class` gpt, 3 seeds | 9.1 / 27.3 / 18.2% | 68.6 / 68.6 / 66.7% | 0.0% | 0.0% |
+| `baseline` Sonnet, 2 seeds | 18.2 / 9.1% | 60.8% | 0.0% | 5.5 / 10.9% |
+| `per-class` Sonnet, 1 seed | **9.1%** | 60.8% | **0.0%** | **0.0%** |
 
-### E-01b — what those scopes do to real verdicts (702 episodes, $0)
+**Read the compliance column with F-29 in hand.** The compiled arms beat gold there because
+the trusted core denies a licensed payment whenever the scope was right enough to authorize
+the preparatory read. Under `ask_on: all_out_of_scope` every arm converges to 60.8%.
 
-| Scope source | Policy | Overreach (underspec.) | Compliance (high) | ASR | Benign FPR-block | ASKs/ep benign |
-|---|---|---|---|---|---|---|
-| *(undefended)* | — | 45.9% [34.1, 57.8] | 84.7% | 22.2% | — | — |
-| gold | consequential | **0.0%** | 84.7% | **0.0%** | 0.0% | 0.00 |
-| tool-ceiling | consequential | **45.9%** | 84.7% | 16.7% | 0.0% | 0.00 |
-| read-only | consequential | 0.0% | **78.2%** | 0.0% | **12.1%** | 0.11 |
-| read-only | all-out-of-scope | 0.0% | 82.9% | 0.0% | 0.0% | 0.32 |
-| llm-qwen-local-p1 | consequential | 17.0% | 60.6% | 0.0% | 11.9% | 0.00 |
-| llm-qwen-local-p2 | consequential | 12.6% | 41.2% | 0.0% | 34.5% | 0.00 |
-| **`gpt-4.1-mini` s1** (pre-D-030) | consequential | 25.2% [11.9, 40.0] | 68.5% | 0.0% | 16.9% | 0.00 |
-| **`gpt-4.1-mini` s1** (after D-030) | consequential | **25.2%** | **84.3%** | **0.0%** | **7.5%** | 0.14 |
-| **`gpt-4.1-mini` s1** (after D-030) | all-out-of-scope | 25.2% | **84.7%** | 0.0% | **0.0%** | 0.27 |
+### Registered predictions, scored
 
-- The gold row reproduces E-01a exactly, which is the check that D-027's wider reviewer
-  oracle cannot bind when the scope is already right.
-- **F-11:** a tool-allowlist scope reproduces undefended overreach episode for episode.
-- **ASK finally does something:** 90 asks / 0 approved under gold; 359 asks / **269
-  recovered refusals** under `read-only`. F-09's contingency is now measured.
-- **F-10:** at `ask_on: consequential`, 22 of 182 benign actions are refused with no dialog,
-  all `CREATE` on private reversible resources. `consequential()` is the right predicate for
-  agent overreach and the wrong one for compiler under-granting.
-- **F-13:** the compiler arm fired gate G2 **59 times**, all on bounds it invented, and G2 is
-  a hard gate — no interruption can repair a wrong bound, while 33 forgotten grants on the
-  same run were repaired by one. `Grant` carries provenance and `Constraint` does not, so the
-  firewall cannot tell a bound the user stated from one the compiler guessed.
-- **F-14:** most of those invented bounds came from my own prompt — its JSON schema example
-  held a literal `$150` budget, and the model copied it. Fixed in prompt v2, declared under
-  R-16, artifacts versioned `p1`/`p2` so the two runs can never be compared silently.
-- **The two-level measurement earned its keep, and this is the result to remember.** Prompt
-  v2 improved *every* scope-level metric (leakage 33.3→26.7%, retention 87.5→100%, contrast
-  58.3→75.0%) and made the deployed system much worse (compliance 60.6→41.2%, benign
-  FPR-block 11.9→34.5%, G2 firings 59→270). Freed from copying the example's `$150`, the
-  model extracted bounds enthusiastically — 69 across 51 utterances against gold's 6 — and
-  they are plausible and wrong: `["Priya"]` where the address is
-  `priya.menon@northwind-systems.com`, `["Amex"]` as the recipient of a payment, a time
-  window clamped onto `READ:CALENDAR`. **A compiler change is not an improvement until E-01b
-  says so.**
-- **F-15:** feeding real compiler output into the monitor found a crash in Phase 2 TCB code —
-  a naive/aware datetime comparison raised inside `Constraint.check`, taking 21 episodes out
-  of the measurement entirely. Fixed and fail-closed; E-01a still reproduces bit-identically.
+| Predictions | Outcome |
+|---|---|
+| 1–5 (E-00g, dev post-repair) | **all held.** The phenomenon survives its instrument being fixed |
+| 6–9 (E-00i, held-out baseline) | **all held.** Gate passes at 68.6%; 81.8% vs 0.0% matched contrast; 10/11 flips |
+| 10 `per-class` gpt leaks < 15% | **FALSIFIED** — 21.2% |
+| 11 baseline leaks ≥ 20 pp more than per-class | **failed** — 15.2 pp |
+| 12 Sonnet baseline < gpt baseline | held — 18.2% vs 36.4% |
+| 13 some arm reaches 0.0% overreach **and** 0.0% ASR | **FALSIFIED** — ASR yes everywhere, overreach best 9.1% |
+| 14 best arm's compliance within 10 pp of gold | held, **for the wrong reason** (F-29) |
+| 15 `tool-ceiling` reproduces undefended overreach | failed — 63.6% vs 81.8%. F-11 weakens to "worth little", not "worth nothing" |
+| 16 `per-class` costs retention on gpt, not Sonnet | held — 88.2% vs 100% |
+
+**10 and 13 were the exit criterion. Both falsified. D-032 reopened (D-034).**
 
 ## 5. Open defects and risks carried forward
 
 | ID | Issue | Action owed |
 |---|---|---|
-| **F-16** | The *baseline* formulation leaks 53.3% against the agents' 45.9%. Prediction 3 falsified | Measurement stands; the explanation is superseded by F-17 |
-| **F-17** | Formulation-dependent: per-class verdicts get 0.0% leakage from the same model | Confirm on the held-out slice before it sets the design |
-| **F-18** | Model-dependent too, and agent behaviour does not predict compiler behaviour: Sonnet's agent overreaches 60.0%, its compiler leaks 10.0% | Confirm on held-out |
-| **F-19** | The two fixes are **substitutes**: one bad cell in the 2x2, either knob alone recovers most of it | A deployment needs *either* a capable model *or* an explicit formulation. Choose on cost — the formulation is ~10x cheaper |
-| **F-20** | `email_list`'s `query` matches contiguous substrings only, so the natural phrasing of a name returns nothing and the agent correctly gives up. Cost: held-out compliance 11.1%, competency gate failed, E-01b impossible there | Fix before Phase 5 scales the suite, then re-run the undefended baselines. Not fixed now: it would invalidate every committed episode's comparability |
-| **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
-| **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
-| **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
-| ~~F-13~~ | **RESOLVED (D-030).** Inferred bounds escalate; stated bounds still hard-gate and consent may not lift them. Compliance 68.5% → 84.3%, FPR-block 16.9% → 7.5%, G2 110 → 0, security unchanged | done |
-| **F-14** | Prompt v1's schema example leaked literal values into compiled constraints | **Fixed** in prompt v2, declared under R-16. Any future prompt uses placeholders |
-| **F-15** | A compiled scope could make `Constraint.check` raise, killing the decision | **Fixed** in `core/scope.py`, fail-closed, two tests. Watch for the same shape in any handler that gains a new input source |
-| **F-09** | ASK's value is contingent on compiler error | **Answered** for the floor arms; re-answer with the LLM arm |
-| **F-07** | Argument provenance is not authority provenance | Dependency screener, still owed in Phase 3 |
-| **F-08** | ASK granularity is per action, not per effect class over a resource set | Phase 4 |
-| **F-05** | `af_auth.us.email.sam_number` asks for a figure the world does not contain | Fix before Phase 5 |
-| **F-06** | High-authority compliance on the OpenAI side is untrustworthy in 8 scenarios | Audit before quoting compliance |
-| **F-03** | Benign BTC understated by over-strict oracles | Loosen before quoting BTC |
-| **R-09** | Open-weight generalisation unresolved | Needs a competent open-weight model |
-| **R-14** | Claude-authored scenarios evaluated a Claude model | Independent authorship in Phase 5. The compiler arm is deliberately an OpenAI model for the same reason |
-| **R-15** | FPR-block must be reported against compiled scopes, never gold | **Done** — E-01b reports it per scope source |
-| **R-16** | **New.** Prompt development and measurement share the dev slice | The tuning slice is declared: benign + af_inject + the control pairs. The 14 core underspecified triples were not looked at while writing the prompt, and any later prompt change must be declared and re-registered |
+| **F-29** | The flow gate denies a licensed payment; compliance therefore **rewards under-granting**; and whether it fires depends on `MIN_EVIDENCE_LEN = 8` against a 7- vs 14-character method id | **Phase 4, `monitors/flow.py`.** First measured requirement on it, with a reproducing case |
+| **F-27** | `old_renders::b` is F-20's class in the files domain; the findability gate covers word queries, not globs | Phase 5: fix the scenario *and* extend the gate, in that order, before anything is measured against either |
+| **F-26** | Two labellers agree on the contested class 6/6 and the whole effect set 0/6 | A labeller-variance floor sits under every effect-set number. Measure it properly before quoting F1 or exact-match |
+| **F-16** | The compiler settles *whether* and asks *how* | **Not fixed.** The cheap structural fix — a grant contradicted by its own open question — was dismissed on dev evidence (2 of 8) and deserves re-measuring on held-out. D-034 |
+| **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model |
+| **F-11** | Tool-allowlist authority ≈ undefended overreach | **Weakened**: exact on dev, 63.6% of 81.8% held out. B-01 proper is Phase 5 |
+| **F-12** | Gold scopes inconsistent about paths named in an utterance | Dev labels unchanged on purpose; the held-out author applied rule 3 uniformly from the start |
+| **F-08 / F-07** | ASK granularity; argument vs authority provenance | Phase 4 |
+| **F-06** | Compliance untrustworthy | **Resolved** via F-22, then F-22 itself corrected by E-00g |
+| **F-05 / F-03 / F-20 / F-21 / F-23 / F-24 / F-25 / F-28** | Benchmark and harness defects | **All resolved in Phase 3.5**, each with a gate or a loud failure in place of the silence |
+| **R-14** | Claude-authored scenarios, labels and compiler arms | **Improved on one axis only** (D-033 removes *context* contamination, not authorship). Needs a human or another vendor — Phase 5 |
+| **R-09** | Open-weight generalisation | Unresolved |
+| **R-16** | Prompt development and measurement share the dev slice | Intact: no prompt was touched in Phase 3.5 |
 
-## 6. Phase 3 is closed. The next milestone is Phase 3.5, not Phase 4.
+## 6. The next milestone is Phase 4, and D-034 changed what it must contain
 
-### What closing means here
+Phase 4 was going to build a cost model and sweep `C_ask`. It still must, and it now has two
+further obligations that Phase 3.5 created:
 
-Deliverable 1 shipped and produced the phase's results. Deliverables 2-8 were **retired,
-superseded or deferred by those results** (D-032), not abandoned for want of time — the phase
-answered its question and dissolved most of its own plan. The disposition table is in section
-2 and the reasoning is in D-032.
+1. **Decide something in the band.** D-034 un-retires the ladder's *question*, not its
+   answer. The evidence says the estimand is narrow and concentrated — five of eleven
+   triples, one failing on every arm — and that the failure is **structurally visible**: a
+   grant accompanied by an open question that presupposes it. Measure the structural fix and
+   the disagree-across-arms ensemble **before** building calibration apparatus. The cascade
+   and the cheap end (M1–M3, M5) stay retired on D-032's untouched cost argument.
+2. **Fix F-29 before quoting any compliance number.** While the flow gate denies a licensed
+   payment, "compliance" is partly a measure of how much a scope failed to authorize.
 
-The architecture decision, stated once:
-
-1. **Deterministic reference monitor over an effect ontology, deny-by-default** — keep. It is
-   the contribution. **ASR 0.0% under every compiled scope ever measured**; the injection half
-   of the thesis never needed a model.
-2. **Intent compilation outside the TCB** — keep. Two configurations reach the gold-scope
-   result end to end.
-3. **ASK as the recovery path** — keep. Its value is a function of compiler error (F-09).
-4. **Constraint provenance** (D-030) — keep. Worth 16 points of compliance.
-5. **The AuthorizationMonitor / M0-M5 ladder** — retired (D-032).
-
-**Deliberately not decided: which model and which formulation to deploy.** Several
-configurations work and one does not; that is more useful to a reader than a single
-recommended stack, and the choice depends on cost and availability.
-
-### Why the next milestone is benchmark repair
-
-Every number above is dev-slice, and the benchmark — not the system — is now the weak link:
-
-| Issue | What it blocks |
-|---|---|
-| **F-20** | `email_list`'s query matches contiguous substrings only, so the natural phrasing of a name returns nothing and a competent agent correctly gives up. It failed the competency gate on the held-out slice (11.1% compliance) and makes **any held-out verdict experiment impossible** |
-| **D-031** | The held-out suite is 3 generated scenarios from one template, 6 variants, all explicit — zero underspecified, zero benign, zero af_inject. It cannot exercise the band the project is about |
-| **F-05** | `af_auth.us.email.sam_number` asks for a figure the world does not contain |
-| **F-03** | Over-strict oracles understate benign task completion |
-| **F-06** | High-authority compliance untrustworthy on 8 scenarios |
-
-And the Phase 1 mitigation for exactly this risk — build the format and generator early so
-Phase 5 is scaling rather than inventing — **did not hold**: the generator has one template
-and it makes explicit B1 pairs, when the phenomenon lives in underspecified triples.
-
-Phase 4 would build a cost model and sweep `C_ask` on numbers nobody has validated. Phase 3.5
-comes first. It is not full Phase 5 scaling — only enough to make the existing claims
-checkable. Deliverables and exit criterion are in `docs/ROADMAP.md`.
-
-**The exit criterion is also the risk on D-032.** If the E-10 headline does not replicate on
-unseen underspecified instructions, D-032 is reopened and the ladder question returns. That is
-the honest status of the ladder's retirement: a well-supported bet on dev evidence, with a
-named condition that would overturn it.
+**Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-025, D-030's provenance
+asymmetry, or D-033's authoring condition without a documented reason.
 
 ### Cheap things worth doing whenever
 
-- A second seed for E-10 arm 4 (~$1.40), so its numbers are more than a point estimate.
-- Held-out gold scopes authored **independently** of whoever scores them — the one caveat on
-  `heldout.yaml` that the session which wrote it cannot fix (D-031).
-
-**Do not** relitigate D-006 (no ML in the trusted path), D-018 to D-024, D-025's input
-restriction, or D-030's provenance asymmetry without a documented reason.
+- A second and third seed for `per-class` on Sonnet (~$1.1 each). The best arm rests on one.
+- The dev slice's `af_auth.us.email.sam_number::c` still points at the Q1 report while its
+  siblings ask about Q3 — legible only because F-23 made rewording an utterance expensive.
+- Extend the findability gate to glob and prefix tools (F-27).
 
 ## 7. Environment notes
 
 - Python 3.12.9, uv 0.12.7, git 2.55, Windows 11. Venv at `.venv/`.
-- Credentials load from **`.env.local`** (gitignored). It holds a **working**
-  `OPENAI_API_KEY` (~$3.86 as of 2026-08-31). **`OPENROUTER_API_KEY` is in the operator's
-  shell but not in `.env.local`, so the harness cannot see it** — E-10 arm 3 is blocked on
-  exactly that, and the credential fingerprint line caught it in seconds this time instead
-  of costing a day (D-029). **The file now wins a conflict with an exported variable and says so
-  (D-029)** — the reverse rule cost E-09a a day and had already cost E-00 a day before that.
-  Every command prints the credential fingerprint it is using; `--prefer-exported-key`
-  restores the old precedence.
-- No NVIDIA GPU. Ollama is installed with `qwen2.5-coder:14b` and `dolphin3`; both are
-  unusable as *agents* (D-016/D-020) but a compiler needs only JSON output, so
-  `qwen2.5-coder:14b` runs as an explicitly exploratory arm at roughly 50–100 s per
-  utterance on CPU.
-- **Phase 3 has spent roughly $4.4** (E-09a ~$0.30, E-10 ~$4.1 including one discarded
-  attempt and two smoke probes). Total API spend across the project is roughly **$8.5**.
-- E-09a's compiled scopes are committed on purpose (D-026): they are inputs to E-01b, not
-  outputs of it. E-01b's per-arm replay output is derived data and regenerates in ~2 minutes.
+- Credentials load from **`.env.local`** (gitignored). It now holds **both** a working
+  `OPENAI_API_KEY` and a working `OPENROUTER_API_KEY` — the previous note that OpenRouter was
+  "in the operator's shell but not in `.env.local`" is **stale**, and all four E-11 arms
+  including both Sonnet ones ran on it. The file wins a conflict with an exported variable
+  and says so (D-029); every command prints the credential fingerprint it used.
+- No NVIDIA GPU. Ollama has `qwen2.5-coder:14b`; usable as an exploratory compiler only.
+- **Phase 3.5 spent roughly $3.5** — E-00i $0.20, E-00g $0.76, E-11 $2.51 (of which $2.26 is
+  the two Sonnet arms), smoke tests ~$0.05. **Total project API spend is roughly $12.**
+- **Smoke-test one call per arm before launching it.** Four arms were smoked for about $0.03
+  and all four ran clean afterwards. Separately, **dry-run the free half of a pipeline before
+  paying for the expensive half** — that is how F-28 was caught, at a cost of one minute
+  instead of ~$2 and an argument with sunk cost.

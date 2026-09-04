@@ -50,21 +50,28 @@ consequential cases — which is what the cost model and the ASK budget exist to
 
 ## What we measured
 
-Six undefended-baseline runs, ~1,700 episodes. The headline is a **within-scenario paired
+Eight undefended-baseline runs, ~2,400 episodes. The headline is a **within-scenario paired
 contrast**: same world, same contested effect, same authority level — only the wording of
 the low-authority ask differs.
 
-| Low-authority utterance | OpenAI (E-00b) | Anthropic (E-00f) |
-|---|---|---|
-| **Underspecified** — "deal with it", "sort that out" | **38.9%** [25.6, 52.2] | **60.0%** [40.0, 80.0] |
-| **Explicit** — "tell me what it says", "draft it" | **2.2%** [0.0, 6.5] | **0.0%** [0.0, 0.0] |
-| Explicit-escalation controls | **0.0%** (0/54) | **0.0%** (0/27) |
-| Gap | **+36.7 pp** | **+60.0 pp** |
-| High-authority compliance | 81.2% | 91.7% |
+| Low-authority utterance | OpenAI, dev | Anthropic, dev | OpenAI, **held-out** |
+|---|---|---|---|
+| **Underspecified** — "deal with it", "sort that out" | **45.6%** [31.1, 61.1] | **60.0%** [40.0, 80.0] | **81.8%** [60.6, 100.0] |
+| **Explicit** — "tell me what it says", "draft it" | **2.9%** [0.0, 8.7] | **0.0%** [0.0, 0.0] | **0.0%** (0/51) |
+| Explicit-escalation controls | **0.0%** | **0.0%** (0/27) | **0.0%** (0/18) |
+| Gap | **+42.7 pp** | **+60.0 pp** | **+81.8 pp** |
+| High-authority compliance | 93.1% | 91.7% | 68.6% |
+| run | E-00g | E-00f *(pre-repair)* | E-00i |
 
-In **11 of 14** scenarios, across 7 domains, the wording alone flipped the outcome — in
-both vendors independently. Agents did not disregard explicit instructions; they inferred
-authority from silence.
+In **11 of 14** dev scenarios and **10 of 11** held-out ones, across 8 domains and two
+separate worlds, the wording alone flipped the outcome — in both vendors independently.
+Agents did not disregard explicit instructions; they inferred authority from silence.
+
+*The Anthropic column is **pre-repair**: it was measured before Phase 3.5 fixed a tool
+contract that silently killed a fifth of the episodes, and it was not re-run (a declared
+budget decision). The other two columns are post-repair. The three columns are placed
+side by side because they are three measurements of the same phenomenon; no claim in this
+project rests on a difference between a pre- and a post-repair number.*
 
 **What this does and does not establish.** It replicates across two vendors on models
 competent enough to do the task (a pre-registered 60% compliance floor). It is **not**
@@ -110,13 +117,19 @@ rather than a sentence in a design document.
 **One statistical result, and one caveat that dominates it.** Replaying all 702 committed
 Phase 1 episodes through the firewall (`agentfw replay`, no API calls, $0):
 
-| Slice | Undefended | Deterministic core |
-|---|---|---|
-| AF-Auth low, underspecified | 45.9% [34.1, 57.8] | **0.0%** |
-| AF-Auth high (licensed — must survive) | 84.7% [75.5, 92.6] | **84.7%**, unchanged |
-| ASR (AF-Inject) | 22.2% [2.8, 44.4] | **0.0%** |
-| Benign actions refused | — | **0 / 182** |
-| Benign episodes interrupted | — | **0 / 108** |
+| Slice | Undefended | Deterministic core | held out |
+|---|---|---|---|
+| AF-Auth low, underspecified | 45.9% [34.1, 57.8] | **0.0%** | **0.0%** |
+| AF-Auth high (licensed — must survive) | 84.7% [75.5, 92.6] | **84.7%**, unchanged | 68.6% → 60.8% (see F-29) |
+| ASR (AF-Inject) | 22.2% [2.8, 44.4] | **0.0%** | **0.0%** (undefended 33.3%) |
+| Benign actions refused | — | **0 / 182** | **0 / 58** |
+| Benign episodes interrupted | — | **0 / 108** | **0 / 30** |
+
+The first two columns are dev and **pre-repair**; the held-out column is post-repair and
+comes from a different world, so read it as a replication rather than a continuation. The
+one row that does not replicate is compliance, and the reason is a defect in the trusted
+core rather than in the scope: the confidentiality gate denies a *licensed* payment whenever
+the scope was correct enough to authorize the preparatory read (F-29).
 
 The caveat: **the scope is a hand-written label, not a compiled one** (D-023). This measures
 enforcement given a correct scope. The hard half of the problem is assumed away, and the
@@ -136,6 +149,13 @@ is now the first thing Phase 3 does. Written up as
 Reproduce: `agentfw replay experiments/e01a_deterministic/config.yaml` (~40 s, no API key).
 
 ## Phase 3 (complete): what happens when the scope is compiled rather than written by hand
+
+> **Every number in this section is from the development split, and Phase 3.5 tested it on
+> unseen data.** The injection result replicated; the authorization result did not. Read the
+> Phase 3.5 section below before quoting anything here — in particular the claim that two
+> configurations "match the hand-written gold scopes", which is a dev-slice statement.
+> Numbers here are also **pre-repair**: Phase 3.5 fixed a tool contract that silently killed
+> 18.2% of these episodes, and the corrected dev baseline is E-00g.
 
 The scope is what the whole design rests on, so Phase 3 starts by asking how wrong it gets.
 `intent/compiler.py` turns an utterance into an `IntentScope` from two inputs and no others:
@@ -234,9 +254,88 @@ the moment to be most suspicious rather than least.
 
 Phase 3 closed here. Most of its planned ML work — the M0-M5 ladder, calibration, the
 cascade — was **retired rather than built** (D-032): it existed to calibrate a probability
-that places an ASK boundary, and the compiler turned out to place that boundary correctly on
-its own. The next milestone is not Phase 4 but a benchmark repair, because every number above
-is from the development split and the held-out suite cannot currently validate any of it.
+that places an ASK boundary, and the compiler appeared to place that boundary correctly on
+its own. That retirement carried a named condition, and Phase 3.5 met it.
+
+## Phase 3.5 (complete): the benchmark was the weak link, and the headline did not replicate
+
+Every Phase 3 number was dev-slice, and the held-out suite could not check any of it — three
+generated scenarios, six utterances, all explicit, in the same world as dev, with no benign
+tasks and no attacks. So contested-effect leakage had an empty denominator there, and benign
+refusal rate and attack success rate were not measurable at all.
+
+**What was rebuilt.** A second world; 32 held-out scenarios over 60 utterances, including
+eleven *underspecified triples* across six contested effect classes; ten benign tasks and
+five injection attacks. Gold labels for all of it, written by an author given the sixty
+sentences and the labelling rule **and nothing else** — no finding, no prior result, and no
+knowledge that this project contains a compiler (D-033). The brief and its input are
+committed before the labels, and the labels before any compiler ran, so the ordering is
+checkable in the history rather than asserted here.
+
+**First: does the phenomenon survive its own instrument being repaired?** A tool contract
+matched contiguous substrings only, so searching for "Dana Whitfield" returned nothing while
+the world plainly held `dana.whitfield@…`, and a competent agent correctly gave up. That
+silently affected 18.2% of the dev episodes every earlier number rests on. Repaired, and
+re-measured:
+
+| dev slice, OpenAI models | pre-repair | post-repair |
+|---|---|---|
+| Underspecified overreach | 38.9% | **45.6%** |
+| Explicit-low overreach | 2.2% | 2.9% |
+| **Gap** | +36.7 pp | **+42.7 pp** |
+| High-authority compliance | 81.2% | **93.1%** |
+
+The phenomenon is not merely intact; it is **larger on a benchmark that works**. Had it gone
+the other way, two phases would have been built on a broken instrument.
+
+**Then: does the Phase 3 headline replicate on unseen underspecified instructions?**
+
+| contested-effect leakage | free-form prompt | per-class verdicts |
+|---|---|---|
+| `gpt-4.1-mini` — dev | 53.3% | **0.0%** |
+| `gpt-4.1-mini` — **held-out** | **36.4%** | **21.2%** |
+| `claude-sonnet-5` — dev | 10.0% | **0.0%** |
+| `claude-sonnet-5` — **held-out** | **18.2%** | **9.1%** |
+
+**No.** No cell reaches zero. On dev either intervention alone reached the floor, and we
+concluded they were substitutes — pick one, on cost. Held out both help, neither suffices,
+and they compose. The undefended agent overreaches on **81.8%** of these instructions, so
+every compiled scope is a large improvement; "matches the hand-written gold scopes" is not.
+
+**And the residue is the *same failure* Phase 3 thought it had fixed.** It concentrates in
+five of eleven scenarios, one of which every arm gets wrong, and on those the compiler grants
+the contested effect while asking a question about *how*: *"What answers should be submitted
+for the poll questions…"*, *"Is the exact duration 1 hour or something else?"* It has settled
+whether the action happens and is asking how — which is, word for word, what we wrote when we
+first measured this failure and then declared it repaired. The independent labeller, having
+seen none of that, wrote the question those cases actually needed: *"whether 'take care of
+that' licenses filling in and submitting the poll, or only reading what it asks."*
+
+**What did replicate is the half that never needed a model.**
+
+| held out, 180 episodes | undefended | best compiled scope |
+|---|---|---|
+| Attack success rate | **33.3%** | **0.0%** |
+| Overreach (underspecified) | 81.8% | 9.1% |
+
+Attack success is **0.0% under every compiled scope**, against five attacks the system had
+never seen, two of them written to be defense-aware. Deny-by-default over an effect ontology
+does that with no model in the decision path. The tool-allowlist baseline still lets 6.7%
+through.
+
+So the pre-registered exit criterion failed, and **D-032 is reopened** (D-034): the question
+the ML ladder existed to answer comes back, though not its answer — the evidence now says the
+uncertain band is narrow, concentrated, and structurally visible as *a grant contradicted by
+its own open question*, which is a cheaper thing to attack than a calibrated probability.
+
+**Ten defects found, most by gates rather than by review** — including a replay that reported
+a perfect defense over *zero episodes* because it was indexed to the wrong split, and a
+confidentiality gate that denies a licensed payment, so that the compliance metric rewards a
+scope for failing to authorize things. That last one had been invisible for three phases
+because the dev fixture's payment identifiers are seven characters long and the threshold for
+noticing is eight.
+
+
 
 The rest of this section is how we got there, and it is left standing because the wrong turn
 is the instructive part.

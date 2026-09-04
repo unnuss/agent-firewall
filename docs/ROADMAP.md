@@ -161,7 +161,49 @@ Deliverables:
 
 ---
 
-## Phase 3.5 — Benchmark repair and held-out validation (NEXT)
+## Phase 3.5 — Benchmark repair and held-out validation ✅ complete (2026-09-04)
+
+**Outcome.** All six deliverables shipped, and **the exit criterion was answered in the
+negative**: the E-10 headline does not replicate on unseen underspecified instructions, so
+D-032's retirement of the M0–M5 ladder is reopened (D-034). That was the registered condition
+and it is followed rather than renegotiated.
+
+*What replicated.* **ASR 0.0% under every compiled scope**, on a held-out slice where the
+undefended agent is hijacked 33.3% of the time by five unseen attacks, two of them
+defense-aware. The injection half of the thesis is validated on unseen data and it never
+needed a model.
+
+*What did not.* The best compiled scope leaks **9.1%** of contested effects on unseen
+underspecified instructions where dev showed **0.0%**, and no arm reaches the 0.0%/0.0% pair.
+F-19's "the two fixes are substitutes" is dev-only: held out both help, neither suffices, and
+they compose. The residue is **F-16's exact mechanism** — the compiler grants the contested
+class and asks a question about *how* — in the arms F-17 and F-19 declared had fixed it.
+
+*What the benchmark repair proved about itself.* The dev phenomenon **survives its own
+instrument being fixed and grows**: underspecified overreach 38.9% → 45.6%, the gap D-018
+rests on +36.7 pp → **+42.7 pp**, compliance 81.2% → 93.1%, benign BTC 88.0% → 97.2%. Had it
+not survived, two phases would have been built on a broken instrument, and that was the real
+risk this milestone carried.
+
+*Ten findings, most of them from gates rather than review.* F-21 (a tool reporting an empty
+world for a missed prefix), F-22 (a hand-read diagnosis right about four of six — then itself
+**corrected by intervention** to four of six with a different sixth), F-23 (compiled scopes
+keyed by id but defined by an utterance), F-24 (ten held-out scenarios silently running in the
+dev world), F-25 (a gate whose hardcoded probes bound it to the old world), F-26 (two
+labellers: 6/6 on the contested class, 0/6 on the whole effect set), F-27 (the findability
+gate covers word queries, not globs), F-28 (**a replay of the wrong split reporting a perfect
+defense over zero episodes**), F-29 (**the flow gate denies a licensed payment, so compliance
+rewards under-granting — hidden for three phases behind a seven-character identifier**).
+
+*What Phase 4 inherits.* D-034 un-retires the ladder's **question** and not its answer, with
+the estimand's shape measured: concentrated in five of eleven triples, structurally visible as
+a grant contradicted by its own open question, and disagreed on between arms. And F-29 must be
+fixed before any compliance number is quoted.
+
+Original plan follows.
+
+
+## Phase 3.5 — Benchmark repair and held-out validation (as planned)
 
 **Why this exists as its own milestone.** Phase 3's results are good and entirely
 unvalidated: every number is dev-slice. Four findings say the benchmark, not the system, is
@@ -198,13 +240,28 @@ Deliverables:
 replicates on unseen underspecified instructions or it does not. If it does not, D-032 is
 reopened and the ladder question returns.
 
+> **It did not.** E-11 predictions 10 and 13 were the operative form of this criterion and
+> both are falsified. See D-034.
+
 ## Phase 4 — Cost model, flow control, and full integration
+
+**Re-scoped by D-034 and F-29 before it starts.** Two deliverables gained a specific,
+measured requirement in Phase 3.5, and deliverable 0 is new:
+
+0. **Decide something in the band D-034 reopened**, and measure the cheap options first: the
+   *structural* fix (refuse a grant that its own open question contradicts — dismissed on dev
+   evidence of 2 of 8, untested held out) and a *disagreement* ensemble across arms. Only if
+   both fail does a calibrated `P(licensed)` earn its apparatus. The cascade and M1–M3 stay
+   retired on D-032's cost argument, which E-11 did not touch.
 
 Deliverables:
 1. `policy/cost_model.py` — the expected-cost decision, `C_ask` sweep, per-effect
-   `C_allow_harmful` from reversibility/externality/magnitude.
+   `C_allow_harmful` from reversibility/externality/magnitude. **F-10 is its first measured
+   requirement**; the compliance metric it optimises is unsound until F-29 is fixed.
 2. `monitors/flow.py` — confidentiality lattice, declassification grants, sensitive-pattern
-   ingestion labeling.
+   ingestion labeling. **F-29 first**: the gate currently denies a licensed payment because an
+   opaque local handle appears in an argument, and it does so only when that handle is at
+   least `MIN_EVIDENCE_LEN` characters long.
 3. ASK budget + fail-closed exhaustion (D-009); reviewer fatigue model.
 4. **E-04: the ASK-budget sweep** — the headline trade-off curve, first version.
 5. Full-system integration; all monitors live.
@@ -253,6 +310,14 @@ limitations section that actually lists the conceded threats, demo script, scree
 
 - Phase 5 is where projects like this die (scenario authoring is slow). Mitigation: build
   the scenario *format* and the generator in Phase 1, so Phase 5 is scaling rather than
-  inventing.
+  inventing. **This mitigation failed and was repaired in Phase 3.5.** Having a generator was
+  not the same as having the right one: it shipped with a single template producing *explicit
+  pairs* while D-018 had re-centred the benchmark on *underspecified triples* in the same
+  phase, and nothing forced a template to declare which shape it made. The held-out suite was
+  therefore unable to exercise the phenomenon for two phases (D-031). The repair is
+  structural — a template now declares its variants, and a validator rejects a three-variant
+  af_auth template that has lost the a/c contrast — so the same failure cannot recur silently.
+  **The transferable lesson: a mitigation that is a deliverable rather than a check is not a
+  mitigation.**
 - Phase 3 can absorb unlimited time. Mitigation: E-01/E-02/E-03 are defined up front with
   fixed deliverables; new model ideas go into `EXPERIMENTS.md` as backlog, not into scope.
