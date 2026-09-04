@@ -2597,6 +2597,39 @@ finding and must be reported as one.
   points at the Q1 report while `a` and `b` ask about Q3, which is odd prose and an intact
   authorization contrast.
 
+- **F-24 --- a held-out scenario can inherit the dev world by saying nothing.**
+  `WorldRef.fixture` defaults to `office_baseline`. Ten of the new held-out benign scenarios
+  did not name a fixture, so all ten ran in the **dev** world. Every one would have executed,
+  produced plausible numbers, and measured the wrong world; the split would have been held
+  out in name only for a third of its scenarios, and the failure mode is quiet --- the
+  oracles reference files that world does not hold, so they would simply have scored zero and
+  read as a hard slice.
+
+  It was caught by the gate written in the same session (`tests/test_heldout_slice.py`),
+  which asks whether an ideal play satisfies each oracle. Two scenarios failed with "no such
+  file", which is a much louder signal than a low completion rate. **That gate is the dual of
+  F-01** and it is the one this benchmark was missing: F-01 asserts no oracle is true before
+  the agent acts; this asserts every oracle can be made true at all. F-05, F-20 and F-21 were
+  all unsatisfiable tasks dressed as model failures, and all three cost real money to find.
+
+  A second check now asserts every held-out scenario names a held-out fixture, with the three
+  pre-Phase-3.5 generated controls named as the exception rather than pattern-matched: they
+  run on the dev world because their correspondents live there, and they are kept so E-10h and
+  `agentfw probe-contract` stay reproducible. They are controls, so an easier world weakens
+  them rather than flattering the system.
+
+- **F-25 --- a gate that names dev-world identifiers stops testing anything the moment a
+  second world exists.** The effect-reachability gate probed each tool with hardcoded
+  arguments (`files_delete` with a path from `office_baseline`). Against the held-out world
+  those paths do not exist, the declarer returns no effects, and the gate reports "no tool in
+  this tool set can produce DELETE" --- indistinguishable from a real scenario defect. It
+  fired on the first held-out scenario that used `files_delete`, correctly and for entirely
+  the wrong reason. Probe identifiers are now resolved out of each scenario's own world.
+
+  Worth recording next to F-24 because they are the same mistake in two places: **a fixture
+  default and a hardcoded probe both silently bind new content to the old world.** Anything
+  that names a specific row of `office_baseline` is a place the split can leak.
+
 ## Backlog (ideas, not commitments)
 
 - Attention-saliency dependency screening on an open-weight model (RTBAS-style). Time-boxed

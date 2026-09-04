@@ -11,7 +11,7 @@ from hypothesis import strategies as st
 from pydantic import ValidationError
 
 from agentfw.core.types import Integrity, Label, ProposedAction, ResourceClass, Verb
-from agentfw.eval.generator import PairTemplate, expand, expand_dir
+from agentfw.eval.generator import ScenarioTemplate, expand, expand_dir
 from agentfw.eval.metrics import cluster_bootstrap, rate
 from agentfw.eval.oracles import EffectPattern, Oracle
 from agentfw.eval.runner import EpisodeResult
@@ -253,27 +253,97 @@ def test_controls_are_retained_not_deleted() -> None:
 # --- generator --------------------------------------------------------------
 
 
-def test_generator_expands_a_template_into_valid_minimal_pairs() -> None:
+def test_generator_expands_a_template_into_valid_scenarios() -> None:
     scenarios = expand_dir()
     assert scenarios
     for sc in scenarios:
         assert sc.source == "generated"
         assert sc.template
         assert sc.split == "heldout", "generated scenarios must not land in dev"
-        assert "{" not in sc.variants[0].utterance
-        assert "{" not in (sc.variants[0].task_oracle.sql or "")
+        for v in sc.variants:
+            assert "{" not in v.utterance
+            assert "{" not in (v.task_oracle.sql or "") if v.task_oracle else True
+
+
+def test_the_generator_produces_the_shape_the_benchmark_is_about() -> None:
+    """The Phase 1 generator had one template and it made explicit pairs.
+
+    D-018 re-centred AF-Auth on the underspecified triple in Phase 1, and nothing forced the
+    generator to follow, so the held-out suite was three explicit pairs and could not
+    exercise the band the project measures (D-031). This asserts the repair rather than
+    trusting it: the generated half of the suite must carry underspecified triples across
+    more than one contested effect class, or the same failure has quietly returned.
+    """
+    scenarios = expand_dir()
+    triples = [s for s in scenarios if len(s.variants) == 3]
+    assert len(triples) >= 8, f"only {len(triples)} generated triples"
+    for sc in triples:
+        specs = {v.specificity for v in sc.variants if v.authority == "low"}
+        assert specs == {"underspecified", "explicit"}, f"{sc.id} lost the a/c contrast"
+    classes = {
+        f"{s.contested_effect.verb.value}:{s.contested_effect.resource_class.value}"
+        for s in triples
+    }
+    assert len(classes) >= 4, f"generated triples cover only {classes}"
+    assert any(s.role == "control" for s in scenarios), "controls must survive too"
+
+
+def test_a_template_claiming_to_make_triples_may_not_make_pairs() -> None:
+    """The check that would have caught the Phase 1 gap at authoring time."""
+    with pytest.raises(ValueError, match="underspecified"):
+        ScenarioTemplate(
+            template="t",
+            family="B4",
+            domain="email",
+            id_prefix="x",
+            tools=["email_send"],
+            contested_effect={"verb": "SEND", "resource_class": "EMAIL"},
+            variants=[
+                {
+                    "id": "a",
+                    "authority": "low",
+                    "contested_authorized": False,
+                    "utterance": "u",
+                },
+                {
+                    "id": "b",
+                    "authority": "high",
+                    "contested_authorized": True,
+                    "utterance": "v",
+                },
+                {
+                    "id": "c",
+                    "authority": "low",
+                    "contested_authorized": False,
+                    "utterance": "w",
+                },
+            ],
+            instances=[{"id_suffix": "i"}],
+        )
 
 
 def test_generator_rejects_a_missing_slot() -> None:
-    tpl = PairTemplate(
+    tpl = ScenarioTemplate(
         template="t",
         family="B1",
         domain="email",
         id_prefix="x",
         tools=["email_send"],
         contested_effect={"verb": "SEND", "resource_class": "EMAIL"},
-        low_utterance="draft to {person}",
-        high_utterance="send to {nobody_supplied_this}",
+        variants=[
+            {
+                "id": "a",
+                "authority": "low",
+                "contested_authorized": False,
+                "utterance": "draft to {person}",
+            },
+            {
+                "id": "b",
+                "authority": "high",
+                "contested_authorized": True,
+                "utterance": "send to {nobody_supplied_this}",
+            },
+        ],
         instances=[{"id_suffix": "i", "slots": {"person": "Sam"}}],
     )
     with pytest.raises(KeyError):
@@ -371,14 +441,22 @@ def test_no_oracle_is_trivially_true_on_an_untouched_world() -> None:
 
 
 def test_every_scenario_oracle_is_reachable_by_some_tool_in_its_tool_set() -> None:
-    """An effect oracle whose verb no listed tool can produce can never fire."""
+    """An effect oracle whose verb no listed tool can produce can never fire.
+
+    The probe arguments used to be literal dev-world identifiers, so this gate silently
+    stopped testing anything the moment a scenario ran on a different fixture: a probe
+    naming a file that world does not hold declares no effect, and "no tool can produce
+    DELETE" reads identically to "the probe pointed at nothing". Phase 3.5 added a second
+    fixture and the gate caught it --- correctly, and for the wrong reason. Identifiers are
+    now resolved out of each scenario's own world.
+    """
     load_all()
     for sc in load_suite(split=None):
         world = World.from_fixture(sc.world.fixture, sc.world.overlay)
         producible = set()
         for name in sc.tools:
             spec = REGISTRY[name]
-            for probe in _PROBE_ARGS.get(name, [{}]):
+            for probe in _probe_args(world, name):
                 try:
                     for eff in spec.declare(world, probe):
                         producible.add((eff.verb.value, eff.resource_class.value))
@@ -393,26 +471,42 @@ def test_every_scenario_oracle_is_reachable_by_some_tool_in_its_tool_set() -> No
         world.close()
 
 
-_PROBE_ARGS: dict[str, list[dict]] = {
-    "files_read": [{"path": "reports/q4-2025-final.md"}],
-    "files_write": [{"path": "x.md", "content": "c"}],
-    "files_delete": [{"path": "archive/exports/tmp-export-1.csv"}],
-    "files_share_link": [{"path": "reports/q4-2025-final.md"}],
-    "email_read": [{"id": "m-001"}],
-    "email_draft": [{"to": "a@b.example", "subject": "s", "body": "b"}],
-    "email_send": [{"to": "a@b.example", "subject": "s", "body": "b"}],
-    "calendar_create": [{"title": "t", "start": "s", "end": "e"}],
-    "calendar_delete": [{"id": "evt-001"}],
-    "contacts_search": [{"query": "a"}],
-    "web_search": [{"query": "a"}],
-    "web_fetch": [{"url": "https://cloudhost.example/pricing"}],
-    "web_post": [{"url": "https://x.example", "data": "d"}],
-    "payments_charge": [{"method_id": "pm-amex", "amount_usd": 1.0, "merchant": "m"}],
-    "storage_upload": [{"path": "reports/q4-2025-final.md", "key": "k"}],
-    "storage_share": [{"key": "k", "principal": "anyone"}],
-    "travel_search_flights": [{"origin": "BOS", "destination": "DXB"}],
-    "travel_book_flight": [{"flight_id": "fl-102", "payment_method_id": "pm-amex"}],
-}
+def _one(world: World, sql: str, column: str, fallback: str) -> str:
+    rows = world.query(sql)
+    return str(rows[0][column]) if rows else fallback
+
+
+def _probe_args(world: World, tool: str) -> list[dict]:
+    """Arguments that exercise a tool's declarer, resolved against *this* world."""
+    a_file = _one(
+        world, "SELECT path FROM files WHERE deleted = 0 ORDER BY path", "path", "x.md"
+    )
+    a_mail = _one(world, "SELECT id FROM emails ORDER BY id", "id", "m-001")
+    an_event = _one(world, "SELECT id FROM calendar_events ORDER BY id", "id", "evt-001")
+    a_page = _one(world, "SELECT url FROM web_pages ORDER BY url", "url", "https://x.example")
+    a_card = _one(world, "SELECT id FROM payment_methods ORDER BY id", "id", "pm-visa")
+    a_key = _one(world, "SELECT key FROM storage_objects ORDER BY key", "key", "k")
+    a_flight = _one(world, "SELECT id FROM flights ORDER BY id", "id", "fl-102")
+    return {
+        "files_read": [{"path": a_file}],
+        "files_write": [{"path": "probe.md", "content": "c"}],
+        "files_delete": [{"path": a_file}],
+        "files_share_link": [{"path": a_file}],
+        "email_read": [{"id": a_mail}],
+        "email_draft": [{"to": "a@b.example", "subject": "s", "body": "b"}],
+        "email_send": [{"to": "a@b.example", "subject": "s", "body": "b"}],
+        "calendar_create": [{"title": "t", "start": "s", "end": "e"}],
+        "calendar_delete": [{"id": an_event}],
+        "contacts_search": [{"query": "a"}],
+        "web_search": [{"query": "a"}],
+        "web_fetch": [{"url": a_page}],
+        "web_post": [{"url": "https://x.example", "data": "d"}],
+        "payments_charge": [{"method_id": a_card, "amount_usd": 1.0, "merchant": "m"}],
+        "storage_upload": [{"path": a_file, "key": "k"}],
+        "storage_share": [{"key": a_key, "principal": "anyone"}],
+        "travel_search_flights": [{"origin": "BOS", "destination": "DXB"}],
+        "travel_book_flight": [{"flight_id": a_flight, "payment_method_id": a_card}],
+    }.get(tool, [{}])
 
 
 # --- D-019: the competency floor is enforced, not merely documented ---------

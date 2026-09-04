@@ -4,14 +4,30 @@ RISK R-07: scenario authoring is slow, Phase 5 needs ~120-200 AF-Auth scenarios,
 projects like this die when that work is left to the end. So the generator exists now, in
 Phase 1, and Phase 5 becomes scaling rather than inventing.
 
-A template is one *pair shape* — a contested effect, a tool set, and two utterance forms
-that differ only in the consequence they license — plus a table of instances that fill its
-slots. Substitution is recursive over strings in the template body, so oracles get filled
+**That mitigation did not hold, and this module is the repair (Phase 3.5).** The generator
+shipped with one template and it produced the wrong shape: an explicit *pair* --- "draft a
+reply to X" against "reply to X" --- when the phenomenon the benchmark was re-centred on in
+D-018 lives in the underspecified *triple*. The held-out suite it produced therefore had
+zero underspecified variants and could not exercise the band the project is about (D-031).
+Having a generator was not the same as having the right generator, and the failure was
+invisible because nothing forced a template to say what shape it made.
+
+So a template no longer knows about "low" and "high" as special names. **It declares its
+variants**, each with its own authority, specificity and oracle, and the same machinery
+makes a pair, a triple, or whatever the schema will validate. The four special-cased fields
+(`low_utterance`, `high_utterance`, and their two oracles) are gone rather than joined by
+four more --- a triple template written on top of them would have needed
+`underspecified_utterance` and a third oracle, and a quadruple another two.
+
+A template is one *scenario shape* --- a contested effect, a tool set, and the utterance
+forms that differ only in the authority they license --- plus a table of instances that fill
+its slots. Substitution is recursive over strings in the template body, so oracles get filled
 in too, and every generated scenario is validated by the same pydantic model as a
-hand-written one. Generated scenarios are marked ``source: generated`` and carry the
+hand-written one and passes the same gates: oracle triviality (F-01), effect reachability,
+and findability (F-20). Generated scenarios are marked ``source: generated`` and carry the
 template name, so a later analysis can check whether the generated half behaves like the
-hand-written half — if it does not, the generator is producing artefacts and we will see
-it rather than assume it.
+hand-written half --- if it does not, the generator is producing artefacts and we will see it
+rather than assume it.
 """
 
 from __future__ import annotations
@@ -21,9 +37,9 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from agentfw.eval.scenario import Scenario, Split
+from agentfw.eval.scenario import Role, Scenario, Specificity, Split, Suite
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 _SLOT = re.compile(r"\{([a-z0-9_]+)\}")
@@ -39,13 +55,29 @@ class Instance(BaseModel):
     notes: str = ""
 
 
-class PairTemplate(BaseModel):
-    """One AF-Auth pair shape plus the instances that fill it."""
+class VariantTemplate(BaseModel):
+    """One utterance form. The template says what it is; the generator does not guess."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    authority: str
+    specificity: Specificity = "explicit"
+    contested_authorized: bool | None = None
+    utterance: str
+    task_oracle: dict[str, Any] | None = None
+    notes: str = ""
+
+
+class ScenarioTemplate(BaseModel):
+    """One scenario shape plus the instances that fill it."""
 
     model_config = ConfigDict(extra="forbid")
 
     template: str
+    suite: Suite = "af_auth"
     family: str
+    role: Role = "core"
     domain: str
     id_prefix: str
     split: Split = "heldout"
@@ -53,16 +85,39 @@ class PairTemplate(BaseModel):
     tools: list[str]
     max_steps: int = 12
     description: str = ""
-    contested_effect: dict[str, Any]
-    low_utterance: str
-    high_utterance: str
-    low_task_oracle: dict[str, Any] | None = None
-    high_task_oracle: dict[str, Any] | None = None
+    contested_effect: dict[str, Any] | None = None
+    variants: list[VariantTemplate]
     instances: list[Instance]
 
+    @model_validator(mode="after")
+    def _check(self) -> ScenarioTemplate:
+        if not self.variants:
+            raise ValueError(f"{self.template}: a template with no variants makes nothing")
+        ids = [v.id for v in self.variants]
+        if len(set(ids)) != len(ids):
+            raise ValueError(f"{self.template}: duplicate variant ids {ids}")
+        # The shape rules themselves live on Scenario, which validates every expansion. What
+        # is worth catching here is the mistake this module exists to prevent: a template
+        # that claims to make triples and makes pairs.
+        if self.suite == "af_auth" and len(self.variants) == 3:
+            specs = sorted(v.specificity for v in self.variants if v.authority == "low")
+            if specs != ["explicit", "underspecified"]:
+                raise ValueError(
+                    f"{self.template}: a three-variant af_auth template must contrast one "
+                    f"underspecified low variant against one explicit low variant, got "
+                    f"{specs}. That contrast is the phenomenon; a template that loses it "
+                    f"produces scenarios that look like the dev slice and measure nothing "
+                    f"it measures (D-018, D-031)."
+                )
+        return self
+
     @classmethod
-    def from_yaml(cls, path: Path) -> PairTemplate:
+    def from_yaml(cls, path: Path) -> ScenarioTemplate:
         return cls(**(yaml.safe_load(path.read_text(encoding="utf-8")) or {}))
+
+
+# Retained name so existing callers and configs keep working; the shape is the general one.
+PairTemplate = ScenarioTemplate
 
 
 def _fill(value: Any, slots: dict[str, str]) -> Any:
@@ -78,14 +133,15 @@ def _fill(value: Any, slots: dict[str, str]) -> Any:
     return value
 
 
-def expand(tpl: PairTemplate) -> list[Scenario]:
+def expand(tpl: ScenarioTemplate) -> list[Scenario]:
     out: list[Scenario] = []
     for inst in tpl.instances:
         slots = dict(inst.slots)
         data: dict[str, Any] = {
             "id": f"{tpl.id_prefix}.{inst.id_suffix}",
-            "suite": "af_auth",
+            "suite": tpl.suite,
             "family": tpl.family,
+            "role": tpl.role,
             "domain": inst.domain or tpl.domain,
             "split": tpl.split,
             "source": "generated",
@@ -93,29 +149,22 @@ def expand(tpl: PairTemplate) -> list[Scenario]:
             "tools": list(tpl.tools),
             "max_steps": tpl.max_steps,
             "world": {"fixture": tpl.fixture, "overlay": _fill(inst.world_overlay, slots)},
-            "contested_effect": _fill(tpl.contested_effect, slots),
             "notes": inst.notes or tpl.description,
             "variants": [
                 {
-                    "id": "a",
-                    "authority": "low",
-                    "contested_authorized": False,
-                    "utterance": _fill(tpl.low_utterance, slots),
-                    "task_oracle": _fill(tpl.low_task_oracle, slots)
-                    if tpl.low_task_oracle
-                    else None,
-                },
-                {
-                    "id": "b",
-                    "authority": "high",
-                    "contested_authorized": True,
-                    "utterance": _fill(tpl.high_utterance, slots),
-                    "task_oracle": _fill(tpl.high_task_oracle, slots)
-                    if tpl.high_task_oracle
-                    else None,
-                },
+                    "id": v.id,
+                    "authority": v.authority,
+                    "specificity": v.specificity,
+                    "contested_authorized": v.contested_authorized,
+                    "utterance": _fill(v.utterance, slots),
+                    "task_oracle": _fill(v.task_oracle, slots) if v.task_oracle else None,
+                    "notes": _fill(v.notes, slots),
+                }
+                for v in tpl.variants
             ],
         }
+        if tpl.contested_effect is not None:
+            data["contested_effect"] = _fill(tpl.contested_effect, slots)
         out.append(Scenario(**data))
     return out
 
@@ -124,7 +173,7 @@ def expand_dir(template_dir: Path | None = None) -> list[Scenario]:
     template_dir = template_dir or TEMPLATE_DIR
     out: list[Scenario] = []
     for path in sorted(template_dir.glob("*.yaml")):
-        out += expand(PairTemplate.from_yaml(path))
+        out += expand(ScenarioTemplate.from_yaml(path))
     return out
 
 
@@ -138,3 +187,15 @@ def write_suite(scenarios: list[Scenario], path: Path) -> int:
     text += yaml.safe_dump_all(docs, sort_keys=False, allow_unicode=True, width=88)
     path.write_text(text, encoding="utf-8")
     return len(scenarios)
+
+
+def write_suites(scenarios: list[Scenario], root: Path) -> dict[Path, int]:
+    """Write one file per (suite, split), so generated scenarios land beside their kin."""
+    groups: dict[tuple[str, str], list[Scenario]] = {}
+    for s in scenarios:
+        groups.setdefault((s.suite, s.split), []).append(s)
+    written: dict[Path, int] = {}
+    for (suite, split), group in sorted(groups.items()):
+        path = root / suite / f"generated_{split}.yaml"
+        written[path] = write_suite(sorted(group, key=lambda s: s.id), path)
+    return written

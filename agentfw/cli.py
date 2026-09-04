@@ -20,7 +20,7 @@ from pathlib import Path
 
 from agentfw.config import credential_report, load_local_env
 from agentfw.eval import report as report_mod
-from agentfw.eval.generator import expand_dir, write_suite
+from agentfw.eval.generator import expand_dir, write_suite, write_suites
 from agentfw.eval.runner import RunConfig, env_report, run
 from agentfw.eval.scenario import SUITE_DIR, load_suite
 from agentfw.sandbox.registry import REGISTRY, load_all
@@ -58,10 +58,18 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
+    """Expand every template into its suite file.
+
+    One file per (suite, split), because a template now declares its own suite and split
+    (Phase 3.5) and a single output path would have silently merged them.
+    """
     scenarios = expand_dir()
-    out = Path(args.out) if args.out else SUITE_DIR / "af_auth" / "generated_heldout.yaml"
-    n = write_suite(scenarios, out)
-    print(f"wrote {n} generated scenarios to {out}")
+    if args.out:
+        n = write_suite(scenarios, Path(args.out))
+        print(f"wrote {n} generated scenarios to {args.out}")
+        return 0
+    for path, n in write_suites(scenarios, SUITE_DIR).items():
+        print(f"wrote {n} generated scenarios to {path}")
     return 0
 
 
