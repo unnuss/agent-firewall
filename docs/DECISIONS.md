@@ -946,6 +946,83 @@ for it.
 
 ---
 
+### D-034 — D-032 is reopened: the band exists after all, and it is narrow and concentrated
+**Date:** 2026-09-04 · **Status:** accepted · **Reopens:** D-032 · **Closes Phase 3.5**
+
+**Decision.** D-032's retirement of the M0–M5 ladder is **reopened**, on the condition D-032
+itself wrote down. E-11's predictions 10 and 13 were the registered exit criterion and both
+are falsified: `per-class` on `gpt-4.1-mini` leaks **21.2%** of contested effects on unseen
+underspecified instructions where dev showed 0.0%, and **no** compiled arm reaches the
+0.0%-overreach / 0.0%-ASR pair that dev's best two cells reached. The ladder question
+returns.
+
+**Reopened is not un-retired, and the difference is the whole content of this decision.**
+
+D-032's argument had one load-bearing step: *"E-10 removed the band. A compiled scope from
+either a capable model or an explicit formulation reaches 0.0% overreach and 0.0% ASR — the
+gold-scope result — with no probability anywhere in the system. There is no uncertain middle
+left for a calibrated score to arbitrate."* Held out, **the band is not empty.** The best
+configuration leaves roughly one contested effect in eleven granted, and the second-best
+leaves one in five. Something has to decide those, and at the moment nothing does.
+
+**What held-out evidence says the estimand should be, which is not what the ladder assumed.**
+
+- **The residue is concentrated, not diffuse.** Five of eleven triples account for all of it,
+  and one — `calendar.devi_planning` — leaks on *every arm including the best*. A calibrated
+  `P(licensed)` over all actions is aimed at the wrong thing; what varies is a small set of
+  utterances on which every compiler agrees, wrongly.
+- **The failure has a *shape*, and it is F-16's.** On every leaking case the compiler grants
+  the contested class and raises an open question about *how* rather than *whether* — *"What
+  answers should be submitted…"*, *"Is the exact duration 1 hour…"*. That is a structural
+  property of the output, visible without a probability: **an open question that presupposes
+  the action, alongside a grant of that action.** F-16 dismissed the cheap structural fix
+  because it would have repaired 2 of 8 cases on dev; on held-out the leaking arms raise a
+  *how*-question on the granted class far more often than that, and the fix deserves
+  re-measuring before any calibration apparatus is built.
+- **Disagreement between arms is itself signal.** The four arms leak on overlapping but
+  different scenarios. An ensemble that withholds where its members disagree is a
+  no-calibration mechanism aimed directly at the measured residue, and it is cheaper than
+  M1–M3.
+
+**So what is un-retired is narrow.** Phase 4 must decide *something* in the band, and the
+options now have evidence attached. What stays retired is the **cascade** (M5) and the cheap
+end (M1–M3): D-032's cost argument is untouched — compilation is one call per episode against
+the agent's ten to fifteen, and optimising it remains a rounding error. What returns is the
+question the ladder existed to answer, **not** the ladder's answer to it.
+
+**What did replicate, and it must not be lost in the correction.** ASR is **0.0% under every
+compiled scope**, on a held-out slice where the undefended agent is hijacked **33.3%** of the
+time by five attacks it had never seen, two of them defense-aware. The injection half of the
+thesis is validated on unseen data and it never needed a model. D-006 is untouched, and the
+contribution D-032 called "the contribution" is the half that survived.
+
+**The honest summary of what Phase 3 claimed and what held.** Phase 3 said the architecture's
+bet — *"what did this person authorize?"* is an easier question than *"what should I do?"* —
+**holds but not automatically**. Held out, the bet still pays: 81.8% undefended overreach
+against 9.1% for the best compiled scope. What does not hold is the stronger claim that
+followed it, that two configurations *reach the gold-scope result end to end*. They do not,
+and the gap between "large improvement" and "solved" is exactly where the ML core has to
+live.
+
+**Three things this decision is not.**
+
+1. Not a claim that E-10 was wrong. E-10 measured dev correctly. What was wrong was reading
+   two 0.0% cells as a floor rather than as a small sample at the edge of its range —
+   D-032 said "all of the above rests on dev-slice evidence" and was right to.
+2. Not a claim that the held-out numbers are the true ones. Eleven triples, wide intervals
+   ([0.0, 27.3] on the best arm), one Sonnet seed. **Neither slice is authoritative and the
+   difference between them is itself a finding**: a slice built after two phases of learning
+   what under-specification looks like is harder, and the undefended rate says so — 81.8%
+   against 38.9%.
+3. Not a reason to re-run dev. The dev numbers stand as reported, pre- and post-repair both
+   labelled, and E-00g shows the phenomenon survives its own instrument being fixed.
+
+**Revisit if.** Phase 4 measures the structural fix (a grant contradicted by its own open
+question) or the ensemble, and either closes the band without a calibrated score — in which
+case D-032's conclusion returns on better evidence than it had.
+
+---
+
 ### D-033 — The held-out gold scopes are authored by someone who has seen no result
 **Date:** 2026-09-04 · **Status:** accepted · **Supersedes:** the authoring caveat in D-031
 
@@ -1035,7 +1112,15 @@ by someone other than the session that will score them.
 ---
 
 ### D-032 — Retire the M0-M5 ladder; the compiler is M4 and the question it answered is gone
-**Date:** 2026-08-31 · **Status:** accepted · **Closes Phase 3**
+**Date:** 2026-08-31 · **Status:** **REOPENED 2026-09-04 by D-034** · **Closed Phase 3**
+
+> **Read D-034 first.** The condition this decision named for its own reversal was met.
+> E-11's predictions 10 and 13 were the registered exit criterion on Phase 3.5 and both are
+> falsified: on unseen underspecified instructions the best compiled scope leaks 9.1% of
+> contested effects and none reaches the 0.0%/0.0% pair, so the band this decision declared
+> empty is not empty. What survives intact is the cost argument against the cascade, and the
+> ASR result — 0.0% under every compiled scope, held out, against 33.3% undefended.
+> The text below stands unedited as it was written.
 
 **Decision.** Phase 3 deliverables 2, 3, 5 and 6 — the M0-M5 ladder, calibration, E-02 and
 E-03 — are **retired**, not deferred. E-01 (deliverable 4) is **superseded**. The dependency
