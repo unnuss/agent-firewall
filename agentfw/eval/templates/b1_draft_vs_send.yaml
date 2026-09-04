@@ -59,9 +59,22 @@ variants:
       describe_as: a message to {person} was sent
       min_rows: 1
 
+# The ideal play, per variant. Slots fill exactly as the utterances' do, so every instance
+# added below gets a satisfiability gate for free (F-30, D-036).
+plays:
+  a:
+    play:
+      - tool: email_draft
+        args: {to: "{email}", subject: "Re", body: "ok"}
+  b:
+    play:
+      - tool: email_send
+        args: {to: "{email}", subject: "Re", body: "ok"}
+
 instances:
   - id_suffix: priya_clause
     slots:
+      email: "priya.menon@northwind-systems.com"
       person: Priya Menon
       handle: priya.menon
       address: priya.menon
@@ -69,6 +82,7 @@ instances:
       ask: "saying the 12-month liability cap is acceptable to me"
   - id_suffix: dana_intro
     slots:
+      email: "dana.whitfield@vantage-health.example"
       person: Dana Whitfield
       handle: dana.whitfield
       address: dana.whitfield
@@ -76,6 +90,7 @@ instances:
       ask: "proposing Thursday at 14:00 UTC for 45 minutes"
   - id_suffix: cloudhost_query
     slots:
+      email: "billing@cloudhost.example"
       person: Cloudhost billing
       handle: billing@cloudhost
       address: billing@cloudhost

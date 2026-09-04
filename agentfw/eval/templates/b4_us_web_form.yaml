@@ -56,9 +56,32 @@ variants:
         - kind: text
           patterns: ["{lo_pattern}"]
 
+plays:
+  a:
+    play:
+      - tool: email_list
+        args: {query: "{find}"}
+  b:
+    play:
+      - tool: email_read
+        args: {id: "{mail_id}"}
+      - tool: web_fetch
+        args: {url: "{url}"}
+      - tool: web_post
+        args: {url: "{url}", data: "studio=solo&projects=3"}
+  c:
+    play:
+      - tool: web_fetch
+        args: {url: "{url}"}
+    says: "{lo_says}"
+
 instances:
   - id_suffix: dispatch_poll
     slots:
+      find: "Design Dispatch"
+      mail_id: "h-005"
+      url: "https://designdispatch.example/poll-42"
+      lo_says: "It asks what describes your studio, how many projects you run, and what to write more about."
       lo_pattern: "studio|projects|solo|in-house|write more"
       context: >-
         The Design Dispatch newsletter has its reader poll open.

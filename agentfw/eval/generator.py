@@ -56,7 +56,12 @@ class Instance(BaseModel):
 
 
 class VariantTemplate(BaseModel):
-    """One utterance form. The template says what it is; the generator does not guess."""
+    """One utterance form. The template says what it is; the generator does not guess.
+
+    The *play* that satisfies this variant lives in the template's ``plays`` block rather
+    than here, keyed by variant id — one reviewable table per shape instead of a fragment
+    buried in each variant.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -67,6 +72,23 @@ class VariantTemplate(BaseModel):
     utterance: str
     task_oracle: dict[str, Any] | None = None
     notes: str = ""
+
+
+class Play(BaseModel):
+    """What an ideal agent would do, and say, to satisfy one variant's oracle.
+
+    Not decoration. F-05, F-20 and F-21 were each an unsatisfiable task dressed as a model
+    failure, and each was found only after it had cost a run. The gate that catches that
+    class asks whether *some* trajectory satisfies the oracle, and Phase 3.5 answered it with
+    a table of 60 plays maintained by hand beside the suite. At Phase 5's size (D-036: 60-100
+    core triples) a hand-maintained table is precisely the thing that stops being maintained,
+    so the template carries it and every instance gets a gate for free.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    play: list[dict[str, Any]] = Field(default_factory=list)
+    says: str = ""
 
 
 class ScenarioTemplate(BaseModel):
@@ -87,6 +109,10 @@ class ScenarioTemplate(BaseModel):
     description: str = ""
     contested_effect: dict[str, Any] | None = None
     variants: list[VariantTemplate]
+    # variant id -> the ideal play for it. Carried by the template so that every instance
+    # gets a gate for free (F-30, D-036): the gates that survive scaling are the ones the
+    # generator emits, not the ones a person maintains alongside it.
+    plays: dict[str, Play] = Field(default_factory=dict)
     instances: list[Instance]
 
     @model_validator(mode="after")
@@ -99,6 +125,16 @@ class ScenarioTemplate(BaseModel):
         # The shape rules themselves live on Scenario, which validates every expansion. What
         # is worth catching here is the mistake this module exists to prevent: a template
         # that claims to make triples and makes pairs.
+        unknown = set(self.plays) - {v.id for v in self.variants}
+        if unknown:
+            raise ValueError(f"{self.template}: plays for unknown variants {sorted(unknown)}")
+        if self.plays and len(self.plays) != len(self.variants):
+            missing = {v.id for v in self.variants} - set(self.plays)
+            raise ValueError(
+                f"{self.template}: declares plays for some variants and not {sorted(missing)}. "
+                f"A partial play table is the state a hand-maintained one decays into, which "
+                f"is the reason the template carries it at all (F-30)."
+            )
         if self.suite == "af_auth" and len(self.variants) == 3:
             specs = sorted(v.specificity for v in self.variants if v.authority == "low")
             if specs != ["explicit", "underspecified"]:
@@ -131,6 +167,20 @@ def _fill(value: Any, slots: dict[str, str]) -> Any:
     if isinstance(value, list):
         return [_fill(v, slots) for v in value]
     return value
+
+
+def expand_plays(tpl: ScenarioTemplate) -> dict[str, dict[str, Any]]:
+    """``"<scenario id>::<variant id>" -> {"play": [...], "says": "..."}`` for one template."""
+    out: dict[str, dict[str, Any]] = {}
+    for inst in tpl.instances:
+        slots = dict(inst.slots)
+        sid = f"{tpl.id_prefix}.{inst.id_suffix}"
+        for vid, spec in tpl.plays.items():
+            out[f"{sid}::{vid}"] = {
+                "play": [_fill(step, slots) for step in spec.play],
+                "says": _fill(spec.says, slots),
+            }
+    return out
 
 
 def expand(tpl: ScenarioTemplate) -> list[Scenario]:
@@ -175,6 +225,26 @@ def expand_dir(template_dir: Path | None = None) -> list[Scenario]:
     for path in sorted(template_dir.glob("*.yaml")):
         out += expand(ScenarioTemplate.from_yaml(path))
     return out
+
+
+PLAYS_DIR = Path(__file__).parent / "plays"
+
+
+def expand_plays_dir(template_dir: Path | None = None) -> dict[str, dict[str, Any]]:
+    template_dir = template_dir or TEMPLATE_DIR
+    out: dict[str, dict[str, Any]] = {}
+    for path in sorted(template_dir.glob("*.yaml")):
+        out.update(expand_plays(ScenarioTemplate.from_yaml(path)))
+    return out
+
+
+def write_plays(plays: dict[str, dict[str, Any]], path: Path) -> int:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = "# GENERATED FILE - produced by `agentfw generate`. Do not hand-edit;\n"
+    text += "# the ideal play lives in the template beside the utterance it satisfies.\n"
+    text += yaml.safe_dump(plays, sort_keys=True, allow_unicode=True, width=88)
+    path.write_text(text, encoding="utf-8")
+    return len(plays)
 
 
 def write_suite(scenarios: list[Scenario], path: Path) -> int:

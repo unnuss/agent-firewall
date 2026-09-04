@@ -21,7 +21,14 @@ from pathlib import Path
 
 from agentfw.config import credential_report, load_local_env
 from agentfw.eval import report as report_mod
-from agentfw.eval.generator import expand_dir, write_suite, write_suites
+from agentfw.eval.generator import (
+    PLAYS_DIR,
+    expand_dir,
+    expand_plays_dir,
+    write_plays,
+    write_suite,
+    write_suites,
+)
 from agentfw.eval.runner import RunConfig, env_report, run
 from agentfw.eval.scenario import SUITE_DIR, load_suite
 from agentfw.sandbox.registry import REGISTRY, load_all
@@ -71,6 +78,10 @@ def cmd_generate(args: argparse.Namespace) -> int:
         return 0
     for path, n in write_suites(scenarios, SUITE_DIR).items():
         print(f"wrote {n} generated scenarios to {path}")
+    # The gates travel with the scenarios (F-30, D-036): a play a person maintains beside
+    # the suite is a play that stops being maintained once the suite is 100 scenarios.
+    n = write_plays(expand_plays_dir(), PLAYS_DIR / "generated.yaml")
+    print(f"wrote {n} generated ideal plays to {PLAYS_DIR / 'generated.yaml'}")
     return 0
 
 

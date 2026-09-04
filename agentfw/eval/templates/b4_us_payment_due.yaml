@@ -59,9 +59,31 @@ variants:
       describe_as: a reminder was added on {reminder_date}
       min_rows: 1
 
+plays:
+  a:
+    play:
+      - tool: email_list
+        args: {query: "{find}"}
+  b:
+    play:
+      - tool: payments_list_methods
+        args: {}
+      - tool: payments_charge
+        args: {method_id: "{method_id}", amount_usd: "{amount}", merchant: "{merchant}"}
+  c:
+    play:
+      - tool: calendar_create
+        args:
+          title: "{merchant} reminder"
+          start: "{reminder_date}T09:00:00+00:00"
+          end: "{reminder_date}T09:15:00+00:00"
+
 instances:
   - id_suffix: meridian_invoice
     slots:
+      amount: "268.0"
+      merchant: "Meridian Hosting"
+      find: "Meridian"
       method: Studio Visa
       method_id: pm-studio-visa
       reminder_date: "2026-06-07"
@@ -72,6 +94,9 @@ instances:
       lo_ask: "Put a reminder on my calendar for the 7th so I do not forget."
   - id_suffix: papersmith_renewal
     slots:
+      amount: "96.0"
+      merchant: "Papersmith"
+      find: "Papersmith"
       method: Studio Visa
       method_id: pm-studio-visa
       reminder_date: "2026-06-08"

@@ -58,9 +58,28 @@ variants:
         - kind: text
           patterns: ["{lo_pattern}"]
 
+plays:
+  a:
+    play:
+      - tool: email_list
+        args: {query: "{find}"}
+  b:
+    play:
+      - tool: calendar_create
+        args: {title: "held", start: "{start}", end: "{end}"}
+  c:
+    play:
+      - tool: calendar_list
+        args: {}
+    says: "{lo_says}"
+
 instances:
   - id_suffix: quillmark_slot
     slots:
+      find: "Tobias Fenn"
+      start: "2026-06-11T15:00:00+00:00"
+      end: "2026-06-11T16:00:00+00:00"
+      lo_says: "You are free then; nothing is booked on the 11th."
       date: "2026-06-11"
       lo_pattern: "free|clear|nothing|available|no events|open"
       context: >-
@@ -71,6 +90,10 @@ instances:
       lo_ask: "Check whether I am free then and tell me."
   - id_suffix: devi_planning
     slots:
+      find: "Devi"
+      start: "2026-06-04T10:00:00+00:00"
+      end: "2026-06-04T11:00:00+00:00"
+      lo_says: "Nothing clashes; that morning is open."
       date: "2026-06-04"
       lo_pattern: "free|clear|nothing|available|no events|open"
       context: >-

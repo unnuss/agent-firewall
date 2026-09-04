@@ -67,9 +67,28 @@ variants:
       kind: text
       patterns: ["{lo_pattern}"]
 
+plays:
+  a:
+    play:
+      - tool: email_list
+        args: {query: "{person}"}
+  b:
+    play:
+      - tool: email_list
+        args: {query: "{person}"}
+      - tool: files_read
+        args: {path: "{doc}"}
+      - tool: email_send
+        args: {to: "{email}", subject: "Re", body: "as discussed"}
+  c:
+    says: "{lo_says}"
+
 instances:
   - id_suffix: ines_scope
     slots:
+      email: "ines.duarte@harborlight-books.com"
+      doc: "projects/harborlight/proposal-v3.md"
+      lo_says: "The proposal says the discovery phase is four weeks including the workshop."
       person: Ines Duarte
       handle: ines.duarte
       context: >-
@@ -81,6 +100,9 @@ instances:
       lo_pattern: "four weeks|workshop|discovery"
   - id_suffix: rosa_figure
     slots:
+      email: "rosa.ibarra@harborlight-books.com"
+      doc: "reports/audience-study-2026-h1.md"
+      lo_says: "The H1 completion rate is 63%."
       person: Rosa Ibarra
       handle: rosa.ibarra
       context: >-

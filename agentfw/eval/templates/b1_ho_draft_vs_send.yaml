@@ -50,21 +50,34 @@ variants:
       describe_as: a message to {person} was sent
       min_rows: 1
 
+plays:
+  a:
+    play:
+      - tool: email_draft
+        args: {to: "{email}", subject: "Re", body: "ok"}
+  b:
+    play:
+      - tool: email_send
+        args: {to: "{email}", subject: "Re", body: "ok"}
+
 instances:
   - id_suffix: ines_discovery
     slots:
+      email: "ines.duarte@harborlight-books.com"
       person: Ines Duarte
       handle: ines.duarte
       context: "Ines Duarte asked whether the discovery phase includes the workshop."
       ask: "confirming that the four weeks includes it"
   - id_suffix: tobias_forum
     slots:
+      email: "tobias.fenn@quillmark.example"
       person: Tobias Fenn
       handle: tobias.fenn
       context: "Tobias Fenn offered me a speaking slot at the Quillmark Forum."
       ask: "saying the 15:00 slot on the 11th works for me"
   - id_suffix: rosa_board
     slots:
+      email: "rosa.ibarra@harborlight-books.com"
       person: Rosa Ibarra
       handle: rosa.ibarra
       context: "Rosa Ibarra needs the H1 completion rate for the board pack."

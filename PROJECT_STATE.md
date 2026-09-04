@@ -2,8 +2,9 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-09-04 · **Phase 3.5 COMPLETE; Phase 4 deliverable 0 done (D-035).**
-· **Next: Phase 4 proper — the cost model — or Phase 5 scenario scaling. See section 6.**
+**Last updated:** 2026-09-04 · **Phase 3.5 complete; Phase 4 deliverable 0 done (D-035);
+Phase 5 STARTED — sized and tooled, authoring not begun (D-036).** · **Next: author held-out
+triples up to N=60, then N=100. See section 6.**
 
 ---
 
@@ -32,7 +33,7 @@ Health check (~55 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **329 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
+Expect **331 passed**, and 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios plus
 17 AF-Auth / 5 AF-Inject / 10 benign **held-out** scenarios, 23 tools.
 
 Three experiments reproduce with no key:
@@ -203,7 +204,54 @@ the preparatory read. Under `ask_on: all_out_of_scope` every arm converges to 60
 | **R-09** | Open-weight generalisation | Unresolved |
 | **R-16** | Prompt development and measurement share the dev slice | Intact: no prompt was touched in Phase 3.5 |
 
-## 6. Both of Phase 4's prerequisites are done. The next call is Phase 4 vs Phase 5
+## 6. Phase 5 is under way: sized and tooled. The bulk is authoring.
+
+**Decided (D-036):** Phase 5 runs before Phase 4, and its size is **60 held-out core triples
+as a floor, 100 to settle D-034**. Both numbers come from E-13 rather than from the roadmap:
+at today's N=11 the best and worst arms of the 2x2 have disjoint intervals in ~35% of draws,
+at N=60 in 80%, at N=100 in 98% — and only at N≈100 does the best arm's interval exclude
+zero, which is what D-034 asserts. Seeds buy nothing here and that was measured, not assumed.
+
+**Done this session, all of it infrastructure or debt:**
+
+- **E-13**, the sizing analysis, and D-036.
+- **F-27 re-diagnosed** — it was not a benchmark defect. `old_renders` is reachable four ways
+  and the miss message told the agent to enumerate; it stopped anyway. A competency finding,
+  and the scenario is untouched. *Second* time in two phases that a "defect" was a model
+  finding; the corrective is written down in F-27.
+- **F-30**, a negative result: the resource-route gate Phase 5 wants fires 39 false positives
+  when it infers targets from oracle SQL. Not shipped. The fix is for the **template** to
+  declare its target, which is the same lesson as the plays.
+- **Templates now carry their own gates.** A `plays:` block per template, slot-filled per
+  instance, emitted by `agentfw generate` into `agentfw/eval/plays/generated.yaml`. The
+  43-entry hand table for generated scenarios is gone; two tests assert the generator covered
+  every generated variant and that the file is not stale. **This is what makes 100 scenarios
+  safe rather than merely large** — 100 triples is 300 plays, and a table nobody generates is
+  a table nobody maintains.
+
+**The bulk, not started.** Authoring ~50 more underspecified triples to reach the floor.
+Concretely, in order:
+
+1. **Extend `office_heldout`** — 11 triples currently lean on five correspondents and a dozen
+   documents. N=60 needs a materially richer world, or a third fixture. This is the real
+   constraint, not the templates.
+2. **Add instances** to the six `b4_us_*` templates and write new shapes for contested
+   classes that are thin (`WRITE:USER_FILES`, `PUBLISH`, `EXECUTE` are unrepresented).
+   Every instance needs slots, a play and an oracle; the template makes the play cheap.
+3. **Keep the a/c contrast honest.** The guard is the reason the 81.8% is believable
+   (0/33 explicit-low). If new instances start overreaching on `c`, they are pushy rather
+   than ambiguous and must be rewritten — D-036 says explicitly that a smaller suite with
+   the interval it earns beats a bigger one with worse scenarios.
+4. **Then** independent gold scopes (D-033's protocol, brief committed before the author
+   runs), a fresh E-00i-style baseline, and E-11/E-12 re-run at the new N.
+
+Two things Phase 5 should carry regardless: **test R1-on-`per-class` first** (D-035), and
+**have a human adjudicate `af_auth.ho.calendar.devi_planning`**, where every compiler
+including the best says "Can you get that set up?" licenses `CREATE:CALENDAR` and the
+independent labeller says it does not. That one scenario moves the best arm between 9.1% and
+0.0%; a fourth model's opinion will not settle it.
+
+## 6b. What Phase 4 is owed when it resumes
 
 Phase 3.5 handed Phase 4 two obligations and both are discharged:
 

@@ -268,7 +268,29 @@ Deliverables:
 
 ---
 
-## Phase 5 — Benchmark build-out and experimental evaluation
+## Phase 5 — Benchmark build-out and experimental evaluation (IN PROGRESS, brought forward)
+
+**Re-ordered ahead of Phase 4 by D-036**, because every quantity Phase 4 would optimise
+against carries a ±23 pp interval that no amount of seeding narrows. **Sized by E-13 rather
+than by the original estimate: 60 held-out core triples as a floor, 100 to settle D-034.**
+The original target — "60–100 pairs", written in Phase 0 before any episode had run — turns
+out to be approximately what the power analysis demands, so this phase needs executing
+rather than re-planning.
+
+*Started.* The sizing (E-13, D-036); F-27 re-diagnosed as a competency finding rather than a
+defect; F-30 recorded as a negative result on the obvious resource-route gate; and the
+scaling infrastructure — **templates now carry their own ideal plays**, emitted by
+`agentfw generate`, so every generated scenario is satisfiability-gated for free. The
+hand-maintained play table for generated scenarios is gone.
+
+*Not started.* The authoring itself, and its first constraint is the **world** rather than
+the templates: 11 triples already lean on five correspondents, and N=60 needs a much richer
+`office_heldout` or a third fixture.
+
+Original plan follows.
+
+
+## Phase 5 — Benchmark build-out and experimental evaluation (as planned)
 
 Deliverables:
 1. AF-Auth and AF-Inject scaled to full size (~120–200 and ~100+ scenarios), **dev/held-out

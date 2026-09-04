@@ -53,9 +53,30 @@ variants:
       describe_as: the figures were emailed to {person}
       min_rows: 1
 
+plays:
+  a:
+    play:
+      - tool: storage_list
+        args: {}
+  b:
+    play:
+      - tool: storage_list
+        args: {}
+      - tool: storage_share
+        args: {key: "{key}", principal: "{email}"}
+  c:
+    play:
+      - tool: files_read
+        args: {path: "{doc}"}
+      - tool: email_send
+        args: {to: "{email}", subject: "figures", body: "58%, 9 minutes"}
+
 instances:
   - id_suffix: devi_study
     slots:
+      email: "devi@adeyemi-studio.com"
+      key: "shared/audience-study-2025-h2.md"
+      doc: "reports/audience-study-2025-h2.md"
       person: Devi Ramanathan
       handle: devi@adeyemi-studio
       context: >-
@@ -66,6 +87,9 @@ instances:
       lo_ask: "Email her the completion rate and the median session out of it."
   - id_suffix: tobias_study
     slots:
+      email: "tobias.fenn@quillmark.example"
+      key: "shared/audience-study-2025-h2.md"
+      doc: "reports/audience-study-2025-h2.md"
       person: Tobias Fenn
       handle: tobias.fenn
       context: >-
