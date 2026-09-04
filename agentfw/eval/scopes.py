@@ -87,8 +87,27 @@ class GoldScopes:
 
     @classmethod
     def load(cls, path: Path | None = None) -> GoldScopes:
-        path = path or SCOPES_DIR / "dev.yaml"
-        return cls(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+        """Load one scope file, or every file in ``scopes_data/`` when none is named.
+
+        Merging rather than defaulting to ``dev.yaml`` so that a held-out scenario resolves
+        without any caller having to know which file it lives in. Scenario ids are unique
+        across the suite, so a collision between files is a mistake rather than an override,
+        and it raises instead of silently letting one file win.
+        """
+        if path is not None:
+            return cls(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+        merged: dict[str, Any] = {}
+        for f in sorted(SCOPES_DIR.glob("*.yaml")):
+            block = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+            clash = set(block) & set(merged)
+            if clash:
+                raise ValueError(
+                    f"{f.name} redefines gold scopes already loaded: {sorted(clash)}. "
+                    "A scenario has exactly one gold scope; fix the duplicate rather than "
+                    "letting file order decide which label counts."
+                )
+            merged.update(block)
+        return cls(merged)
 
     def scope_for(self, scenario_id: str, variant_id: str, objective: str) -> IntentScope:
         try:

@@ -347,3 +347,72 @@ def test_a_compiled_scope_source_drops_into_the_replay_unchanged(dev_scenarios):
     assert out.actions[-1].asked is True
     assert out.actions[-1].verdict == "ALLOW"
     assert out.actions[-1].policy_verdict == "ASK"
+
+
+# ---------------------------------------------------------------------------
+# Held-out gold scopes (D-031)
+# ---------------------------------------------------------------------------
+
+
+def test_every_scenario_in_every_split_has_a_gold_scope():
+    """The dev version of this test guarded dev only, so the held-out scenarios sat
+    unlabelled for two phases without anything noticing. A missing label is invisible until
+    something asks for it, and then it either raises mid-run or — worse, if the loader ever
+    softened — authorizes nothing and looks like a perfect security result."""
+    scopes = GoldScopes.load()
+    missing = [
+        f"{s.id}::{v.id}"
+        for split in ("dev", "heldout")
+        for s in load_suite(split=split)
+        for v in s.variants
+        if not scopes.covers(s.id, v.id)
+    ]
+    assert not missing, f"scenarios without a gold scope: {missing}"
+
+
+def test_scope_files_may_not_redefine_each_other():
+    """Two files claiming the same scenario is a mistake, not an override. File order must
+    never decide which label counts."""
+    import yaml
+
+    from agentfw.eval.scopes import SCOPES_DIR
+
+    seen: dict[str, str] = {}
+    for f in sorted(SCOPES_DIR.glob("*.yaml")):
+        for sid in yaml.safe_load(f.read_text(encoding="utf-8")) or {}:
+            assert sid not in seen, f"{sid} defined in both {seen[sid]} and {f.name}"
+            seen[sid] = f.name
+
+
+def test_the_heldout_labels_follow_the_dev_label_for_the_same_template():
+    """All three held-out scenarios are `b1_draft_vs_send`, whose dev counterpart is
+    `af_auth.email.reply_sam`. The labels should be that one with the names changed — if
+    they are not, a judgement was made on the held-out slice that dev did not make, which
+    is exactly the freedom the authoring rule exists to remove."""
+    scopes = GoldScopes.load()
+    ref_a = set(scopes.data["af_auth.email.reply_sam"]["a"]["effects"])
+    ref_b = set(scopes.data["af_auth.email.reply_sam"]["b"]["effects"])
+    for sid in (
+        "af_auth.email.gen.cloudhost_query",
+        "af_auth.email.gen.dana_intro",
+        "af_auth.email.gen.priya_clause",
+    ):
+        assert set(scopes.data[sid]["a"]["effects"]) == ref_a, sid
+        assert set(scopes.data[sid]["b"]["effects"]) == ref_b, sid
+        # And the contested SEND is absent from `a` and present in `b`, which is what makes
+        # the pair minimal (D-010) and is asserted independently of the reference label.
+        assert "SEND:EMAIL" not in scopes.data[sid]["a"]["effects"]
+        assert "SEND:EMAIL" in scopes.data[sid]["b"]["effects"]
+
+
+def test_no_heldout_scope_invents_a_constraint():
+    """Rule 3 applied uniformly (F-12): none of the six held-out utterances states a bound
+    in words, so none of the scopes carries one. Naming an addressee is not a bound."""
+    scopes = GoldScopes.load()
+    for sid in (
+        "af_auth.email.gen.cloudhost_query",
+        "af_auth.email.gen.dana_intro",
+        "af_auth.email.gen.priya_clause",
+    ):
+        for vid in ("a", "b"):
+            assert not scopes.data[sid][vid].get("constraints")
