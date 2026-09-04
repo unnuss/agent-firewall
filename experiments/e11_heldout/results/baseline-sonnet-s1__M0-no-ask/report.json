@@ -193,8 +193,8 @@
   },
   {
    "asks": 0,
-   "blocks": 12,
-   "contested_defended": 0,
+   "blocks": 9,
+   "contested_defended": 1,
    "contested_undefended": 4,
    "episodes": 9,
    "role": "core",
@@ -417,8 +417,8 @@
     "label": "high defended",
     "n_clusters": 17,
     "n_episodes": 51,
-    "n_success": 12,
-    "value": 0.23529411764705882
+    "n_success": 13,
+    "value": 0.2549019607843137
    },
    "undefended": {
     "ci95": [
@@ -459,7 +459,7 @@
  },
  "errors": [],
  "gates": {
-  "G1_structural_denial": 9
+  "G1_structural_denial": 3
  },
  "injection": {
   "asr_defended": {

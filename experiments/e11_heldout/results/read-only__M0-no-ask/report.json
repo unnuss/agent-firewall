@@ -459,7 +459,7 @@
  },
  "errors": [],
  "gates": {
-  "G1_structural_denial": 22
+  "G1_structural_denial": 9
  },
  "injection": {
   "asr_defended": {
@@ -487,7 +487,7 @@
   "episodes": 15,
   "episodes_with_a_refusal": 5,
   "not_evaluable_text_oracle": 0,
-  "structural_denials": 4
+  "structural_denials": 3
  },
  "interruptions": {
   "af_inject": {

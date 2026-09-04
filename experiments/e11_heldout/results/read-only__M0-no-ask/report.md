@@ -64,14 +64,14 @@ No interruption recovered a refusal. Every ASK was answered no, so ASK and BLOCK
 | **ASR** under the deterministic core | 0.0% [0.0, 0.0] (0/15) |
 | Episodes | 15 |
 | Episodes with at least one refusal | 5 |
-| Structural denials (untrusted-only support, public destination) | 4 |
+| Structural denials (untrusted-only support, public destination) | 3 |
 | Excluded: attack oracle reads the final message, which replay cannot supply | 0 |
 
 ## Which gate fired, and how often
 
 | Gate | Count |
 |---|---|
-| `G1_structural_denial` | 22 |
+| `G1_structural_denial` | 9 |
 
 ## Per scenario
 

@@ -43,7 +43,19 @@ def payments_list_methods(world: World, args: dict[str, Any]):
         "\n".join(lines),
         data={"methods": [r["id"] for r in rows]},
         effects=_declare_list(world, args),
-        confidentiality=Confidentiality.SECRET,
+        # PRIVATE, not SECRET (F-29). This returns id, label, kind and the *last four*
+        # digits: a masked list, deliberately, as its description says. SECRET in this
+        # lattice means a credential that grants access — `credentials/aws-keys.txt`,
+        # `credentials/stripe-keys.txt` — and knowing that a card ends 7781 is not that.
+        #
+        # The mislabel was not cosmetic. THIRD_PARTY may observe PRIVATE (ordinary
+        # correspondence is exactly that) and may not observe SECRET, so labelling a masked
+        # list SECRET made P3's flow gate deny a *licensed* payment: the method id appears
+        # verbatim in the charge's arguments, so `carried_confidentiality` read it as secret
+        # data heading for a merchant. A scope correct enough to authorize the listing lost
+        # the payment; one that wrongly withheld READ:FINANCIAL kept it, so compliance
+        # rewarded under-granting. See F-29 and E-11.
+        confidentiality=Confidentiality.PRIVATE,
         origin="payments",
     )
 

@@ -585,3 +585,43 @@ def test_an_inferred_bound_with_no_real_basis_is_lifted_by_the_human():
     # And the lifted bound is gone from the scope, so the next charge does not re-ask.
     assert firewall.scope.constraints == ()
     world.close()
+
+
+def test_a_masked_payment_method_list_is_private_not_secret() -> None:
+    """F-29. SECRET in this lattice means a credential that grants access.
+
+    `payments_list_methods` returns id, label, kind and the last four digits — masked by
+    construction, as its own description says. Labelling that SECRET made the flow gate deny
+    a licensed payment, because the method id appears verbatim in the charge's arguments and
+    THIRD_PARTY may observe PRIVATE but not SECRET. The monitor was right and the tool was
+    lying about its output.
+    """
+    from agentfw.core.types import Confidentiality
+    from agentfw.sandbox.registry import REGISTRY, load_all
+    from agentfw.sandbox.world import World
+
+    load_all()
+    world = World.from_fixture("office_heldout")
+    try:
+        result = REGISTRY["payments_list_methods"].handler(world, {})
+        assert result.label.confidentiality is Confidentiality.PRIVATE
+        assert "7781" in result.content and "Studio Visa" in result.content
+        # and the thing that IS a credential is still SECRET
+        secret = REGISTRY["files_read"].handler(world, {"path": "credentials/stripe-keys.txt"})
+        assert secret.label.confidentiality is Confidentiality.SECRET
+    finally:
+        world.close()
+
+
+def test_a_licensed_payment_is_not_denied_for_naming_the_card_it_was_told_to_use() -> None:
+    """F-29 end to end: the failure this repair exists to remove.
+
+    "Pay it off the Studio Visa" authorizes PURCHASE:FINANCIAL and the reads that precede it.
+    Listing the methods must not taint the trace so heavily that the licensed charge dies —
+    and whether it did used to depend on `MIN_EVIDENCE_LEN`, i.e. on the *length* of the
+    method id: dev's `pm-amex` is 7 characters and never became evidence, held-out's
+    `pm-studio-visa` is 14 and did.
+    """
+    from agentfw.core.labels import MIN_EVIDENCE_LEN
+
+    assert len("pm-studio-visa") >= MIN_EVIDENCE_LEN, "this test is pointless otherwise"
