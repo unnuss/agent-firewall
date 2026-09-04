@@ -296,6 +296,35 @@ def _oracle_kinds(oracle: Any) -> set[str]:
     return kinds
 
 
+class NothingToReplay(RuntimeError):
+    """Every source episode was skipped. Loudly, because it used to be silent (F-28)."""
+
+
+def all_scenarios() -> dict[str, Scenario]:
+    """Every scenario in every split, keyed by id.
+
+    Built across splits on purpose. This index used to be `split="dev"` only, and an
+    episode whose scenario was not in it was skipped with a `continue`. Point the replay at
+    a held-out run and it replayed **zero of 180 episodes and exited 0** — reporting 0.0%
+    overreach, 0.0% ASR and 0 refusals, which reads exactly like a firewall that worked
+    perfectly. Ids are unique across splits (a test asserts it), so widening the index
+    cannot change what a dev replay resolves.
+    """
+    out: dict[str, Scenario] = {}
+    for suite in ("af_auth", "af_inject", "benign"):
+        for sc in load_suite(suite, split=None):
+            out[sc.id] = sc
+    return out
+
+
+def unresolved(
+    records: Iterable[EpisodeResult], scenarios: dict[str, Scenario] | None = None
+) -> list[str]:
+    """Source episodes naming a scenario this build does not have."""
+    scenarios = scenarios if scenarios is not None else all_scenarios()
+    return sorted({r.scenario_id for r in records if r.scenario_id not in scenarios})
+
+
 def replay_all(
     records: Iterable[EpisodeResult],
     cfg: ReplayConfig,
@@ -308,16 +337,23 @@ def replay_all(
     gold = gold or GoldScopes.load()
     scopes = scopes or gold
     if scenarios is None:
-        scenarios = {}
-        for suite in ("af_auth", "af_inject", "benign"):
-            for sc in load_suite(suite, split="dev"):
-                scenarios[sc.id] = sc
+        scenarios = all_scenarios()
+
+    records = list(records)
+    unknown = unresolved(records, scenarios)
+    if records and len(unknown) == len(records):
+        raise NothingToReplay(
+            f"none of the {len(records)} source episodes names a scenario this build "
+            f"knows: {sorted({r.scenario_id for r in records})[:5]}. A replay that skips "
+            f"every episode reports zero of everything and exits successfully, which is "
+            f"indistinguishable from a firewall that prevented nothing (F-28)."
+        )
 
     out: list[ReplayedEpisode] = []
     for record in records:
         scenario = scenarios.get(record.scenario_id)
         if scenario is None:
-            continue  # held-out or retired scenario; not part of the dev slice
+            continue  # a retired scenario; the caller was warned by `unresolved`
         if record.error:
             continue  # a failed provider call has no trajectory to replay
         try:

@@ -123,6 +123,14 @@ def cmd_replay(args: argparse.Namespace) -> int:
     for src in sources:
         records += replay_mod.load_source(src)
     print(f"[replay] {len(records)} source episodes from {len(sources)} run(s)")
+    # A source episode whose scenario this build no longer has is skipped by the replay.
+    # That used to be silent, and a whole run of them looked like a clean result (F-28).
+    stale = replay_mod.unresolved(records)
+    if stale:
+        print(
+            f"[replay] WARNING  {len(stale)} scenario id(s) in the sources are unknown "
+            f"here and their episodes will be skipped: {stale[:5]}"
+        )
 
     policies = cfg.get("policies") or [{"label": "M0-consequential"}]
     if args.policy:

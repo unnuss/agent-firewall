@@ -512,3 +512,31 @@ def test_no_heldout_scope_invents_a_constraint_the_utterance_does_not_state():
             assert c.get("applies_to") in granted, (
                 f"{sid}::{vid} bounds {c.get('applies_to')}, which it does not grant"
             )
+
+
+def test_a_replay_that_skips_every_episode_is_an_error_not_a_clean_run() -> None:
+    """F-28. The scenario index was built from the dev split only, and an episode whose
+    scenario was not in it was skipped with a bare `continue`.
+
+    Pointed at the held-out run, the replay resolved **zero of 180 episodes and exited 0**,
+    reporting 0.0% overreach, 0.0% ASR and zero refused benign actions — which is exactly
+    what a firewall that worked perfectly reports. It was caught by dry-running the verdict
+    pipeline on the free arms before paying for the compiled ones, and it would otherwise
+    have been caught after.
+    """
+    from agentfw.eval.replay import NothingToReplay, replay_all
+
+    record = _record("no.such.scenario", "a", "u", [])
+    with pytest.raises(NothingToReplay):
+        replay_all([record], ReplayConfig(label="p"))
+
+
+def test_the_scenario_index_spans_every_split() -> None:
+    """The index is what makes a held-out replay possible at all, and ids are unique across
+    splits, so widening it cannot change what a dev replay resolves."""
+    from agentfw.eval.replay import all_scenarios
+
+    index = all_scenarios()
+    for split in ("dev", "heldout"):
+        for sc in load_suite(split=split):
+            assert index.get(sc.id) is not None, f"{sc.id} missing from the replay index"

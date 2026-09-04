@@ -45,3 +45,9 @@ experiments/e01a_deterministic/results/*.jsonl
 # committed, and so are E-09a's compiled scopes — those are an *input* to this experiment
 # rather than an output of it (D-026), which is the distinction that decides the rule.
 experiments/e01b_compiled/results/*.jsonl
+
+# E-11's per-arm replay output, on the same reasoning as E-01a's: derived data, a pure
+# function of committed inputs (E-00i's episodes, the gold scopes, the compiled scopes),
+# regenerating in seconds with no API access. The reports it produces ARE committed.
+experiments/e11_heldout/results/*__*.jsonl
+experiments/e11_heldout/results/M0-*.jsonl
