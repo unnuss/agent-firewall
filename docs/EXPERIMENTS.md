@@ -2883,6 +2883,31 @@ finding and must be reported as one.
   scenario and extends the gate to glob and prefix tools, in that order and before anything is
   measured against either.
 
+- **F-28 --- a replay pointed at the wrong split reported a perfect defense over zero
+  episodes.** `replay_all` built its scenario index from `load_suite(suite, split="dev")` and
+  skipped any record it could not resolve with a bare `continue`. Pointed at E-00i's
+  held-out run it replayed **0 of 180 episodes, printed `0 replayed, 0 errors`, and exited
+  0** --- producing 0.0% overreach, 0.0% ASR and zero refused benign actions.
+
+  **Every one of those numbers is what a firewall that worked perfectly reports.** A reader
+  of the report could not have told the difference, and neither could I, because a defense
+  whose job is to make bad things not happen and a harness that measured nothing produce
+  byte-identical output. It is the same shape as F-20 and F-21 one layer up: an empty result
+  that cannot be told apart from a good one.
+
+  Fixed by indexing every split — scenario ids are unique across splits, so a dev replay
+  resolves exactly what it did before, and E-01a reproduces bit-identically — and by making
+  the silence impossible: a replay in which *every* record is skipped now raises
+  `NothingToReplay`, and one in which any record is skipped prints the unresolved ids.
+
+  **How it was found is the part worth keeping.** By dry-running the verdict pipeline on the
+  two *free* compiler arms before paying for the four LLM ones. That cost nothing and about a
+  minute. Had the paid arms run first, the defect would have surfaced after roughly $2 of
+  compilation, and the temptation at that point would have been to debug under sunk cost. The
+  general rule: **run the free half of a pipeline end to end before buying the expensive
+  half**, and treat "it succeeded and measured nothing" as a failure mode worth an explicit
+  check rather than an outcome anyone would notice.
+
 ## Backlog (ideas, not commitments)
 
 - Attention-saliency dependency screening on an open-weight model (RTBAS-style). Time-boxed
