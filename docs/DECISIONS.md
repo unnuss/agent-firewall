@@ -946,6 +946,46 @@ for it.
 
 ---
 
+### D-036 — Phase 5 comes before Phase 4, and its size is 60 core triples minimum, 100 to settle D-034
+**Date:** 2026-09-04 · **Status:** accepted · **Re-orders:** ROADMAP Phases 4 and 5
+
+**Decision.** Phase 5's benchmark scale-out runs **before** Phase 4's cost model. The target
+is **60 underspecified core triples on the held-out split as a floor and 100 as the goal**,
+chosen from E-13 rather than from the roadmap's original figure.
+
+**Why the order changes.** Phase 4 builds a cost model that trades interruptions against
+harm, and every quantity it would optimise against currently carries a ±23 pp interval that
+**no amount of seeding will narrow** — 1, 2 and 3 seeds give identical widths because the
+bootstrap resamples scenario clusters. Sweeping `C_ask` against numbers that loose would
+produce a curve whose shape is authoring noise. The cheaper mistake is to build the benchmark
+first.
+
+**Why those numbers.** E-13: at today's N=11 the best and worst arms of the 2x2 have disjoint
+intervals in ~35% of draws; at N=60 in 80%; at N=100 in 98%. And at the best arm's observed
+9.1%, only N≈100 gives an interval that excludes zero — so **N≈100 is the price of carrying
+D-034 on its own evidence** rather than on the consistency of a direction across four cells.
+60 is the floor at which arms become comparable at all; below it Phase 5 has not bought what
+it was brought forward to buy.
+
+**What is explicitly deferred with Phase 4, and what is not.** Deferred: the cost model,
+`C_ask` sweep, E-04, the flow-control build-out, and the residual F-29 imprecision (latent,
+zero denials on licensed work). **Not deferred:** anything Phase 5 needs to author safely —
+the F-27 gate gap, and any scaling infrastructure, because authoring 50 more scenarios behind
+a gate with a known blind spot is how the F-20 class recurs at five times the size.
+
+**The risk this accepts, stated plainly.** ROADMAP already says Phase 5 is where projects like
+this die, and this decision walks into it deliberately and earlier than planned. The
+mitigations are that the format, the generator, the five gates and two worlds now exist, and
+that Phase 3.5 has already demonstrated what a scaling failure looks like (D-031) so it is
+recognisable. **If authoring stalls below 60 triples, the honest outcome is a smaller suite
+with the interval it earns, not a bigger one with worse scenarios** — the a/c contrast guard
+exists precisely to catch the second and must not be quietly relaxed to hit a number.
+
+**Revisit if.** The scale-out reaches 60 and the intervals separate the arms, at which point
+Phase 4 resumes with quantities worth optimising against.
+
+---
+
 ### D-035 — The coupling rule is measured, not adopted; the band narrows and stays open
 **Date:** 2026-09-04 · **Status:** accepted · **Depends on:** D-034 · **Closes** Phase 4
 deliverable 0

@@ -2177,6 +2177,61 @@ three scenarios scored 0/3 on high-authority compliance:
 
 ---
 
+## E-13 — how many scenarios does a usable interval cost? (sizing, $0)
+
+**Phase:** 5 · **Status:** done (2026-09-04) · **Not a hypothesis test.** A measurement of the
+measuring apparatus, run before authoring anything, so that Phase 5's size is chosen from
+evidence rather than from a round number.
+
+**Why it exists.** Phase 5 was brought forward ahead of Phase 4 for one reason: everything
+D-034 and D-035 conclude is **scenario-limited**. The held-out clustered interval is ±23 pp on
+the arm the exit criterion turned on, and it does not move at all with seed count — 1, 2 and 3
+seeds give an identical width, because the bootstrap resamples the 11 scenario clusters and
+seeds only add observations inside them. So the only question worth asking first is *how many
+scenarios*.
+
+**Method.** Resample scenarios with replacement from the observed held-out per-scenario
+leakage to synthesise suites of size N, then run the clustered bootstrap the harness actually
+reports. **Stated assumption: new scenarios resemble existing ones.** If Phase 5's additions
+are more homogeneous the intervals will be narrower than this and the sizing conservative; if
+they are more varied, wider.
+
+| arm (observed leakage) | N=11 *(today)* | N=25 | N=40 | N=60 | N=100 |
+|---|---|---|---|---|---|
+| `per-class` Sonnet (9.1%) | ±13.6 pp | ±10.0 | ±8.8 | ±7.5 | **±5.5** |
+| `per-class` gpt (21.2%) | ±22.7 pp | ±15.7 | ±11.9 | ±9.3 | **±7.3** |
+| `baseline` gpt (36.4%) | ±27.3 pp | ±18.0 | ±15.0 | ±12.5 | **±9.0** |
+
+| Can the best and worst arms be told apart? | share of draws with disjoint intervals |
+|---|---|
+| N=11 | **35%** |
+| N=25 | 33% |
+| N=40 | 60% |
+| N=60 | 80% |
+| N=100 | **98%** |
+
+**Three things fall out, and the third is the one that matters for D-034.**
+
+1. **At today's N=11 the two most different arms in the 2x2 are distinguishable in about a
+   third of draws.** The E-11 headline — that leakage runs 36.4% down to 9.1% across the
+   2x2 — is a consistent *ordering* observed once, not a separation the suite can resolve.
+2. **N≈60 is the knee.** Below it the intervals are too wide to compare arms; above it the
+   returns flatten and the cost is authoring.
+3. **N≈100 is what it takes to show the best arm is not at zero.** At 9.1% observed, N=100
+   gives ±5.5 pp — an interval of roughly [3.6, 14.6] that excludes 0. Below that, *"the best
+   compiled scope still leaks"* — which is the substance of D-034 — remains consistent with
+   sampling noise on any single arm. **D-034 is currently carried by the consistency of the
+   direction across four cells and two models, and N≈100 is the price of carrying it on its
+   own evidence.**
+
+**An unplanned check on Phase 0.** ROADMAP's Phase 5 target, written before a single episode
+had run, is "~120–200 AF-Auth scenarios (60–100 pairs)". The power analysis lands on 60–100
+core scenarios. **The number chosen by intuition two phases ago is approximately the number
+the evidence now demands** — which is a mild vindication of the original sizing and, more
+usefully, means Phase 5 does not need re-planning, only executing.
+
+---
+
 ## E-12 — registration: can a grant be refused by the compiler's own doubt?
 **Phase:** 4 (deliverable 0, per D-034) · **Status:** registered 2026-09-04, before the rule
 was implemented and before it was run on anything · **Cost: $0**
