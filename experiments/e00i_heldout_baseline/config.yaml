@@ -1,0 +1,38 @@
+# E-00i — the undefended baseline on the REBUILT held-out slice (Phase 3.5).
+#
+# Registered in docs/EXPERIMENTS.md, "Phase 3.5 — registration", before the repair landed
+# and before a token was spent. Predictions 6-9 are scored against this run.
+#
+#   agentfw run experiments/e00i_heldout_baseline/config.yaml
+#
+# 32 scenarios, 60 variants, 3 seeds, 1 model = 180 episodes, roughly $0.15 at E-00b's
+# observed rates.
+#
+# WHAT THIS RUN IS. A data-collection run *and* a gate. E-11's verdict half replays recorded
+# episodes and none exist for the new slice, so this creates them. And D-019's competency
+# floor applies: E-00h failed it at 11.1% because of F-20 and made every downstream held-out
+# experiment meaningless. **If this run fails the floor, E-11's verdict half does not run**
+# and the phase stops at the scope level rather than producing a number nobody should read.
+#
+# WHAT IT IS NOT. Not a model replication; D-021's stopping rule is untouched. One model, no
+# vendor comparison, no new claim about any model's behaviour.
+#
+# POST-REPAIR. Every number from this run sits on the far side of the Phase 3.5 apparatus
+# boundary and may not be differenced against E-00, E-00b, E-00f or E-00h. See the
+# CONTRACT.md files under those runs' results directories.
+
+experiment: E-00i
+defense: undefended
+split: heldout
+suites: [af_auth, af_inject, benign]
+seeds: [1, 2, 3]
+max_workers: 6
+save_traces: true
+
+models:
+  - id: gpt-4.1-mini
+    provider: openai
+    model: gpt-4.1-mini
+    kind: mid-tier
+    max_tokens: 2048
+    temperature: 1.0

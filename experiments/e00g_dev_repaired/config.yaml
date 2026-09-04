@@ -1,0 +1,48 @@
+# E-00g — the dev undefended baseline, re-measured after the Phase 3.5 apparatus repair.
+#
+# Registered in docs/EXPERIMENTS.md before the repair landed. Predictions 1-5 are scored
+# against this run.
+#
+#   agentfw run experiments/e00g_dev_repaired/config.yaml
+#
+# E-00b's config, unchanged except that the world underneath it has been repaired:
+# email_list and contacts_search now match the way people write names (F-20), storage_list
+# no longer claims an empty bucket for a missed prefix (F-21), the world contains the Q3
+# figure Sam's mail asks for (F-05), the newsletter says the word "newsletter" (F-06), and
+# benign.email.summarise_inbox no longer demands a body read the task does not require
+# (F-03).
+#
+# 86 utterances x 3 seeds x 2 models = 516 episodes, ~$0.66 at E-00b's observed rates.
+#
+# WHY IT IS RUN AT ALL. F-20 was believed to be a held-out problem. The contract probe shows
+# it touches 18.2% of E-00b's dev episodes, so the dev headline numbers are pre-repair in the
+# same sense the held-out ones were. Building Phase 4's cost model on them without checking
+# would compound exactly the defect Phase 3.5 exists to remove.
+#
+# WHAT IS DELIBERATELY MISSING. Claude Sonnet 5's dev baseline (E-00f) is NOT re-run: ~$2 on
+# an unknown OpenRouter balance for a row that is not on the exit-criterion path. The
+# consequence is disclosed rather than hidden — **the Anthropic dev row stays pre-repair** and
+# no post-repair number is differenced against it.
+
+experiment: E-00g
+defense: undefended
+split: dev
+suites: [af_auth, af_inject, benign]
+seeds: [1, 2, 3]
+max_workers: 8
+save_traces: true
+
+models:
+  - id: gpt-5-mini
+    provider: openai
+    model: gpt-5-mini
+    kind: reasoning
+    max_tokens: 4096
+    extra_body:
+      reasoning_effort: low
+  - id: gpt-4.1-mini
+    provider: openai
+    model: gpt-4.1-mini
+    kind: mid-tier
+    max_tokens: 2048
+    temperature: 1.0

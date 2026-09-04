@@ -1,0 +1,86 @@
+# E-11, scope level — the intent compiler against the independently authored held-out gold
+# scopes (D-033). The first genuine validation of any Phase 3 claim.
+#
+# Registered in docs/EXPERIMENTS.md before the slice existed. Predictions 10-12, 15 and 16
+# are scored against this run; predictions 13-14 need the verdict half.
+#
+#   agentfw compile-scopes experiments/e11_heldout/compile.yaml --compiler <label>
+#
+# EVERY ARM IS BYTE-IDENTICAL TO ITS DEV COUNTERPART. Same prompts, same models, same seed
+# counts. A prompt edited after seeing a held-out result would end this experiment's meaning
+# (R-16), so nothing here is new except the utterances.
+#
+# THE ARMS RUN IN THIS ORDER, AND THE ORDER IS REGISTERED. A budget or credential failure
+# must degrade gracefully and visibly, so whatever is not reached is reported as (pending)
+# with its reason and a partial 2x2 is reported as a partial 2x2:
+#
+#   0. tool-ceiling, read-only                 free, no key            the floors
+#   1. baseline    on gpt-4.1-mini, 3 seeds    ~$0.15   F-16's cell
+#   2. per-class   on gpt-4.1-mini, 3 seeds    ~$0.20   F-17: the formulation fix
+#   3. baseline    on claude-sonnet-5, 2 seeds ~$0.60   F-18: the model fix
+#   4. per-class   on claude-sonnet-5, 1 seed  ~$1.00   F-19: are they substitutes
+#
+# The compiler sees the utterance and the tool catalogue and nothing else (D-025), so it is
+# unaffected by the Phase 3.5 apparatus repair — the world changed and its inputs did not.
+# A test recomputes the prompt digest of every committed record to keep that true.
+
+experiment: E-11-heldout
+suites: [af_auth, af_inject, benign]
+split: heldout
+max_workers: 6
+
+compilers:
+  - label: tool-ceiling
+    kind: tool-ceiling
+  - label: read-only
+    kind: read-only
+
+  - label: baseline-gpt-4.1-mini
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 900
+      temperature: 1.0
+
+  - label: per-class-gpt-4.1-mini
+    kind: llm
+    prompt: per-class
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 1600
+      temperature: 1.0
+
+  - label: baseline-claude-sonnet-5
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 2400
+      temperature: 1.0
+
+  - label: per-class-claude-sonnet-5
+    kind: llm
+    prompt: per-class
+    seeds: [1]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 8000
+      temperature: 1.0

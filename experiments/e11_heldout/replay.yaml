@@ -1,0 +1,84 @@
+# E-11, verdict level — the same replay E-01b runs, over the held-out episodes.
+#
+#   agentfw replay experiments/e11_heldout/replay.yaml
+#
+# No model is called. The compiled scopes are the artifacts the scope half wrote and the
+# episodes are E-00i's, so this reproduces from files in the repository with no key and no
+# dollars — the property D-026 exists to preserve.
+#
+# THIS RUN DOES NOT HAPPEN IF E-00i FAILED THE COMPETENCY FLOOR. D-019: a run below 0.60
+# high-authority compliance is neither confirmation nor falsification, and replaying it
+# would measure a firewall preventing something that never occurred. E-00h failed at 11.1%
+# and that is why the Phase 3 held-out exercise produced nothing.
+#
+# The `gold` arm is the reference: the independently authored labels (D-033) turned into
+# real ALLOW/ASK/BLOCK verdicts. Predictions 13 and 14 are scored against the gap between it
+# and the best compiled arm.
+#
+# Policies are E-01b's, unchanged, so the held-out rows sit in the same table as the dev
+# ones and differ in the slice rather than in the configuration.
+
+experiment: E-11
+sources:
+  - experiments/e00i_heldout_baseline/results/episodes.jsonl
+
+scope_sources:
+  - label: gold
+    kind: gold
+  - label: tool-ceiling
+    kind: compiled
+    path: experiments/e11_heldout/results/tool-ceiling.s0.jsonl
+  - label: read-only
+    kind: compiled
+    path: experiments/e11_heldout/results/read-only.s0.jsonl
+
+  - label: baseline-gpt-s1
+    kind: compiled
+    path: experiments/e11_heldout/results/baseline-gpt-4.1-mini.baseline-v2.s1.jsonl
+  - label: baseline-gpt-s2
+    kind: compiled
+    path: experiments/e11_heldout/results/baseline-gpt-4.1-mini.baseline-v2.s2.jsonl
+  - label: baseline-gpt-s3
+    kind: compiled
+    path: experiments/e11_heldout/results/baseline-gpt-4.1-mini.baseline-v2.s3.jsonl
+
+  - label: perclass-gpt-s1
+    kind: compiled
+    path: experiments/e11_heldout/results/per-class-gpt-4.1-mini.per-class-v1.s1.jsonl
+  - label: perclass-gpt-s2
+    kind: compiled
+    path: experiments/e11_heldout/results/per-class-gpt-4.1-mini.per-class-v1.s2.jsonl
+  - label: perclass-gpt-s3
+    kind: compiled
+    path: experiments/e11_heldout/results/per-class-gpt-4.1-mini.per-class-v1.s3.jsonl
+
+  - label: baseline-sonnet-s1
+    kind: compiled
+    path: experiments/e11_heldout/results/baseline-claude-sonnet-5.baseline-v2.s1.jsonl
+  - label: baseline-sonnet-s2
+    kind: compiled
+    path: experiments/e11_heldout/results/baseline-claude-sonnet-5.baseline-v2.s2.jsonl
+
+  - label: perclass-sonnet-s1
+    kind: compiled
+    path: experiments/e11_heldout/results/per-class-claude-sonnet-5.per-class-v1.s1.jsonl
+
+policies:
+  - label: M0-consequential
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-ask-all
+    ask_on: all_out_of_scope
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-no-ask
+    ask_on: never
+    ask_budget: 0
+    reviewer_epsilon: 0.0
+    with_reviewer: false
+    reviewer_oracle: gold
