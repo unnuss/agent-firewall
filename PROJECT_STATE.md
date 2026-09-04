@@ -8,11 +8,12 @@
 
 ## 0. If you are the next session, do exactly this
 
-1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-025 to D-029** — D-025
+1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-025 to D-031** — D-025
    fixes what the intent compiler may see, D-026 why compiled scopes are committed
    artifacts, D-027 what the scripted human knows in E-01b, D-028 the experiment renaming,
    D-029 credential precedence and why a run was misdiagnosed for a day.
-   D-022, D-023 and D-024 remain the Phase 1/2 constraints.
+   D-030 constraint provenance, D-031 why the held-out slice is not yet a held-out
+   validation. D-022, D-023 and D-024 remain the Phase 1/2 constraints.
 2. Read **E-09a and E-01b in `docs/EXPERIMENTS.md`**. Both are done, including the
    registered `gpt-4.1-mini` arm at three seeds; E-09a's run log carries a correction worth
    reading about how that arm was misdiagnosed as blocked on billing for a day.
@@ -26,7 +27,7 @@ Health check (~35 s, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **226 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
+Expect **230 passed** and 24 AF-Auth / 6 AF-Inject / 18 benign dev scenarios, 23 tools.
 
 Both replay experiments reproduce with no key:
 
@@ -232,6 +233,7 @@ on all three seeds. **Predictions scored: 1 held, 2 failed instructively, 3 FALS
 | **F-17** | Formulation-dependent: per-class verdicts get 0.0% leakage from the same model | Confirm on the held-out slice before it sets the design |
 | **F-18** | Model-dependent too, and agent behaviour does not predict compiler behaviour: Sonnet's agent overreaches 60.0%, its compiler leaks 10.0% | Confirm on held-out |
 | **F-19** | The two fixes are **substitutes**: one bad cell in the 2x2, either knob alone recovers most of it | A deployment needs *either* a capable model *or* an explicit formulation. Choose on cost — the formulation is ~10x cheaper |
+| **F-20** | `email_list`'s `query` matches contiguous substrings only, so the natural phrasing of a name returns nothing and the agent correctly gives up. Cost: held-out compliance 11.1%, competency gate failed, E-01b impossible there | Fix before Phase 5 scales the suite, then re-run the undefended baselines. Not fixed now: it would invalidate every committed episode's comparability |
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model needs a `C_block_benign` term; the ML core's job is P(compiler under-granted) |
 | **F-11** | Tool-allowlist authority = undefended overreach | Feeds EVALUATION 6.2; B-01 proper is Phase 5 |
 | **F-12** | Gold scopes are inconsistent about paths named in an utterance (globs written for deletes, not for destinations) | **Labels deliberately unchanged.** Apply rule 3 uniformly when the held-out scopes are written |
@@ -286,10 +288,22 @@ The design is **validated as specified in ARCHITECTURE.md**, with one part re-sc
 
 ### Owed before Phase 4
 
-1. **Held-out validation.** Everything above is the dev slice. EVALUATION section 5 commits
-   to a held-out split touched only for final numbers, and the held-out scenarios have **no
-   gold scopes**. Writing them, then re-running E-09a/E-01b there, is the single highest-value
-   remaining task. Nothing in Phase 3 should be called final on dev numbers alone.
+1. **A real held-out validation — attempted, and it is not achievable with the current
+   suite (D-031).** Gold scopes were written and committed for the held-out split, and
+   E-09a ran there. Two blockers, both structural:
+   - The suite is 3 generated scenarios from one template, 6 variants, **all explicit**.
+     Zero underspecified variants, zero benign, zero af_inject. Phase 3 is about the
+     underspecified band, so the slice cannot exercise it.
+   - **E-01b cannot run there at all.** No episode had ever been recorded for a held-out
+     scenario; E-00h was run to create them and failed the competency floor at 11.1%
+     compliance, because of **F-20** — `email_list`'s `query` matches contiguous substrings
+     only, so "Cloudhost billing" returns nothing while "cloudhost" returns the message.
+     Systematic for that template. Not fixed here: changing a sandbox tool invalidates every
+     committed episode's comparability, so it is Phase 5 work plus a baseline re-run.
+
+   It did produce one real result: **`per-class`'s over-conservatism replicates on unseen
+   scenarios** — 66.7% retention for `gpt-4.1-mini` against 100% for Sonnet, the same
+   asymmetry as dev.
 2. **A second seed for arm 4** (~$1.40) if its numbers are to be quoted as more than a point
    estimate.
 

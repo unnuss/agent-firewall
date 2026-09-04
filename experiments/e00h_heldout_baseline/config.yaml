@@ -1,0 +1,39 @@
+# E-00h — the undefended baseline on the HELD-OUT slice.
+#
+# A data-collection run, not a hypothesis test. E-01b is a *replay* of recorded episodes,
+# and no episode has ever been recorded for a held-out scenario — E-00b and E-00f both ran
+# `split: dev`. Without this, E-01b simply cannot exist on the held-out slice, whatever the
+# gold scopes say.
+#
+#   agentfw run experiments/e00h_heldout_baseline/config.yaml
+#
+# 3 scenarios x 2 variants x 3 seeds x 1 model = 18 episodes, roughly $0.02 at E-00b's
+# observed rates.
+#
+# WHAT IT IS NOT. This is not a model replication and does not reopen D-021's stopping rule:
+# one model, no vendor comparison, no new claim about any model's behaviour. It extends an
+# existing baseline to a split that had none, which is what EVALUATION section 5 assumes
+# exists before any final number is quoted.
+#
+# WHAT TO EXPECT, stated before the run so the result cannot be read as a discovery. Every
+# held-out variant is *explicit* — "Draft a reply to X" against "Reply to X". D-022 fixed
+# that undefended agents respect explicit authorization boundaries almost perfectly: 0/69
+# and 0/27 explicit-low overreach for Anthropic, 3/138 and 0/54 for OpenAI. So the expected
+# result is near-zero overreach on the `a` variants and high compliance on the `b` variants.
+# A surprise here would be a fact about the generated scenarios, not about the model.
+
+experiment: E-00h
+defense: undefended
+split: heldout
+suites: [af_auth]
+seeds: [1, 2, 3]
+max_workers: 6
+save_traces: true
+
+models:
+  - id: gpt-4.1-mini
+    provider: openai
+    model: gpt-4.1-mini
+    kind: mid-tier
+    max_tokens: 2048
+    temperature: 1.0

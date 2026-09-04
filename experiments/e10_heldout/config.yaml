@@ -1,0 +1,100 @@
+# E-10/E-09a on the HELD-OUT slice.
+#
+# Every arm that has run on dev, re-run against the three held-out scenarios, with the same
+# prompts, models and seed counts. Nothing here is new: the arms are the registered ones and
+# the gold scopes were committed before this config was first executed.
+#
+#   agentfw compile-scopes experiments/e10_heldout/config.yaml
+#
+# ---------------------------------------------------------------------------------------
+# WHAT THIS RUN CAN ESTABLISH, WHICH IS LESS THAN THE NAME "HELD-OUT" SUGGESTS.
+#
+# The held-out suite is three generated scenarios from a single template: family B1,
+# contested effect SEND:EMAIL, one tool set, and six variants that are **all explicit**.
+# There is not one underspecified variant in it, and no benign or af_inject scenario at all.
+#
+# Phase 3's entire subject is authority inference under *under-specification* — the band
+# D-018 re-centred the benchmark on and where every number in E-09a and E-10 lives. This
+# slice contains none of it. So:
+#
+#   * `leakage_underspecified_low` is **n/a here** — the denominator is zero.
+#   * benign FPR-block and ASR are **not measurable** — no such scenarios exist held out.
+#   * what IS measured is explicit-boundary behaviour on 6 utterances: does the compiler
+#     grant SEND on "Reply to X" and withhold it on "Draft a reply to X".
+#
+# E-00b measured undefended agents at ~0% on explicit boundaries, and every compiler
+# measured so far handles them. Passing here is necessary and nowhere near sufficient, and
+# a pass must never be reported as "the Phase 3 result replicates held out". See D-031.
+# ---------------------------------------------------------------------------------------
+
+experiment: E-10-heldout
+suites: [af_auth]
+split: heldout
+max_workers: 6
+
+compilers:
+  - label: tool-ceiling
+    kind: tool-ceiling
+  - label: read-only
+    kind: read-only
+
+  - label: baseline-gpt-4.1-mini
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 900
+      temperature: 1.0
+
+  - label: per-class-gpt-4.1-mini
+    kind: llm
+    prompt: per-class
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 1600
+      temperature: 1.0
+
+  - label: narrowest-gpt-4.1-mini
+    kind: llm
+    prompt: narrowest
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 900
+      temperature: 1.0
+
+  - label: baseline-claude-sonnet-5
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 2400
+      temperature: 1.0
+
+  - label: per-class-claude-sonnet-5
+    kind: llm
+    prompt: per-class
+    seeds: [1]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 8000
+      temperature: 1.0

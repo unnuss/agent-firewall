@@ -943,3 +943,46 @@ structural rather than statistical.
 **Revisit if.** Phase 4's cost model arrives: "how confident is the compiler in this bound"
 is exactly the sort of quantity it could price, and provenance is the two-valued placeholder
 for it.
+
+---
+
+### D-031 — The held-out slice is not yet a held-out validation, and says so
+**Date:** 2026-08-31 · **Status:** accepted
+
+**Decision.** Gold scopes now exist for the held-out split and E-09a runs there. **No Phase 3
+claim may be described as validated on held-out data**, and the phrase "held out" is not used
+for these numbers without the qualification below, until the suite is rebuilt.
+
+**Why, in one table.** The held-out suite is three generated scenarios from a single
+template: family B1, contested effect `SEND:EMAIL`, one tool set, six variants, **all
+explicit**. Zero underspecified variants; zero benign; zero af_inject. Phase 3 is entirely
+about the underspecified band (D-018), so the slice cannot exercise it. `leakage
+(underspecified)` has an empty denominator there; benign FPR-block and ASR are not
+measurable at all.
+
+**And it cannot support a verdict-level experiment either.** E-01b replays recorded
+episodes; none existed for held-out, so E-00h was run to create them. It failed D-019's
+competency floor — 11.1% high-authority compliance against 0.60 — because of F-20, a
+literal-substring `query` contract that turns the template's natural phrasings into empty
+results. Until that is fixed and the baseline re-run, E-01b on held-out measures nothing.
+
+**What the gold scopes are worth anyway.** They are owed, they are cheap, they close a gap
+that had gone unnoticed for two phases (the "every scenario has a scope" test guarded dev
+only), and E-09a on them produced one real result: `per-class`'s over-conservatism replicates
+on unseen scenarios and stays model-dependent — 66.7% retention for `gpt-4.1-mini` against
+100% for Sonnet.
+
+**The authoring caveat, recorded because it is permanent.** `dev.yaml` was written in Phase 2
+when no compiler existed, so its author could not have tuned toward an output. `heldout.yaml`
+was written by a session that had seen every dev result. Commit-before-run, mechanical rule
+application, and mirroring the dev label for the same template stand in for that, and they
+are weaker. An independently authored held-out set is what EVALUATION section 5 and R-14 ask
+for and this is not it.
+
+**What would make it a real held-out validation**, in order: (a) fix F-20 and re-run the
+undefended baselines; (b) author underspecified held-out *triples* — the generator has one
+template and it produces explicit B1 pairs only, so this is new template work; (c) add benign
+and af_inject held-out scenarios so FPR-block and ASR are measurable; (d) have them authored
+by someone other than the session that will score them.
+
+**Revisit if.** Phase 5 rebuilds the suite, which is where this belongs.
