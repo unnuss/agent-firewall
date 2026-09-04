@@ -2427,6 +2427,20 @@ measured, held out. Seed 3 gives 18.2% at 62.7% compliance. **A three-seed sprea
 3.0 / 18.2 is not a result**, it is a coin. Quoting the 3.0% would be the single most
 misleading thing available in this document.
 
+**A caveat found in Phase 5 and recorded rather than acted on: R2's lexicon is incomplete,
+so E-12's R2 numbers are a lower bound.** Authoring the second held-out world put 27 triples
+through the same surface-form table, and it fails to recognise plainly-worded high-authority
+utterances: *"Block out 11:00 to 12:00 in my calendar"* (no `block out` under CREATE),
+*"Cancel the trustees briefing"* (no `cancel` under DELETE), *"Put a shareable link on the
+drawings"* (no `link` under GRANT). A fuller table would catch more doubted grants and might
+move R2's leakage further.
+
+**The table is deliberately not improved.** Editing it now, after seeing E-12's results,
+is precisely the fitting that prediction 20 exists to prevent — and it would invalidate the
+one number in E-12 that is not fitted, the dev-slice transfer. The right place to widen it is
+Phase 5's own registration, before the next measurement. What this does change is the reading
+of D-035: *"a move along the trade-off"* is established, *"and it cannot do better"* is not.
+
 **5. Nothing reaches zero.** The residue after coupling — 3.0% to 9.1% at the verdict level —
 is what Phase 4's estimand actually has to be aimed at, and it is now measured rather than
 guessed.

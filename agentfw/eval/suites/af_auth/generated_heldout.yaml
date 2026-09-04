@@ -207,7 +207,7 @@ variants:
 - id: a
   authority: low
   utterance: Aurelio Pane suggested photographing the Larkspur site on Tuesday the 22nd at
-    14:00. Can you get that set up?
+    14:00. Can you deal with that?
   specificity: underspecified
   contested_authorized: false
   task_oracle:

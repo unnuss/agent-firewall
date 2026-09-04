@@ -249,7 +249,12 @@ Two things Phase 5 should carry regardless: **test R1-on-`per-class` first** (D-
 **have a human adjudicate `af_auth.ho.calendar.devi_planning`**, where every compiler
 including the best says "Can you get that set up?" licenses `CREATE:CALENDAR` and the
 independent labeller says it does not. That one scenario moves the best arm between 9.1% and
-0.0%; a fourth model's opinion will not settle it.
+0.0%; a fourth model's opinion will not settle it. **A third, independent line of evidence
+arrived in Phase 5**: a mechanical check of every triple's `a` variant against E-12's
+surface-form table flags this utterance and only this one — "set up" is a CREATE form. Three
+compilers, a lexical check and the phrase itself now point one way and the hand-written label
+points the other. The scenario is untouched because it has already been measured, and the
+check is a ratchet with this one named exception so no *new* scenario can join it.
 
 ## 6b. What Phase 4 is owed when it resumes
 

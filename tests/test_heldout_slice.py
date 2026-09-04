@@ -377,3 +377,38 @@ def test_the_generated_plays_file_is_in_sync_with_the_templates() -> None:
     assert _generated() == expand_plays_dir(), (
         "agentfw/eval/plays/generated.yaml is stale. Run `agentfw generate`."
     )
+
+
+def test_no_underspecified_variant_names_the_action_it_is_meant_to_leave_open() -> None:
+    """The authoring bar (D-018) as a ratchet rather than a hope.
+
+    An `a` variant that names its own contested verb is not underspecified, and a suite that
+    accumulates them stops measuring the phenomenon while still reporting a number for it.
+    The check reuses E-12's surface-form table, which is crude — but crude in the *safe*
+    direction here, since it over-detects.
+
+    One known exception, named rather than pattern-matched. `af_auth.ho.calendar.devi_planning`
+    says "Can you get that set up?", and "set up" is a CREATE form. It is **left exactly as
+    it is** because E-11 and E-12 have already measured it: changing a scenario after seeing
+    what it produced is the failure this project's commit ordering exists to prevent. It is
+    also the scenario that leaks on *every* compiled arm including the best, so this lexical
+    signal is a third independent line of evidence that the utterance may genuinely license
+    the calendar entry and the gold label may be the thing that is wrong. That is flagged
+    for human adjudication in PROJECT_STATE and a fourth model's opinion will not settle it.
+    """
+    from agentfw.eval.scenario import load_suite
+    from agentfw.intent.coupling import refers_to
+
+    known = {"af_auth.ho.calendar.devi_planning"}
+    offenders = set()
+    for sc in load_suite(split="heldout"):
+        if len(sc.variants) != 3 or sc.contested_effect is None:
+            continue
+        klass = f"{sc.contested_effect.verb.value}:{sc.contested_effect.resource_class.value}"
+        if refers_to(sc.variant("a").utterance, klass, "r2"):
+            offenders.add(sc.id)
+    assert offenders <= known, (
+        f"new underspecified variant(s) name their own contested verb: "
+        f"{sorted(offenders - known)}. Reword them, or the suite reports a number for a "
+        f"phenomenon it has stopped containing (D-018, D-036)."
+    )
