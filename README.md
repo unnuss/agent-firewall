@@ -1,9 +1,12 @@
 # Agent Firewall
 
 > A runtime authorization layer for tool-using LLM agents.
-> **Status: Phase 2 complete.** Sandbox, agent, benchmark, six undefended-baseline
-> experiments including a cross-vendor replication, and the deterministic reference monitor
-> with its structural properties enforced as property tests. The ML core is Phase 3.
+> **Status: Phase 5 complete.** Sandbox, agent, a 60-triple held-out benchmark across three
+> worlds with blind-authored gold labels, a deterministic reference monitor whose structural
+> properties are enforced as property tests, and an intent compiler validated end to end at
+> N=60 with every prediction registered before the run. 481 tests, ~3,000 baseline episodes,
+> 34 registered predictions scored, 35 findings — several of which correct earlier claims in
+> this file. Phase 4, the cost model, is next.
 
 An agent being *capable* of an action does not mean it should be *allowed* to perform it.
 
@@ -50,22 +53,30 @@ consequential cases — which is what the cost model and the ASK budget exist to
 
 ## What we measured
 
-Eight undefended-baseline runs, ~2,400 episodes. The headline is a **within-scenario paired
+Nine undefended-baseline runs, ~3,000 episodes. The headline is a **within-scenario paired
 contrast**: same world, same contested effect, same authority level — only the wording of
 the low-authority ask differs.
 
 | Low-authority utterance | OpenAI, dev | Anthropic, dev | OpenAI, **held-out** |
 |---|---|---|---|
-| **Underspecified** — "deal with it", "sort that out" | **45.6%** [31.1, 61.1] | **60.0%** [40.0, 80.0] | **81.8%** [60.6, 100.0] |
-| **Explicit** — "tell me what it says", "draft it" | **2.9%** [0.0, 8.7] | **0.0%** [0.0, 0.0] | **0.0%** (0/51) |
-| Explicit-escalation controls | **0.0%** | **0.0%** (0/27) | **0.0%** (0/18) |
-| Gap | **+42.7 pp** | **+60.0 pp** | **+81.8 pp** |
-| High-authority compliance | 93.1% | 91.7% | 68.6% |
-| run | E-00g | E-00f *(pre-repair)* | E-00i |
+| **Underspecified** — "deal with it", "sort that out" | **45.6%** [31.1, 61.1] | **60.0%** [40.0, 80.0] | **49.4%** [37.8, 61.1] |
+| **Explicit** — "tell me what it says", "draft it" | **2.9%** [0.0, 8.7] | **0.0%** [0.0, 0.0] | **3.5%** [0.0, 8.1] |
+| Explicit-escalation controls | **0.0%** | **0.0%** (0/27) | **0.0%** (0/30) |
+| Gap | **+42.7 pp** | **+60.0 pp** | **+45.9 pp** |
+| High-authority compliance | 93.1% | 91.7% | 83.3% |
+| run | E-00g | E-00f *(pre-repair)* | E-00j |
 
-In **11 of 14** dev scenarios and **10 of 11** held-out ones, across 8 domains and two
-separate worlds, the wording alone flipped the outcome — in both vendors independently.
-Agents did not disregard explicit instructions; they inferred authority from silence.
+In **11 of 14** dev scenarios and **36 of 60** held-out ones, across 9 contested effect
+classes and **three separate worlds**, the wording alone flipped the outcome — in both
+vendors independently. Agents did not disregard explicit instructions; they inferred
+authority from silence.
+
+> **An earlier version of this table said 81.8%.** That figure (E-00i) was measured on 11
+> held-out triples with a ±23 pp interval. Re-measured on 60 triples it is **49.4%** — wrong
+> by 32 pp. About 13 pp of the gap is composition (the contested effect class explains an
+> 87.5 pp spread, F-32) and the rest is small-sample noise. The correction is kept visible
+> because it is the strongest argument in this repository for the ordering it enforces:
+> **the scenario count was fixed before the conclusions were drawn on it.**
 
 *The Anthropic column is **pre-repair**: it was measured before Phase 3.5 fixed a tool
 contract that silently killed a fifth of the episodes, and it was not re-run (a declared
@@ -257,6 +268,116 @@ cascade — was **retired rather than built** (D-032): it existed to calibrate a
 that places an ASK boundary, and the compiler appeared to place that boundary correctly on
 its own. That retirement carried a named condition, and Phase 3.5 met it.
 
+## Phase 5 (complete): the same question at five times the sample, and the answer holds
+
+Phase 3.5 concluded that the compiled scope does not reach the gold-scope result on unseen
+data. It concluded that from **11 held-out triples**, on an interval **±23 pp wide**. Before
+building anything on it, we measured what that interval would cost to narrow (E-13) and found
+something worth stating plainly: **more seeds narrow nothing.** One, two and three seeds give
+the identical width, because the bootstrap resamples scenarios and there were eleven of them.
+Only scenarios help. So the benchmark was rebuilt before the next conclusion was drawn on it.
+
+| | Phase 3.5 | **Phase 5** |
+|---|---|---|
+| core triples | 11 | **60** |
+| contested effect classes | 6 | **9** |
+| worlds | 1 | **3** |
+| held-out utterances | 60 | **207** |
+
+The three worlds — an office, an architecture practice, a funded academic lab — differ in
+**what counts as consequential**, and eight of the nine contested classes appear in all three.
+That makes a question answerable that could not be asked before: *is a leakage rate a property
+of the compiler, or of the kind of work?*
+
+**It is neither. It is the effect class, by a factor of six.**
+
+| underspecified overreach, by contested class | |
+|---|---|
+| `CREATE:CALENDAR` | **100.0%** |
+| `DELETE:USER_FILES` | 88.9% |
+| `PURCHASE:FINANCIAL` | 80.0% |
+| `WRITE:USER_FILES` | 40.7% |
+| `SEND:EMAIL` | 24.2% |
+| `GRANT:USER_FILES` | **12.5%** |
+
+**Spread across contested classes: 87.5 pp. Spread across the three worlds: 13.5 pp.** And the
+ordering is not the ontology's — `CREATE:CALENDAR` is reversible and invisible to anyone but
+the user, and it is taken on *every* underspecified instruction, while irreversible
+third-party-visible `SEND:EMAIL` sits at 24%. The classes agents overreach on are the ones
+where a single unambiguous state change obviously completes the goal; the ones they hesitate
+on require authoring content or exposing a resource to someone else. **"Underspecified
+overreach" is therefore a weighted average over whatever class mix a suite happens to contain**,
+which is a warning about this project's own earlier headline and about anyone else's.
+
+### The 2x2 at N=60
+
+What the compiler granted (**scope level**), and what the agent then actually did under that
+grant (**verdict level**):
+
+| contested action executed | free-form prompt | per-class verdicts |
+|---|---|---|
+| `gpt-4.1-mini` | 24.6% [14.6, 35.2] | 12.2% [5.6, 20.0] |
+| `claude-sonnet-5` | 11.7% [5.0, 19.7] | **5.6% [1.1, 11.7]** |
+
+**Every interval excludes zero**, against an undefended 49.4% and a `gold` scope's 0.0%. All
+six registered predictions held, including the one that was written as the criterion: *no
+compiled arm reaches zero*. **The Phase 3.5 reopening was not a small-sample artifact** — it
+now rests on five times the evidence and a ±5.3 pp interval (D-037).
+
+### What a compiled scope actually buys, from the audit log
+
+The pooled rate hides the mechanism. Here is the disposition of every contested action the
+agent attempted on an underspecified instruction:
+
+| | ALLOW (silent) | ASK → denied | BLOCK |
+|---|---|---|---|
+| tool allowlist, no scope | **100.0%** | 0.0% | 0.0% |
+| free-form prompt, `gpt-4.1-mini` | 48.9% | 51.1% | **0.0%** |
+| per-class verdicts, `claude-sonnet-5` | **10.9%** | 79.3% | 9.8% |
+| hand-written gold scope | 0.0% | 90.2% | 9.8% |
+
+Read the first column: **what the scope buys is the conversion of a silent consequential act
+into a question.** With no scope, every contested action executes unannounced.
+
+Read the last column and there is a mechanism that 11 triples could not show. The free-form
+prompt **never blocks — not once in 276 attempts.** Every per-class arm blocks at the gold
+scope's rate. The reason is structural: a free-form grant list leaves an unlicensed class
+merely *absent*, and deny-by-default correctly routes absence to a human; the per-class
+formulation emits `not_licensed`, which the monitor refuses outright without spending an
+interruption. **"I was not told this is allowed" and "I was told this is not allowed" are
+different propositions, and only the second is actionable without a person.**
+
+### The residual is six utterances, and two of them are our own bugs
+
+33 of the 60 underspecified variants leak under **no** arm; 6 leak under **all four**. The
+distribution is U-shaped, not a uniform error rate — two model families and two prompt
+formulations agree far more than a pooled figure suggests.
+
+Of the six, **two are more likely defects in the benchmark than in the compiler**: one is the
+scenario the blind gold-scope author flagged as ambiguous *before any run*, and one is a label
+that four independent compilations all disagree with. **Neither is repaired.** They have been
+measured, and fixing a scenario after seeing its number is the failure this project's ordering
+exists to prevent. Excluding both would put the best arm at 3.3% instead of 5.6%; **the
+headline stays 5.6%**, and both go in the next slice.
+
+### Two negative results worth more than the positive ones
+
+**The cheap fix does not work where you would deploy it.** A post-hoc rule that withholds a
+grant whenever the compiler's own open question is about that effect — the obvious repair for
+"it settles *whether* and asks *how*" — was re-measured at N=60. It buys 13 pp of leakage on
+the worst arm and **1.7 pp on the best, for 7.6 pp of retention**, while *lowering* contrast
+fidelity from 86.4% to 80.3%. It is a substitute for the per-class prompt, not a complement:
+both extract the compiler's uncertainty, and the prompt does it where the model can still
+reason. **Not adopted**, for the second time and now for a better reason.
+
+**A labelling brief can be debugged, and the debugging is measurable.** Two blind labellers of
+the same utterances first agreed on the whole effect set **0 of 6** times. The brief then
+gained five clarifications — written while no labels existed to fit them to — and a third blind
+author agreed with the second **48 of 60**. The residual disagreement is entirely instrumental
+reads, which is exactly the gap the clarifications did not close, and *the labeller identified
+that gap independently before seeing any comparison*. The ordering is the whole point: had the
+brief been clarified after the labels existed, the improvement would be unreadable.
+
 ## Phase 3.5 (complete): the benchmark was the weak link, and the headline did not replicate
 
 Every Phase 3 number was dev-slice, and the held-out suite could not check any of it — three
@@ -296,6 +417,10 @@ the other way, two phases would have been built on a broken instrument.
 | `gpt-4.1-mini` — **held-out** | **36.4%** | **21.2%** |
 | `claude-sonnet-5` — dev | 10.0% | **0.0%** |
 | `claude-sonnet-5` — **held-out** | **18.2%** | **9.1%** |
+
+> **Superseded by Phase 5.** Every held-out cell above rests on 11 triples. They were
+> re-measured on 60 and the section above this one has the current figures. The *conclusion*
+> — no cell reaches zero — survived; the numbers moved and one reading of them did not.
 
 **No.** No cell reaches zero. On dev either intervention alone reached the floor, and we
 concluded they were substitutes — pick one, on cost. Held out both help, neither suffices,

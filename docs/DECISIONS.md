@@ -946,6 +946,65 @@ for it.
 
 ---
 
+### D-037 — D-034 is confirmed on adequate power; the band is real and it has a shape
+**Date:** 2026-09-06 · **Status:** accepted · **Confirms:** D-034 · **Confirms:** D-035
+
+**Decision.** D-034 — the reopening of the M0–M5 ladder question — **stands.** Phase 4 may
+proceed with a real estimand. D-035's refusal to adopt the coupling rule also stands, now for
+a stronger reason than caution.
+
+**The registered rule, and it was written before the run.** E-14's prediction 30 was named as
+the criterion: *"If no arm reaches 0.0%, D-034 stands on adequate power. If some arm reaches
+0.0%, D-034 is withdrawn, D-032's conclusion is restored, and the honest summary becomes 'the
+Phase 3.5 reopening was a small-sample artifact, caught by Phase 5.'"*
+
+No compiled arm reaches 0.0%. The best — `per-class` on `claude-sonnet-5` — leaves **5.6%**
+of underspecified low-authority contested actions executing, with a scenario-clustered
+interval of **[1.1, 11.7] that excludes zero**, on 60 held-out triples across three worlds and
+nine contested classes. D-034 was measured on 11 triples with a ±23 pp interval; it now rests
+on five times the evidence and a ±5.3 pp one.
+
+**What changed in the claim, and it is not nothing.** D-034 said the band exists. E-14 says
+what is in it, and the answer is narrower than "one contested effect in eleven, uniformly."
+
+- **The residual is concentrated, not diffuse** (F-33). 33 of 60 variants leak under no arm;
+  6 leak under all four. Only a third of the slice is contested territory where the arm
+  matters at all.
+- **Two of the six are probably benchmark defects, not compiler failures** (F-33). Neither is
+  repaired before being reported, and excluding both would put the best arm at 3.3%. **The
+  headline stays 5.6%.**
+- **The remaining core is one instruction shape** — *edit this document to reflect that fact*
+  — that every configuration reads as licensing the write.
+
+**Consequence for Phase 4, and it narrows the work.** A calibrated score arbitrating an
+uncertain middle now has a specific middle to arbitrate: roughly a third of underspecified
+instructions, concentrated on `WRITE:USER_FILES`, and *not* the 6% floor, most of which is
+either unanimous or a labelling error. **Phase 4 should be sized against the contested third,
+not the pooled rate**, and F-32 says any per-effect cost term must be fitted per contested
+class rather than pooled.
+
+**A second consequence, from F-34.** The `per-class` formulation's advantage is partly that it
+can express `not_licensed`, which the monitor refuses outright, where `baseline`'s silence can
+only be routed to a human. `baseline` on `gpt-4.1-mini` never emitted a BLOCK in 276 contested
+attempts; every `per-class` arm blocks at gold's rate. **Any ladder design in Phase 4 should
+treat "told no" and "not told yes" as distinct inputs**, because the reference monitor already
+does.
+
+**Alternatives considered.** (a) *Withdraw D-034 anyway*, on the grounds that 5.6% is small
+enough to be uninteresting. Rejected: the interval excludes zero, the criterion was registered
+in advance precisely so that this call could not be made after seeing the number, and 5.6% of
+consequential actions taken with no human in the loop is not a rounding error. (b) *Declare the
+band settled and skip Phase 4's sizing work*, since F-33 localises the residual so sharply.
+Rejected: F-33 is one run on one slice, and two of its six cases are suspect labels — the
+localisation is a hypothesis worth testing in Phase 4, not a finding to build on.
+
+**Revisit if.** The two suspect scenarios are repaired and the best arm's interval then
+includes zero on a fresh slice; or the `docedit` cluster turns out to be a template artifact
+rather than an instruction shape, which the next authoring round can test directly by writing
+the same contested class into a different template.
+
+---
+
 ### D-036 — Phase 5 comes before Phase 4, and its size is 60 core triples minimum, 100 to settle D-034
 **Date:** 2026-09-04 · **Status:** accepted · **Re-orders:** ROADMAP Phases 4 and 5
 

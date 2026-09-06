@@ -268,24 +268,45 @@ Deliverables:
 
 ---
 
-## Phase 5 — Benchmark build-out and experimental evaluation (IN PROGRESS, brought forward)
+## Phase 5 — Benchmark build-out and experimental evaluation (COMPLETE, brought forward)
 
 **Re-ordered ahead of Phase 4 by D-036**, because every quantity Phase 4 would optimise
-against carries a ±23 pp interval that no amount of seeding narrows. **Sized by E-13 rather
+against carried a ±23 pp interval that no amount of seeding narrows. **Sized by E-13 rather
 than by the original estimate: 60 held-out core triples as a floor, 100 to settle D-034.**
-The original target — "60–100 pairs", written in Phase 0 before any episode had run — turns
-out to be approximately what the power analysis demands, so this phase needs executing
-rather than re-planning.
+The original Phase 0 target — "60–100 pairs", written before any episode had run — turned out
+to be approximately what the power analysis demanded.
 
-*Started.* The sizing (E-13, D-036); F-27 re-diagnosed as a competency finding rather than a
-defect; F-30 recorded as a negative result on the obvious resource-route gate; and the
-scaling infrastructure — **templates now carry their own ideal plays**, emitted by
-`agentfw generate`, so every generated scenario is satisfiability-gated for free. The
-hand-maintained play table for generated scenarios is gone.
+**All seven deliverables are done.** 60 core triples, 81 scenarios, 207 utterances, three
+worlds, nine contested effect classes; gold scopes authored blind with the brief committed
+first (D-033); a fresh undefended baseline (E-00j, 621/621 usable); E-11 and E-12 re-run at
+N=60 (E-14). **Twelve registered predictions across the two runs and all twelve held.**
 
-*Not started.* The authoring itself, and its first constraint is the **world** rather than
-the templates: 11 triples already lean on five correspondents, and N=60 needs a much richer
-`office_heldout` or a third fixture.
+*The exit criterion.* E-14's prediction 30 was registered as the criterion on D-034 before any
+call was made. No compiled arm reaches 0.0%; the best is **5.6% [1.1, 11.7]**, excluding zero.
+**D-034 is confirmed on adequate power (D-037)** and Phase 4 proceeds with a real estimand.
+
+*What Phase 5 changed that Phase 4 must not ignore.*
+
+- **E-00i's 81.8% headline was wrong by 32 pp** and is superseded by E-00j's 49.4%. About
+  13 pp of that is composition, and the rest small-sample noise.
+- **F-32: the contested effect class explains an 87.5 pp spread; the domain explains 13.5 pp.**
+  Any per-effect cost term must be fitted per class, not pooled.
+- **F-33: the residual is six utterances, not a rate.** 33 of 60 leak under no arm. Size the
+  cost model against the contested third, not against 5.6%.
+- **F-34: `not_licensed` and "absent from the grant list" are different inputs** and the
+  monitor already treats them differently. No ladder design should collapse them.
+- **E-12 at N=60: the coupling rule is a substitute for the `per-class` prompt, not a
+  complement**, and degrades the best arm. D-035's refusal to adopt is confirmed.
+- **The interaction between prompt and model is unresolved.** Additive is refuted;
+  multiplicative fits the point estimates on an interval of [0.21, 2.50]. N=60 sizes main
+  effects, not interactions.
+
+*What is deliberately not done.* The 100-triple target that D-036 named as the level needed to
+settle D-034 *to the point of an interval excluding zero on every arm* — 60 was the floor and
+it sufficed for the criterion as registered. Two suspect scenarios (F-33) are measured and
+**not** repaired; they go in the next slice, fixed before anything is measured against them.
+R-14 — Claude-authored scenarios, labels and compiler arms — is untouched and is now the
+largest single risk to every number in this document.
 
 Original plan follows.
 
