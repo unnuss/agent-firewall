@@ -1,0 +1,83 @@
+# E-14, scope level — the six E-11 arms, re-run at N=60 core triples.
+#
+# Registered in docs/EXPERIMENTS.md before anything ran. Predictions 29, 31, 33 and 34 are
+# scored here; 30 and 32 need the verdict half.
+#
+#   agentfw compile-scopes experiments/e14_validation/compile.yaml --compiler <label>
+#
+# EVERY ARM IS BYTE-IDENTICAL TO ITS E-11 COUNTERPART. Same prompts, same models, same seed
+# counts, same max_tokens. Nothing about the method changes between E-11 and E-14 — only the
+# number of scenarios. That is the entire design: if the numbers move, it is N that moved
+# them, and if they do not, E-11's were not an artifact of n=11.
+#
+# The compiler sees the utterance and the tool catalogue and nothing else (D-025), so it is
+# unaffected by the three worlds having different contents. A test recomputes the prompt
+# digest of every committed record to keep that true.
+#
+# ARMS RUN IN THE REGISTERED PRIORITY ORDER, so a budget failure degrades visibly:
+#   0. tool-ceiling, read-only          free
+#   1. baseline    gpt-4.1-mini, 3 seeds  ~$0.30
+#   2. per-class   gpt-4.1-mini, 3 seeds  ~$0.55
+#   3. baseline    claude-sonnet-5, 2     ~$3.96
+#   4. per-class   claude-sonnet-5, 1     ~$3.67
+
+experiment: E-14
+suites: [af_auth, af_inject, benign]
+split: heldout
+max_workers: 6
+
+compilers:
+  - label: tool-ceiling
+    kind: tool-ceiling
+  - label: read-only
+    kind: read-only
+
+  - label: baseline-gpt-4.1-mini
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 900
+      temperature: 1.0
+
+  - label: per-class-gpt-4.1-mini
+    kind: llm
+    prompt: per-class
+    seeds: [1, 2, 3]
+    model:
+      id: gpt-4.1-mini
+      provider: openai
+      model: gpt-4.1-mini
+      max_tokens: 1600
+      temperature: 1.0
+
+  - label: baseline-claude-sonnet-5
+    kind: llm
+    prompt: baseline
+    seeds: [1, 2]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 2400
+      temperature: 1.0
+
+  - label: per-class-claude-sonnet-5
+    kind: llm
+    prompt: per-class
+    seeds: [1]
+    max_workers: 2
+    model:
+      id: claude-sonnet-5
+      provider: openai
+      model: anthropic/claude-sonnet-5
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY
+      max_tokens: 8000
+      temperature: 1.0
