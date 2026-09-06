@@ -14,3 +14,15 @@
 [compile] per-class-gpt-4.1-mini s2: 207 scopes, 0 failures, F1=0.656, leakage=18.3%, contrast=77.3%, tokens=310006
 [compile] per-class-gpt-4.1-mini s3: 207 scopes, 0 failures, F1=0.661, leakage=15.0%, contrast=78.8%, tokens=310209
 [compile] per-class-gpt-4.1-mini pooled: experiments\e14_validation\results\per-class-gpt-4.1-mini\report.md
+[env] loaded OPENAI_API_KEY, OPENROUTER_API_KEY from .env.local
+[env] WARNING  OPENAI_API_KEY: .env.local and the exported environment hold DIFFERENT values. Using the one from .env.local (D-029); the exported environment variable is ignored for this run.
+[env] credentials {"OPENAI_API_KEY": "sha8:6de690a5", "OPENROUTER_API_KEY": "sha8:5c568801", "ANTHROPIC_API_KEY": "absent"}
+[compile] 207 utterances x 1 arm(s) = 414 compilations
+[compile] baseline-claude-sonnet-5 s1: 207 scopes, 4 failures, F1=0.742, leakage=23.3%, contrast=77.3%, tokens=478036
+[compile] baseline-claude-sonnet-5 s2: 207 scopes, 2 failures, F1=0.743, leakage=18.3%, contrast=81.8%, tokens=475814
+[compile] baseline-claude-sonnet-5 pooled: experiments\e14_validation\results\baseline-claude-sonnet-5\report.md
+[env] loaded OPENAI_API_KEY, OPENROUTER_API_KEY from .env.local
+[env] WARNING  OPENAI_API_KEY: .env.local and the exported environment hold DIFFERENT values. Using the one from .env.local (D-029); the exported environment variable is ignored for this run.
+[env] credentials {"OPENAI_API_KEY": "sha8:6de690a5", "OPENROUTER_API_KEY": "sha8:5c568801", "ANTHROPIC_API_KEY": "absent"}
+[compile] 207 utterances x 1 arm(s) = 207 compilations
+[compile] per-class-claude-sonnet-5 s1: 207 scopes, 0 failures, F1=0.777, leakage=15.0%, contrast=86.4%, tokens=719619
