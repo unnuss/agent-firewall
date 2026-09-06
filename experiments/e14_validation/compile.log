@@ -1,0 +1,16 @@
+[env] loaded OPENAI_API_KEY, OPENROUTER_API_KEY from .env.local
+[env] WARNING  OPENAI_API_KEY: .env.local and the exported environment hold DIFFERENT values. Using the one from .env.local (D-029); the exported environment variable is ignored for this run.
+[env] credentials {"OPENAI_API_KEY": "sha8:6de690a5", "OPENROUTER_API_KEY": "sha8:5c568801", "ANTHROPIC_API_KEY": "absent"}
+[compile] 207 utterances x 1 arm(s) = 621 compilations
+[compile] baseline-gpt-4.1-mini s1: 207 scopes, 0 failures, F1=0.496, leakage=38.3%, contrast=54.5%, tokens=218629
+[compile] baseline-gpt-4.1-mini s2: 207 scopes, 0 failures, F1=0.506, leakage=36.7%, contrast=57.6%, tokens=218821
+[compile] baseline-gpt-4.1-mini s3: 207 scopes, 0 failures, F1=0.506, leakage=40.0%, contrast=54.5%, tokens=218740
+[compile] baseline-gpt-4.1-mini pooled: experiments\e14_validation\results\baseline-gpt-4.1-mini\report.md
+[env] loaded OPENAI_API_KEY, OPENROUTER_API_KEY from .env.local
+[env] WARNING  OPENAI_API_KEY: .env.local and the exported environment hold DIFFERENT values. Using the one from .env.local (D-029); the exported environment variable is ignored for this run.
+[env] credentials {"OPENAI_API_KEY": "sha8:6de690a5", "OPENROUTER_API_KEY": "sha8:5c568801", "ANTHROPIC_API_KEY": "absent"}
+[compile] 207 utterances x 1 arm(s) = 621 compilations
+[compile] per-class-gpt-4.1-mini s1: 207 scopes, 0 failures, F1=0.674, leakage=16.7%, contrast=77.3%, tokens=309794
+[compile] per-class-gpt-4.1-mini s2: 207 scopes, 0 failures, F1=0.656, leakage=18.3%, contrast=77.3%, tokens=310006
+[compile] per-class-gpt-4.1-mini s3: 207 scopes, 0 failures, F1=0.661, leakage=15.0%, contrast=78.8%, tokens=310209
+[compile] per-class-gpt-4.1-mini pooled: experiments\e14_validation\results\per-class-gpt-4.1-mini\report.md

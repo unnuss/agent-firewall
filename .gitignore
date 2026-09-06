@@ -51,3 +51,5 @@ experiments/e01b_compiled/results/*.jsonl
 # regenerating in seconds with no API access. The reports it produces ARE committed.
 experiments/e11_heldout/results/*__*.jsonl
 experiments/e11_heldout/results/M0-*.jsonl
+experiments/e14_validation/results/*__*.jsonl
+experiments/e12_coupling/results/*__*.jsonl
