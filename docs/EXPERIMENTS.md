@@ -2182,6 +2182,70 @@ three scenarios scored 0/3 on high-authority compliance:
 
 ---
 
+## E-00j / E-14 — registration: the validation at N=60, written before any call
+**Phase:** 5 · **Status:** registered 2026-09-06, before either run · **Budget: ~$9.4**
+
+D-036 brought Phase 5 forward for one reason: every conclusion in D-034 and D-035 rests on
+11 held-out triples, where E-13 measured the interval at ±23 pp and showed **seeds cannot
+narrow it**. The slice is now 60 core triples over three worlds and nine contested classes,
+and the gold scopes were authored blind and committed before this registration. This is the
+run that says whether the Phase 3.5 conclusions survive adequate power.
+
+**E-00j** is the undefended baseline over all 207 held-out utterances (81 scenarios, 3 seeds,
+`gpt-4.1-mini`, 621 episodes). It supersedes E-00i, which covered 32 of these scenarios. One
+run, one date, one config, rather than splicing E-00i's episodes to the new ones — the join
+would be a comparability hazard for the sake of $0.20.
+
+**E-14** is E-11 and E-12 re-run on it: the same six compiler arms, byte-identical prompts,
+and the same coupling rules. Nothing about the method changes. Only N does.
+
+### Cost, and the order things are dropped in if it runs out
+
+| | | |
+|---|---|---|
+| E-00j baseline | 621 episodes | ~$0.90 |
+| `baseline` gpt-4.1-mini, 3 seeds | 621 compilations | ~$0.30 |
+| `per-class` gpt-4.1-mini, 3 seeds | 621 | ~$0.55 |
+| `baseline` claude-sonnet-5, 2 seeds | 414 | ~$3.96 |
+| `per-class` claude-sonnet-5, 1 seed | 207 | ~$3.67 |
+| | | **~$9.4** |
+
+Higher than the ~$6.7 quoted when Phase 5 was planned, because the slice grew past the
+estimate. **The registered drop order is unchanged from E-11**: floors, then gpt `baseline`,
+then gpt `per-class`, then Sonnet `baseline`, then Sonnet `per-class`. Whatever is not
+reached is reported `(pending)` with its reason, and a partial 2x2 is reported as partial.
+
+### E-00j — registered predictions
+
+| # | Prediction | Why it is worth registering |
+|---|---|---|
+| 23 | The competency gate passes (≥ 0.60 high-authority compliance) | Three new worlds and six new shapes; if the agent cannot do the work, nothing downstream is readable. E-00h failed this at 11.1% |
+| 24 | **Underspecified overreach comes in *below* E-00i's 81.8%**, and lands in 45–70% | The most falsifiable thing here. 81.8% was 11 triples with a ±23 pp interval, and regression toward the dev value is what E-13's arithmetic predicts. If it holds near 81.8% at N=60, that is a stronger phenomenon than we thought; if it collapses below 45%, the held-out slice was never as hard as E-00i suggested |
+| 25 | Explicit-low overreach stays under 10% | D-022's boundary result, now across three worlds |
+| 26 | Scenario-level incidence ≥ 50% of the 60 triples | Guards against a rate carried by a handful of scenarios, which is how E-00 misled in Phase 1 |
+| 27 | **The three worlds differ by less than 20 pp** in underspecified overreach | The reason there are three. If the domain moves it more than that, "agents infer authority from silence" needs a per-domain qualifier |
+| 28 | **The least consequential contested classes do not overreach less than the most consequential.** Specifically `WRITE:USER_FILES` and `CREATE:CALENDAR` (reversible, invisible to third parties) will not come in more than 15 pp below `PURCHASE:FINANCIAL` and `SEND:EMAIL` | D-018's central claim is that *ambiguity* drives this, not consequence size. Until Phase 5 the suite could not test it — the contested classes were too few and too consequential. This is the first registered test of it, and a clean failure would qualify D-018 |
+
+### E-14 — registered predictions
+
+| # | Prediction | What it decides |
+|---|---|---|
+| 29 | The 2x2 ordering holds: `baseline` gpt worst, `per-class` Sonnet best | Whether E-11's ordering was signal or an n=11 accident |
+| 30 | **No compiled arm reaches 0.0% overreach** at the verdict level | D-034's core claim. This is prediction 13 re-run with power. If an arm *does* reach 0.0%, D-034 was an artifact of a small sample and D-032's retirement should be restored |
+| 31 | **`per-class` on gpt-4.1-mini leaks 15% or more** on underspecified variants | Prediction 10 re-run. It failed at 21.2% on n=11; at n=60 it either confirms or reverses |
+| 32 | ASR is **0.0% under every compiled scope**, against an undefended rate above 15% | The deterministic core's claim, now on five injection scenarios it has already seen — weaker evidence than the rest, and labelled so |
+| 33 | The best arm's clustered interval is **narrower than ±12 pp** | E-13 predicted ±7.5 pp at N=60 by resampling the original 11 scenarios. The new ones span three worlds and nine classes, so they may be *more* varied and the interval wider. This is the check on E-13's own assumption |
+| 34 | **`tool-ceiling` reproduces undefended overreach to within 5 pp** | F-11, which has now replicated exactly twice. Three worlds is the hardest test it has had |
+
+**The decision rule, fixed now.** Prediction 30 is the criterion. If no arm reaches 0.0%,
+**D-034 stands on adequate power** and Phase 4 proceeds with a real estimand. If some arm
+reaches 0.0%, **D-034 is withdrawn**, D-032's conclusion is restored, and the honest summary
+becomes "the Phase 3.5 reopening was a small-sample artifact, caught by Phase 5." Either way
+predictions 24, 27, 28 and 33 are reported, because they are about the benchmark rather than
+the system and they are what the three worlds were built to measure.
+
+---
+
 ## E-13 — how many scenarios does a usable interval cost? (sizing, $0)
 
 **Phase:** 5 · **Status:** done (2026-09-04) · **Not a hypothesis test.** A measurement of the

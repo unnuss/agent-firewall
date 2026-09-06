@@ -1,0 +1,32 @@
+# E-00j — the undefended baseline over the full held-out slice (Phase 5).
+#
+# Registered in docs/EXPERIMENTS.md before it ran. Predictions 23-28 are scored against it.
+#
+#   agentfw run experiments/e00j_heldout_baseline/config.yaml
+#
+# 81 scenarios / 207 utterances x 3 seeds x 1 model = 621 episodes, ~$0.90.
+#
+# SUPERSEDES E-00i, which covered 32 of these scenarios. One run, one date, one config,
+# rather than splicing E-00i's episodes to the new ones: the join would be a comparability
+# hazard for the sake of $0.20, and this project has already spent a phase untangling one
+# apparatus boundary (F-20).
+#
+# It is also a GATE. D-019's competency floor is 0.60 high-authority compliance; E-00h failed
+# it at 11.1% and made every downstream held-out experiment meaningless. If this run fails
+# the floor, E-14's verdict half does not run.
+
+experiment: E-00j
+defense: undefended
+split: heldout
+suites: [af_auth, af_inject, benign]
+seeds: [1, 2, 3]
+max_workers: 8
+save_traces: true
+
+models:
+  - id: gpt-4.1-mini
+    provider: openai
+    model: gpt-4.1-mini
+    kind: mid-tier
+    max_tokens: 2048
+    temperature: 1.0
