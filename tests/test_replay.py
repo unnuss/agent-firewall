@@ -433,60 +433,104 @@ def test_an_underspecified_variant_records_the_question_it_leaves_open():
             )
 
 
-def test_the_two_independent_labellings_agree_where_the_measurement_reads(shared_labels):
-    """F-26. Two labellers, six variants, zero exact agreement — and it does not matter.
+def test_every_pair_of_blind_labellings_agrees_on_the_contested_class() -> None:
+    """F-26 and F-31. Three blind labellings; the structural claim must survive all of them.
 
-    The three `af_auth.email.gen.*` controls were labelled twice: once in Phase 3 by a
-    session that had seen every dev result, once in Phase 3.5 by an author that had seen
-    nothing (D-033). They agree on the *whole effect set* for none of the six variants and
-    on the *contested class* for all six.
-
-    That split is the finding. The disagreement is entirely `READ:USER_FILES` — one labeller
-    reads "draft a reply saying X" as licensing a look at the file, the other says every word
-    of the output is already in the sentence — plus an open question on an explicit variant
-    that should not have carried one. Both are rule-2 and rule-4 judgement calls, and both
-    move micro-F1 and exact-match, which E-09a already says are not the metric. Neither moves
-    leakage, retention or contrast fidelity, which are what every conclusion rests on.
-
-    So this asserts the half that has to hold. If a future labelling disagrees on the
-    contested class, the structural ground truth has become a matter of opinion and E-09a's
-    headline metrics stop meaning what they say.
+    AF-Auth's ground truth is structural (D-010): the contested class is licensed on the
+    high-authority variant and on no low one. If two people reading the same sentence under
+    the same rules disagree about *that*, it has stopped being structural and every
+    leakage, retention and contrast number in this project loses its meaning. The whole
+    effect set is a different matter -- it is a judgement call about instrumental reads, it
+    is *known* to move between labellers, and E-09a has said since Phase 3 that effect-set
+    F1 is not the metric.
     """
-    v1, v2 = shared_labels
-    contested_disagreements = []
-    set_disagreements = []
-    for sid in sorted(set(v1) & set(v2)):
-        for vid in sorted(set(v1[sid]) & set(v2[sid])):
-            a = set(v1[sid][vid].get("effects", []))
-            b = set(v2[sid][vid].get("effects", []))
-            if ("SEND:EMAIL" in a) != ("SEND:EMAIL" in b):
-                contested_disagreements.append(f"{sid}::{vid}")
-            if a != b:
-                set_disagreements.append(f"{sid}::{vid}")
-    assert not contested_disagreements, (
-        f"the two labellings disagree on the contested class: {contested_disagreements}. "
-        f"AF-Auth ground truth is supposed to be structural, not a judgement call."
-    )
-    # Recorded, not required. If a future edit makes these agree, the finding is stale and
-    # the number in F-26 needs updating rather than the test needing a pass.
-    assert len(set_disagreements) == 6, (
-        f"F-26 records 6 whole-effect-set disagreements; found {len(set_disagreements)}: "
-        f"{set_disagreements}"
+    for older, newer in (("v1", "v2"), ("v2", "v3")):
+        _, n, clashes = _agreement(_labelling(older), _labelling(newer))
+        assert n > 0, f"{older} and {newer} share no utterances"
+        assert not clashes, (
+            f"{older} vs {newer}: blind labellers disagree on the contested class for "
+            f"{clashes}. AF-Auth ground truth is supposed to be construction, not opinion."
+        )
+
+
+def test_the_clarified_brief_moved_whole_effect_set_agreement() -> None:
+    """F-31, as a ratchet rather than a paragraph.
+
+    v1 vs v2 agreed on the whole effect set for **0 of 6** variants. The brief then gained
+    five clarifications -- written while no label existed to fit them to, which is the only
+    thing that makes the comparison legitimate -- and v2 vs v3 agrees on **48 of 60**.
+
+    Asserted as a floor so a future brief edit that *worsens* agreement fails loudly. Not
+    asserted as an exact figure, because the next labelling will move it and the finding is
+    the direction, not the decimal.
+    """
+    same, n, _ = _agreement(_labelling("v2"), _labelling("v3"))
+    assert n == 60, f"expected 60 shared utterances, found {n}"
+    assert same >= 48, (
+        f"whole-effect-set agreement fell to {same}/{n}; F-31 recorded 48/60 after the "
+        f"brief was clarified. A brief change that lowers agreement needs explaining."
     )
 
 
-@pytest.fixture
-def shared_labels():
-    """The two independent labellings of the scenarios they both cover."""
+def test_the_residual_disagreement_is_the_gap_the_brief_did_not_close() -> None:
+    """F-31's diagnosis, checked rather than asserted.
+
+    Clarification 2 fixed rule 2's stopping rule for `READ:CONTACTS` and left the identical
+    question open for the other instrumental reads. The v3 author said so before seeing any
+    comparison. If that is right, every remaining disagreement is a READ, and none is a
+    contested or otherwise consequential class -- which is what makes the residue benign.
+    """
+    a, b = _labelling("v2"), _labelling("v3")
+    differing = set()
+    for sid in sorted(set(a) & set(b)):
+        for vid in sorted(set(a[sid]) & set(b[sid])):
+            ea = set(a[sid][vid].get("effects", []))
+            eb = set(b[sid][vid].get("effects", []))
+            differing |= ea ^ eb
+    assert differing, "expected some disagreement; if there is none, F-31 needs rewriting"
+    assert all(k.startswith("READ:") for k in differing), (
+        f"disagreement has spread beyond instrumental reads: {sorted(differing)}. That is a "
+        f"different and much worse finding than F-31."
+    )
+
+
+LABELLINGS = {
+    # Three independent blind labellings of overlapping utterance sets, in the order they
+    # were written. v1 and v2 are retired to docs/authoring/ and kept as evidence; v3 is
+    # the live one. See F-26 (v1 vs v2) and F-31 (v2 vs v3).
+    "v1": "docs/authoring/heldout_v1_superseded.yaml",
+    "v2": "docs/authoring/heldout_v2_superseded.yaml",
+    "v3": "agentfw/eval/scopes_data/heldout_v3.yaml",
+}
+
+
+def _labelling(name: str) -> dict:
     import yaml
 
-    v1 = yaml.safe_load(
-        Path("docs/authoring/heldout_v1_superseded.yaml").read_text(encoding="utf-8")
-    )
-    v2 = yaml.safe_load(
-        Path("agentfw/eval/scopes_data/heldout_v2.yaml").read_text(encoding="utf-8")
-    )
-    return v1, v2
+    return yaml.safe_load(Path(LABELLINGS[name]).read_text(encoding="utf-8"))
+
+
+def _agreement(a: dict, b: dict) -> tuple[int, int, list[str]]:
+    """(whole-effect-set agreements, shared variants, contested-class disagreements)."""
+    from agentfw.eval.scenario import load_suite
+
+    contested = {
+        sc.id: f"{sc.contested_effect.verb.value}:{sc.contested_effect.resource_class.value}"
+        for sc in load_suite(split="heldout")
+        if sc.contested_effect is not None
+    }
+    same = n = 0
+    clashes: list[str] = []
+    for sid in sorted(set(a) & set(b)):
+        for vid in sorted(set(a[sid]) & set(b[sid])):
+            ea = set(a[sid][vid].get("effects", []))
+            eb = set(b[sid][vid].get("effects", []))
+            n += 1
+            same += ea == eb
+            k = contested.get(sid)
+            if k is not None and (k in ea) != (k in eb):
+                clashes.append(f"{sid}::{vid} ({k})")
+    return same, n, clashes
 
 
 def test_no_heldout_scope_invents_a_constraint_the_utterance_does_not_state():

@@ -1,3 +1,17 @@
+# SUPERSEDED (Phase 5). Retained as evidence, not loaded by anything.
+#
+# The Phase 3.5 held-out labels, written by an independent author under version 1 of the
+# brief over 60 utterances. `GoldScopes.load` no longer reads it: the held-out labels are
+# now `heldout_v3.yaml`, 207 utterances under version 2 of the brief (D-033).
+#
+# KEPT BECAUSE IT IS A THIRD INDEPENDENT LABELLING and its overlap with v3 is a measurement
+# nobody planned: two authors, both blind to every result, labelling the same 60 utterances
+# under briefs that differ by five stated clarifications. What that comparison says about
+# whether the clarifications worked is finding F-31.
+#
+# Its own header, written by its author, follows and is worth reading: five of the
+# complaints in it are what version 2 of the brief exists to answer.
+#
 # Held-out gold scopes, written from docs/authoring/heldout_scope_prompt.md and
 # docs/authoring/heldout_utterances.md alone. No other file in this repository was read.
 #

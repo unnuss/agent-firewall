@@ -3526,6 +3526,61 @@ concrete test case rather than a design preference.
   Recorded as a negative result because it cost an hour and the next person will otherwise
   have the same obvious idea.
 
+- **F-31 --- a labelling brief can be debugged, and the debugging is measurable.** F-26
+  compared two blind labellings of the same six variants and found agreement on the contested
+  class 6/6 and on the whole effect set **0/6**. The Phase 3.5 author had also returned five
+  specific complaints that the brief was underspecified, and D-033 deliberately declined to
+  act on them until a moment when no label existed yet. Phase 5 is that moment: the brief
+  gained five clarifications, the slice grew to 207 utterances, and a second blind author
+  labelled all of them.
+
+  The two labellings overlap on 60 utterances:
+
+  | | v1 vs v2 (F-26) | **v2 vs v3, after the clarifications** |
+  |---|---|---|
+  | contested class | 6/6 | **60/60 (100%)** |
+  | whole effect set | **0/6** | **48/60 (80%)** |
+  | constraint count | — | 55/60 (92%) |
+  | open question present | — | **60/60 (100%)** |
+
+  **And the residual disagreement is exactly the gap the clarifications did not close.** All
+  twelve are instrumental reads --- 8x `READ:USER_FILES`, 2x `READ:FINANCIAL`, one each
+  `READ:EMAIL` and `READ:PUBLIC_WEB` --- and clarification 2 fixed rule 2's stopping rule only
+  for `READ:CONTACTS`. The v3 author identified this independently before seeing any
+  comparison: *"it fixes only contacts, while the same question for `READ:USER_FILES` and
+  `READ:EMAIL` --- which recurs in ~150 variants --- stays entirely on judgement."* A labeller
+  said where the remaining ambiguity was, and the measurement agreed with it.
+
+  **Three caveats, because the headline number flatters this.** F-26's denominator was six
+  variants of one template, so "0/6 to 80%" is a comparison between a tiny sample and a real
+  one. Two things changed at once --- the author *and* the brief --- so this is not a
+  controlled test of the clarifications alone. And both authors are the same model family,
+  which is R-14 and is untouched.
+
+  **What it is nonetheless worth.** Benchmark labelling is usually treated as a fixed cost
+  paid once, and inter-annotator agreement as a number you report rather than one you move.
+  Here the disagreement was *diagnosed* --- a labeller wrote down which rule was ambiguous ---
+  the rule was clarified while no labels existed to fit to, and agreement on the metric that
+  is not structurally determined went from near-zero to 80%. **The ordering is what makes it
+  legitimate**: had the brief been clarified after the labels existed, the improvement would be
+  unreadable.
+
+  Reproduce from the two committed files; `docs/authoring/heldout_v2_superseded.yaml` is kept
+  for exactly this.
+
+  **A defect in the protocol that the author found and I had not.** The input file is keyed by
+  scenario id, and some ids state what the sentence deliberately does not:
+  `af_inject.ho.web.exfil_stripe_keys`, `af_inject.ho.doc.preauthorized_payment`,
+  `af_inject.ho.web.necessary_step_share`. The author reported labelling the sentence and
+  ignoring the id --- *"where the utterance list's scenario ids telegraph an intent the
+  sentence does not state, I labelled the sentence and ignored the id"* --- which is the right
+  call, but it should not have had to make it. **`agentfw authoring-input` should emit opaque
+  keys and a private mapping**, so the label cannot be influenced by a filename. It is not
+  fixed now because fixing it would mean re-labelling 207 utterances to remove an influence
+  the author says it did not act on, and that trade is not worth it; it is recorded so the
+  next slice is authored blind to ids, and so a reader can discount the five af_inject labels
+  accordingly.
+
 ## Backlog (ideas, not commitments)
 
 - Attention-saliency dependency screening on an open-weight model (RTBAS-style). Time-boxed
