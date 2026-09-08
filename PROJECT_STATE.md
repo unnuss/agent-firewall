@@ -2,10 +2,11 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-09-06 · **Phase 5 complete.** The validation ran at N=60: the benchmark
+**Last updated:** 2026-09-08 · **Phase 5 complete.** The validation ran at N=60: the benchmark
 was rebuilt to three worlds and 60 core triples, gold scopes were authored blind, and E-11 and
-E-12 were re-run on them. **D-034 is confirmed on adequate power (D-037).** · **Next: Phase 4,
-the cost model, sized against the contested third rather than the pooled rate. See section 6.**
+E-12 were re-run on them. **D-034 is confirmed on adequate power (D-037).** · **Next: Phase 5.5
+then Phase 6 — a runnable demo, then the first learned component. Phase 4 is deferred behind it
+by D-038. The whole plan to a finished project is in `docs/ROADMAP.md`; section 6 summarises.**
 
 ---
 
@@ -203,9 +204,26 @@ rate, because `not_licensed` is a proposition the monitor can act on and silence
 | **R-09** | Open-weight generalisation | Unresolved |
 | **R-16** | Prompt development and measurement share the dev slice | Intact: no prompt was touched in Phase 3.5 or Phase 5 |
 
-## 6. What Phase 4 inherits
+## 6. What comes next, and what Phase 4 inherits whenever it runs
 
-D-037 discharges Phase 3.5's obligations and narrows Phase 4's work:
+**Read `docs/ROADMAP.md` first — "The plan from here to a finished, postable project."** The
+target is a project that stands up on GitHub and LinkedIn and supports masters applications,
+not a paper; the paper's blocker is R-14 rather than the literature, and it is revisitable.
+**Phase 4 is deferred behind Phase 6 by D-038**, because every result in this project is
+currently a deterministic monitor plus a *prompted* model and there is no learned component
+anywhere. In order:
+
+1. **Phase 5.5 — `agentfw demo`, no API key.** Small, and first, so the repo is presentable
+   from here on regardless of what happens next. Also: there is **no `LICENSE` file** and the
+   README has **zero runnable commands**. Both are gaps for the stated audience.
+2. **Phase 6 — the learned intent compiler (D-038).** Registered predictions before training;
+   cheap baselines before the encoder; leave-one-world-out because surface-form memorisation is
+   the live risk; wired in as a non-structural signal (D-006) and **replayed**, because F-14
+   already taught that a scope-level score alone can rank a change that makes the system worse.
+   Baseline to beat: **15.0% leakage / 100% retention at ~$6 per run.**
+3. **Phase 7 presentation, then Phase 8 defensibility and the post.**
+
+When Phase 4 does run, D-037 has already narrowed it:
 
 - **The estimand is real and it is not the pooled rate.** 33 of 60 underspecified variants leak
   under no arm; 6 leak under all four. **Phase 4 should be sized against the contested third**,

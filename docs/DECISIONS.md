@@ -946,6 +946,66 @@ for it.
 
 ---
 
+### D-038 — A learned intent compiler comes before Phase 4, and it is the first ML in the project
+**Date:** 2026-09-08 · **Status:** accepted · **Re-orders:** D-037's "Phase 4 proceeds" ·
+**Adds dependencies**
+
+**Decision.** Phase 6 — **a learned intent compiler, evaluated against the prompted one** —
+runs before Phase 4's cost model. `torch`, `transformers` and `scikit-learn` are added as an
+optional `ml` extra, not as core dependencies.
+
+**Why the re-order, and it is a project-goal reason rather than a scientific one.** D-037 left
+Phase 4 well-posed and it remains so. But every result in this project is currently produced
+by a deterministic monitor plus a *prompted* frontier model. There is **no learned component
+anywhere**, which means the work demonstrates experiment design and systems engineering and
+not machine learning. Phase 4's cost model would not change that — it is decision theory. This
+is the same shape of call as D-036 (Phase 5 before Phase 4) and it is made explicitly, not by
+drift.
+
+**Why this is a real experiment and not a bolt-on.** The question has a measured baseline
+waiting for it: `per-class` on `claude-sonnet-5` reaches **15.0% leakage / 100% retention** at
+roughly **$6 per 207-utterance run**. So Phase 6 asks *can a small encoder read authority out
+of a sentence well enough to replace a frontier model at a thousandth of the cost, and what
+does it give up?* Both answers are publishable inside this project.
+
+**Three things make it well-posed, all of them already built.**
+
+1. **The labels are free and already committed.** `dev.yaml` and `heldout_v3.yaml` hold 293
+   blind-authored utterances over ~20 effect classes. The **contested-class** label in
+   particular is *structural* (D-010, D-018) — the template declares it — so the generator can
+   extend the training set without paying for a label.
+2. **There is a real generalisation test, by accident of good design.** Three worlds means
+   leave-one-world-out; dev/held-out means a second, harder split. A model that has merely
+   memorised template surface forms will fail LOWO, and **that is the risk to register against
+   rather than discover.**
+3. **F-33 supplies a prediction to register before training.** The `docedit` /
+   `WRITE:USER_FILES` cluster defeated all four prompted arms. If the learned compiler also
+   fails there, the residual is a property of the instruction and not of the compiler.
+
+**Where the model is allowed to sit, and this is not negotiable.** Outside the TCB, under
+D-006. It emits `Signal(structural=False)`, which the combinator already refuses to accept as
+grounds for a BLOCK, and it may **raise an ASK but never grant authority**. A learned compiler
+that produced a grant the monitor trusted would be wrong no matter how well it scored. The
+existing invariant test covers this; no new exception is created for it.
+
+**Alternatives.** (a) *Phase 4 first, as roadmapped.* Rejected for the reason above; it can
+follow. (b) *Fine-tune a frontier model through an API instead.* Rejected — it would not
+answer the cost question, and it would keep the project in the "better key wins" position it
+is trying to leave. (c) *Add the ML libraries as core dependencies.* Rejected: the TCB must
+stay installable with `pydantic` and `pyyaml` alone, and a reviewer should be able to verify
+that the trusted path has no ML in it by reading `pyproject.toml`.
+
+**Dependency note, per CLAUDE.md.** `torch`, `transformers`, `scikit-learn` under
+`[project.optional-dependencies] ml`. Nothing in `agentfw/core/` may import them, and a test
+asserts it.
+
+**Revisit if.** The learned compiler cannot clear the retention floor D-019 sets as a
+gate rather than a caveat, in which case report it as a negative result and move to Phase 4 rather than
+grinding on architectures — the finding *"a small encoder cannot do this and here is the error
+analysis"* is worth more than a tuned number.
+
+---
+
 ### D-037 — D-034 is confirmed on adequate power; the band is real and it has a shape
 **Date:** 2026-09-06 · **Status:** accepted · **Confirms:** D-034 · **Confirms:** D-035
 

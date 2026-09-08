@@ -243,6 +243,92 @@ reopened and the ladder question returns.
 > **It did not.** E-11 predictions 10 and 13 were the operative form of this criterion and
 > both are falsified. See D-034.
 
+## The plan from here to a finished, postable project
+
+**Written 2026-09-08, after Phase 5 closed.** The target is a project that stands up on GitHub
+and LinkedIn and supports masters applications — *not* a paper. That is a deliberate choice
+(the paper's blocker is R-14, not the literature) and it is revisitable later. Phase 4's cost
+model is **deferred behind Phase 6** by D-038.
+
+The finish line, so it is possible to know when this is done:
+
+1. `git clone && uv sync && agentfw demo` shows the firewall allowing, asking and blocking —
+   **with no API key**.
+2. A GIF of that at the top of the README.
+3. A **learned** intent compiler with a measured comparison against the prompted one, on
+   leakage, retention, contrast and cost per run.
+4. A README readable in 60 seconds, with the depth still reachable underneath it.
+5. A defensibility pass: the questions an interviewer will ask, and where each answer lives.
+6. One LinkedIn post.
+
+### Phase 5.5 — make it runnable (do this *first*, it is insurance)
+
+Small, and it goes first so the repo is presentable from here onward regardless of what
+happens to the rest of the plan.
+
+- `agentfw demo` — replays one committed episode and prints the ALLOW / ASK / BLOCK trace with
+  the monitor's own explanations. **Must work with no key**: the episodes are committed, and
+  replay is already deterministic and free.
+- `uv sync` works from a clean clone; a `LICENSE` exists; the repo has a description and topics.
+
+*Exit:* someone who has never seen the project can watch it refuse something in under a minute.
+
+### Phase 6 — the learned intent compiler (D-038)
+
+The substance, and the first ML in the project. Baseline to beat is already measured and
+published: **15.0% leakage / 100% retention at ~$6 per 207-utterance run.**
+
+1. **Register the predictions before training anything.** Same discipline as E-00j and E-14.
+   At minimum: where it fails (F-33's `docedit` cluster), whether TF-IDF matches the encoder,
+   and whether leave-one-world-out collapses.
+2. **Build and commit the dataset.** 293 blind-authored utterances over ~20 effect classes from
+   `dev.yaml` + `heldout_v3.yaml`; extend via the generator, whose contested-class labels are
+   structural and therefore free.
+3. **Baselines in cost order: majority class → TF-IDF + logistic regression → fine-tuned small
+   encoder.** The cheap baselines are not filler. **If TF-IDF matches the encoder, that is the
+   finding**, and it is a more interesting one than a tuned number.
+4. **Evaluate leave-one-world-out and dev/held-out**, because the utterances are
+   template-generated and surface-form memorisation is the live risk (R-14 again).
+5. **Wire it in as a non-structural signal** — D-006: may raise an ASK, may never grant — and
+   **replay on the committed episodes** so the result is a verdict-level number and not only an
+   F1. A scope-level score alone would repeat the mistake F-14 taught: *a compiler change is not
+   an improvement until the replay says so.*
+
+*Exit:* a table putting the learned compiler beside the prompted one on leakage, retention,
+contrast and cost. **Either direction ships.** If a small encoder cannot do this, report the
+error analysis and stop — do not grind on architectures (D-038).
+
+*Optional follow-on, only if step 5 is decent:* a **cascade** — cheap local model handles the
+confident cases, escalates the rest to the frontier compiler. Note for whoever picks this up:
+this is *compiler routing* and is **not** the M0–M5 authority ladder that D-032 retired. Do not
+conflate them; it needs its own decision entry.
+
+### Phase 7 — presentation
+
+Done *after* Phase 6, so it is done once rather than twice.
+
+- Restructure `README.md`: what it is → GIF → headline number → quickstart → how it works →
+  results. The current phase-by-phase narrative moves to `docs/RESEARCH_LOG.md`, where it is an
+  asset for anyone who digs instead of a wall for everyone who does not.
+- Keep exactly two result tables above the fold: the 2x2 and F-34's disposition table. They are
+  the two that a non-specialist can read.
+
+### Phase 8 — defensibility, then post
+
+- The 10–15 questions someone will actually ask — *why a clustered bootstrap; what is D-006 and
+  why does it constrain the design; walk me through a result that surprised you* — and where in
+  the repo each answer lives. **Keep this file out of the repo**; it is preparation, not a
+  deliverable.
+- Then the LinkedIn post: the GIF and one number.
+
+### Explicitly not in this plan
+
+Phase 4's cost model (deferred, D-038), the paper (deferred; blocker is R-14), multi-agent,
+memory poisoning, computer-use (out of scope by `PROJECT_SPEC.md` section 7), and any scenario
+authoring beyond what Phase 6 needs. **Scope is defended, not expanded.**
+
+---
+
 ## Phase 4 — Cost model, flow control, and full integration
 
 **Re-scoped by D-034 and F-29 before it starts.** Two deliverables gained a specific,
