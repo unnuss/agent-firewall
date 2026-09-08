@@ -122,14 +122,17 @@ def couple(record: CompiledScope, rule: str) -> CompiledScope:
         return record.model_copy(deep=True)
     return record.model_copy(
         deep=True,
+        # ``model_copy`` does not validate, so these must already be the declared tuple
+        # type. Passing a list serialized to the same JSON array but made every write emit
+        # a pydantic serializer warning, which is how a real defect would have been missed.
         update={
-            "effects": kept,
-            "open_questions": list(record.open_questions)
-            + [
+            "effects": tuple(kept),
+            "open_questions": record.open_questions
+            + tuple(
                 f"whether {k} was authorized: the compilation granted it and questioned it "
                 f"in the same breath"
                 for k in withheld
-            ],
+            ),
         },
     )
 

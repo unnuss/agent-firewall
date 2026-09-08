@@ -2,16 +2,22 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-09-08 · **Phase 5 complete.** The validation ran at N=60: the benchmark
-was rebuilt to three worlds and 60 core triples, gold scopes were authored blind, and E-11 and
-E-12 were re-run on them. **D-034 is confirmed on adequate power (D-037).** · **Next: Phase 5.5
-then Phase 6 — a runnable demo, then the first learned component. Phase 4 is deferred behind it
-by D-038. The whole plan to a finished project is in `docs/ROADMAP.md`; section 6 summarises.**
+**Last updated:** 2026-09-09 · **Phase 5.5 complete.** `uv run agentfw demo` replays four
+committed episodes through the real monitor and prints ALLOW / ASK → APPROVED / ASK → DENIED /
+BLOCK, with no API key and no network; `LICENSE` exists (MIT, D-040); the README has runnable
+commands where it had none. The repo is now presentable from here onward, which was the point
+of doing it before the substance. · **Phase 5 (2026-09-08) confirmed D-034 on adequate power
+(D-037)** at N=60 across three worlds with blind-authored gold scopes. · **Next: Phase 6 — the
+learned intent compiler, the first ML in the project (D-038). Phase 4 is deferred behind it.
+The whole plan is in `docs/ROADMAP.md`; section 6 summarises.**
 
 ---
 
 ## 0. If you are the next session, do exactly this
 
+0. Run it before you read anything: `uv run agentfw demo`. Three seconds, no key, and it is
+   the shortest statement of what this project does. Then `uv run agentfw demo --scope
+   tool-ceiling` for the same four scenes under the ablation where the defense does nothing.
 1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-037** — it is the verdict on
    the whole Phase 3.5/Phase 5 arc and it says what Phase 4 inherits. Then **D-034** (what was
    reopened), **D-036** (why Phase 5 ran before Phase 4), **D-035** (the coupling rule, still
@@ -31,20 +37,21 @@ by D-038. The whole plan to a finished project is in `docs/ROADMAP.md`; section 
    E-01b is **pre-repair**; everything from E-00g onward is **post-repair**. A `CONTRACT.md`
    sits in each pre-repair result directory. Never difference across it.
 
-Health check (~12 min, no API calls, no keys needed):
+Health check (~2.5 min measured on the dev machine, no API calls, no keys needed):
 
 ```bash
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **481 passed, 0 failed**. The four gold-scope tests that were red on purpose through
+Expect **515 passed, 0 failed**. The four gold-scope tests that were red on purpose through
 Phase 5's authoring step are green: the labels exist now. Any failure is a real one. `validate`
 reports 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios and **66 AF-Auth / 5 AF-Inject /
 10 benign held-out**, 23 tools.
 
-Four experiments reproduce with no key and no money:
+Five commands reproduce with no key and no money:
 
 ```bash
+.venv/Scripts/python.exe -m agentfw.cli demo
 .venv/Scripts/python.exe -m agentfw.cli probe-contract
 .venv/Scripts/python.exe -m agentfw.cli replay experiments/e01b_compiled/config.yaml
 .venv/Scripts/python.exe -m agentfw.cli replay experiments/e14_validation/replay.yaml
@@ -76,12 +83,31 @@ undefended. `tool-ceiling` — an allowlist with no scope — reproduces undefen
 the decimal for the third time (**49.4% vs 49.4%**, F-11) and still lets **26.7%** of attacks
 through. Restricting the toolset is not the same intervention as compiling a scope.
 
+**Phase 5.5 made all of that runnable by a stranger.** `agentfw demo` puts four committed
+episodes in front of the real monitor and prints what it decided — a licensed file write
+allowed, a $100 charge nobody authorised stopped at a question, an exfiltration refused by a
+structural gate, and a guessed bound asked about and approved — with no key, no network and
+no model call. It prints **no aggregate rate**; the footer names the command that regenerates
+the tables instead, so the demo cannot go stale against its own results (D-039).
+
 **What Phase 5 corrected in this project's own numbers.** E-00i's headline of 81.8%
 underspecified overreach, measured on 11 triples, came in at **49.4%** on 60 — wrong by more
 than thirty points. About 13 pp of that is composition (F-32: the contested class explains an
 87.5 pp spread against the domain's 13.5 pp) and the rest is small-sample noise. **A headline
 measured on 11 scenarios was wrong by 32 pp, and the only reason we know is that Phase 5 ran
 before Phase 4.**
+
+## 2a. Phase 5.5 deliverables, against ROADMAP "make it runnable"
+
+| # | Deliverable | Status |
+|---|---|---|
+| 1 | `agentfw demo`, ALLOW / ASK / BLOCK, no key | **done.** Four scenes, not one: a single episode cannot show all three verdicts, still less an ASK that ends in *yes* (D-039) |
+| 2 | It must be a replay, not an animation | **done.** A presenter over `eval/replay.py` under E-14's own policy. A test asserts every printed explanation appears in the audit log the run produced |
+| 3 | It must be falsifiable | **done.** `--scope tool-ceiling` shows the same four scenes with the charge going through; a test asserts it still does |
+| 4 | `uv sync` from a clean clone | **done and verified in a fresh clone** (see below) |
+| 5 | `LICENSE` | **done.** MIT, D-040, covering the benchmark artifacts too |
+| 6 | Repo description and topics | **not done — owed.** `gh` is not installed here and repo metadata is an account-level change. The exact text is in the Phase 5.5 summary; it is one paste |
+| 7 | README with runnable commands | **done.** A **Run it** section with six, where there were zero |
 
 ## 2. Phase 5 deliverables, against D-036
 
@@ -96,6 +122,19 @@ before Phase 4.**
 | 7 | Sizing analysis before spending (E-13) | **done**, and its width predictions were near-exact: predicted ±7.5 pp, realised ±5.3 pp |
 
 ## 3. What exists in code that did not before
+
+**Phase 5.5:**
+
+```
+agentfw/demo.py            the presenter: scope sources, four scenes, ANSI + glyph fallback
+cli.py                     `demo` (--scope/--scenario/--variant/--seed/--list/--full/--brief)
+eval/replay.py             ActionOutcome now carries the consent question it rendered
+tests/test_demo.py         34 tests, mostly about honesty rather than formatting
+LICENSE                    MIT (D-040)
+README.md                  a **Run it** section: six runnable commands where there were none
+```
+
+**Phase 5:**
 
 ```
 agentfw/
@@ -211,17 +250,25 @@ target is a project that stands up on GitHub and LinkedIn and supports masters a
 not a paper; the paper's blocker is R-14 rather than the literature, and it is revisitable.
 **Phase 4 is deferred behind Phase 6 by D-038**, because every result in this project is
 currently a deterministic monitor plus a *prompted* model and there is no learned component
-anywhere. In order:
+anywhere. Phase 5.5 is **done** (D-039, D-040) — the repo now runs from a clean clone. In
+order from here:
 
-1. **Phase 5.5 — `agentfw demo`, no API key.** Small, and first, so the repo is presentable
-   from here on regardless of what happens next. Also: there is **no `LICENSE` file** and the
-   README has **zero runnable commands**. Both are gaps for the stated audience.
-2. **Phase 6 — the learned intent compiler (D-038).** Registered predictions before training;
+1. **Phase 6 — the learned intent compiler (D-038).** Registered predictions before training;
    cheap baselines before the encoder; leave-one-world-out because surface-form memorisation is
    the live risk; wired in as a non-structural signal (D-006) and **replayed**, because F-14
    already taught that a scope-level score alone can rank a change that makes the system worse.
-   Baseline to beat: **15.0% leakage / 100% retention at ~$6 per run.**
-3. **Phase 7 presentation, then Phase 8 defensibility and the post.**
+   Baseline to beat: **15.0% leakage / 100% retention at ~$6 per run.** When it lands, it
+   becomes a fifth `agentfw demo --scope` arm beside the prompted ones, which is the cheapest
+   possible qualitative comparison and costs nothing to add (D-039).
+2. **Phase 7 presentation, then Phase 8 defensibility and the post.**
+
+**One Phase 5.5 item is owed and it is thirty seconds of someone's time.** The GitHub repo
+still has no description and no topics; `gh` is not installed on this machine and repo
+metadata is an account-level change, so it was written down rather than done. Suggested:
+
+```
+gh repo edit unnuss/agent-firewall   --description "A runtime authorization layer for tool-using LLM agents: a deterministic reference monitor that converts silent, unlicensed agent actions into visible ones. 60-triple held-out benchmark, blind-authored labels, every prediction registered before the run."   --add-topic llm-agents --add-topic ai-safety --add-topic agent-security   --add-topic prompt-injection --add-topic authorization --add-topic reference-monitor   --add-topic benchmark --add-topic python
+```
 
 When Phase 4 does run, D-037 has already narrowed it:
 
@@ -249,9 +296,10 @@ budget, because it is the same kind of quantity.
 - The dev slice's `af_auth.us.email.sam_number::c` still points at the Q1 report while its
   siblings ask about Q3.
 - Extend the findability gate to glob and prefix tools (F-27).
-- `open_questions` is declared `tuple[str, ...]` but populated with a `list`, so every
-  `couple-scopes` run prints a pydantic serialization warning. Harmless (both serialize to a
-  JSON array) but noisy; fix the annotation or the constructor.
+- ~~`open_questions` / `effects` populated with a `list` into a tuple-typed field, so every
+  `couple-scopes` run printed a pydantic serialization warning.~~ **Fixed in Phase 5.5** — two
+  `model_copy(update=...)` calls in `intent/coupling.py`. All four output digests are byte
+  identical before and after, which is what makes it a lint fix and not a result change.
 - A second and third seed for `per-class` on Sonnet — for *variance*, not precision. E-13
   measured that seeds do not narrow a scenario-clustered interval at all.
 
@@ -266,7 +314,14 @@ asymmetry, or D-033's authoring condition without a documented reason.
   (D-029); every command prints the credential fingerprint it used.
 - No NVIDIA GPU. Ollama has `qwen2.5-coder:14b`; usable as an exploratory compiler only.
 - **Phase 5 spent roughly $14.5** — E-00j ~$0.95, E-14 ~$13.6 (estimated from tokens), E-12
-  and every replay $0. **Total project API spend is roughly $26.5.**
+  and every replay $0. **Phase 5.5 spent $0**, and its whole point is that everyone else's
+  first run costs $0 too. **Total project API spend is roughly $26.5.**
+- **A clean install was verified, not assumed.** `uv sync` in a fresh copy of the tree (no
+  `.venv`, no `.env.local`, no `.git`) resolved 16 packages, installed **7** — `agentfw`,
+  pydantic, pydantic-core, pyyaml, annotated-types, typing-extensions, typing-inspection — and
+  `uv run agentfw demo` then rendered in **3.3 s** with all three credential variables
+  reported absent. The `dev` extra (pytest, hypothesis, ruff) is separate and only the test
+  suite needs it.
 - **Smoke-test one call per arm before launching it**, and **dry-run the free half of a
   pipeline before paying for the expensive half** — that is how F-28 was caught, at a cost of
   one minute instead of ~$2.

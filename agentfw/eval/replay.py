@@ -68,6 +68,9 @@ class ActionOutcome(BaseModel):
     policy_verdict: str
     gates: tuple[str, ...] = ()
     asked: bool = False
+    # The consent-integrity rendering the human was shown (D-008). Carried so a reader can
+    # see the question rather than only that one was raised; no metric is computed from it.
+    ask_text: str | None = None
     consent_approved: bool | None = None
     effect_classes: tuple[str, ...] = ()
     executed: bool = False
@@ -255,6 +258,7 @@ def replay_episode(
                 policy_verdict=event.policy_verdict.value,
                 gates=event.gates_fired,
                 asked=event.ask_text is not None,
+                ask_text=event.ask_text,
                 consent_approved=event.consent_approved,
                 effect_classes=tuple(str(e.effect_class) for e in event.effects),
                 executed=result.ok,

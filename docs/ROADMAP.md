@@ -261,7 +261,43 @@ The finish line, so it is possible to know when this is done:
 5. A defensibility pass: the questions an interviewer will ask, and where each answer lives.
 6. One LinkedIn post.
 
-### Phase 5.5 — make it runnable (do this *first*, it is insurance)
+### Phase 5.5 — make it runnable ✅ complete (2026-09-09)
+
+**Outcome.** All of it shipped, and the demo grew from one episode to four because one cannot
+show ALLOW, ASK and BLOCK — let alone an ASK that ends in *yes*, which is the beat that keeps
+ASK from reading as a slower BLOCK (D-039). `agentfw/demo.py` is a presenter over
+`eval/replay.py` under E-14's own policy: no decision logic, no hardcoded rate, every printed
+sentence read back out of the audit log the run produced, and `--scope tool-ceiling` shipped
+alongside it so the same four scenes can be watched failing. `tests/test_demo.py` holds all
+four constraints as assertions, including that the ablation still lets the $100 charge
+through.
+
+Three things the phase turned up that were not on the list. The demo would have crashed on a
+fresh Windows clone — cp1252 cannot encode `─`, `→` or `│` — so glyph selection now probes the
+attached stream. Under `--scope gold` the preparatory `payments_list_methods` read is
+**refused** where the compiled scope allows it — the blind author did not license
+`READ:FINANCIAL` for that underspecified utterance — so the reference label reaches the same
+prevented outcome by a stricter route. Not a defect, and not F-29; left visible. And
+`couple-scopes`' pydantic serialization warning turned out to be two `model_copy(update=...)`
+calls passing lists into tuple-typed fields — fixed, with all four output digests unchanged,
+which is what makes it a lint fix rather than a result change.
+
+**Nothing was measured, so `EXPERIMENTS.md` gains nothing.** No finding, no registered
+prediction, no number. Two shared-code touches were made and both were shown neutral rather
+than argued to be: the coupling fix reproduces its four output digests exactly, and
+`ActionOutcome` gaining `ask_text` leaves `perclass-sonnet-s1__M0-consequential`'s committed
+`report.json` and `report.md` byte identical on a fresh 621-episode replay.
+
+Delivered: `agentfw demo` (+ `--scope`, `--scenario`, `--variant`, `--seed`, `--list`,
+`--full`, `--brief`, `--no-color`), `LICENSE` (MIT, D-040), pyproject metadata and keywords,
+a README **Run it** section with six runnable commands where there were none, and 34 new
+tests.
+
+*Exit criterion, met:* someone who has never seen the project can watch it refuse something in
+under a minute, with no key.
+
+Original plan follows.
+
 
 Small, and it goes first so the repo is presentable from here onward regardless of what
 happens to the rest of the plan.

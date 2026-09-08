@@ -4,6 +4,28 @@ version = "0.1.0"
 description = "Agent Firewall — a runtime authorization layer for tool-using LLM agents"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Unnus Ahmad Usmani" }]
+keywords = [
+    "llm-agents",
+    "ai-safety",
+    "authorization",
+    "reference-monitor",
+    "prompt-injection",
+    "agent-security",
+    "benchmark",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+
+# The trusted computing base installs with these two and nothing else, and that is a claim
+# a reviewer should be able to check by reading this file (D-006, D-038). Anything that
+# calls a model, trains one, or plots a result belongs in an extra below.
 dependencies = [
     "pydantic>=2.9",
     "pyyaml>=6.0",

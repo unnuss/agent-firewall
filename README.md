@@ -1,12 +1,14 @@
 # Agent Firewall
 
 > A runtime authorization layer for tool-using LLM agents.
-> **Status: Phase 5 complete.** Sandbox, agent, a 60-triple held-out benchmark across three
+> **Status: Phase 5.5 complete — `uv run agentfw demo` works from a clean clone, with no
+> API key.** Behind it: a sandbox, an agent, a 60-triple held-out benchmark across three
 > worlds with blind-authored gold labels, a deterministic reference monitor whose structural
 > properties are enforced as property tests, and an intent compiler validated end to end at
-> N=60 with every prediction registered before the run. 481 tests, ~3,000 baseline episodes,
-> 34 registered predictions scored, 35 findings — several of which correct earlier claims in
-> this file. Phase 4, the cost model, is next.
+> N=60 with every prediction registered before the run. 515 tests, ~3,000 baseline
+> episodes, 34 registered predictions scored, 35 findings — several of which correct earlier
+> claims in this file. **Next: Phase 6, a learned intent compiler and the first ML in the
+> project (D-038); Phase 4's cost model is deferred behind it.**
 
 An agent being *capable* of an action does not mean it should be *allowed* to perform it.
 
@@ -17,6 +19,49 @@ structured model of what the user actually licensed before it can happen.
 ```
 USER  →  AGENT  →  PROPOSED ACTION  →  AGENT FIREWALL  →  ALLOW / ASK / BLOCK  →  TOOL
 ```
+
+## Run it
+
+**No API key, no network, no cost.** The agent trajectories are committed, the monitor is
+deterministic, so the whole thing replays from files in the repository.
+
+```bash
+git clone https://github.com/unnuss/agent-firewall && cd agent-firewall
+uv sync
+uv run agentfw demo
+```
+
+`agentfw demo` replays four recorded episodes through the reference monitor and prints what
+it decided and why. You will watch it allow a licensed file write, stop an agent that was
+about to pay a $100 invoice nobody authorised, refuse an exfiltration a web page talked the
+agent into, and ask a question it then gets a *yes* to. Every verdict and every sentence of
+explanation is read back out of the hash-chained audit log that run produced.
+
+Then make it fail, which is the more useful half:
+
+```bash
+uv run agentfw demo --scope tool-ceiling
+```
+
+That swaps the compiled scope for an allowlist with no scope at all — the ablation that
+reproduces undefended overreach to the decimal (F-11). The payment goes through, and the
+demo says so in the same words it used to say it was stopped.
+
+### Everything else that reproduces with no key
+
+```bash
+uv sync --extra dev
+uv run pytest -q                                          # 515 tests, ~2.5 min
+uv run agentfw validate                                   # every scenario loads and gates
+uv run agentfw replay experiments/e14_validation/replay.yaml   # E-14: the headline 2x2
+uv run agentfw replay experiments/e01b_compiled/config.yaml    # E-01b: the Phase 3 replay
+uv run agentfw probe-contract                             # F-20: what the repair moved
+```
+
+The three commands that *do* need a credential are `agentfw run` (a fresh undefended
+baseline), `agentfw compile-scopes` (one model call per utterance) and `agentfw models`.
+Every command prints the credential fingerprint it used before it does anything, so a run
+against the wrong key is visible in its own log rather than three hours later (D-029).
 
 ## The problem, in two halves
 
@@ -532,6 +577,11 @@ breaks. Fixed, fail-closed (F-15).
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every architectural decision, with reasoning |
 | [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) | Experiments defined in advance, with registered predictions |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phases 1–7 |
+
+## License
+
+MIT — see [`LICENSE`](LICENSE). The benchmark scenarios, gold scopes and committed
+experiment results are covered by the same terms.
 
 ## Honest positioning
 

@@ -11,11 +11,13 @@ agentfw probe-contract           # F-20: how much committed evidence the repair 
 agentfw couple-scopes            # E-12: withhold grants the compiler itself questioned
 agentfw authoring-input          # D-033: the utterances an independent labeller is given
 agentfw smoke                    # one scripted episode, no network, no key
+agentfw demo                     # watch it allow, ask and refuse; no key, no network
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -679,6 +681,37 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_demo(args: argparse.Namespace) -> int:
+    """Phase 5.5: the sixty-second look at the system, from committed artifacts only."""
+    from agentfw import demo as demo_mod
+
+    if args.list:
+        rows = demo_mod.available()
+        for scenario_id, variant_id, seed, utterance in rows:
+            print(f"{scenario_id}::{variant_id} (seed {seed})  {utterance[:72]}")
+        print(f"{NEWLINE}{len(rows)} committed episode(s). Replay one with --scenario <id>.")
+        return 0
+
+    # A fresh clone on Windows gets a cp1252 stdout. Ask for UTF-8 where the stream
+    # supports it, and fall back to ASCII box drawing where it does not, rather than
+    # greeting a first-time reader with a UnicodeEncodeError.
+    with contextlib.suppress(Exception):
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    color = demo_mod.Ink.detect(force_off=args.no_color).enabled
+    print(
+        demo_mod.render(
+            args.scope,
+            scenario=args.scenario,
+            variant=args.variant,
+            seed=args.seed,
+            color=color,
+            glyphs=demo_mod.Glyphs.detect(),
+            ask_text_mode=("all" if args.full else "none" if args.brief else "flagged"),
+        )
+    )
+    return 0
+
+
 def cmd_smoke(args: argparse.Namespace) -> int:
     from agentfw.agent.loop import run_episode
     from agentfw.agent.providers.scripted import ScriptedClient, call, say
@@ -811,6 +844,33 @@ def main(argv: list[str] | None = None) -> int:
     cp = sub.add_parser("compare")
     cp.add_argument("results", nargs="+", help="[label=]path/to/results ...")
     cp.set_defaults(fn=cmd_compare)
+
+    from agentfw.demo import DEFAULT_SCOPE, SCOPE_CHOICES
+
+    dm = sub.add_parser(
+        "demo",
+        help="replay committed episodes through the firewall and print ALLOW/ASK/BLOCK",
+    )
+    dm.add_argument(
+        "--scope",
+        default=DEFAULT_SCOPE,
+        choices=[c.label for c in SCOPE_CHOICES],
+        help="where the episode's starting authority comes from (default: %(default)s)",
+    )
+    dm.add_argument("--scenario", help="replay this scenario id instead of the curated scenes")
+    dm.add_argument("--variant", help="with --scenario: which variant (default: the first)")
+    dm.add_argument("--seed", type=int, help="with --scenario: which recorded seed")
+    dm.add_argument("--list", action="store_true", help="print every replayable episode")
+    dm.add_argument(
+        "--full",
+        action="store_true",
+        help="print every consent question in full, not just the showcased one",
+    )
+    dm.add_argument(
+        "--brief", action="store_true", help="verdicts only; print no consent question"
+    )
+    dm.add_argument("--no-color", action="store_true", help="plain text, no ANSI")
+    dm.set_defaults(fn=cmd_demo)
 
     sub.add_parser("smoke").set_defaults(fn=cmd_smoke)
 
