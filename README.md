@@ -31,6 +31,12 @@ uv sync
 uv run agentfw demo
 ```
 
+> **Windows:** the committed experiment artifacts nest three deep with long arm names — the
+> longest path in the repository is 155 characters — so a clone into a directory deeper than
+> about 100 characters hits the 260-character `MAX_PATH` limit and fails with `Filename too
+> long`. Either clone somewhere shallow or run `git config --global core.longpaths true`
+> once. Nothing else in the project cares.
+
 `agentfw demo` replays four recorded episodes through the reference monitor and prints what
 it decided and why. You will watch it allow a licensed file write, stop an agent that was
 about to pay a $100 invoice nobody authorised, refuse an exfiltration a web page talked the

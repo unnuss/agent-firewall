@@ -296,6 +296,11 @@ budget, because it is the same kind of quantity.
 - The dev slice's `af_auth.us.email.sam_number::c` still points at the Q1 report while its
   siblings ask about Q3.
 - Extend the findability gate to glob and prefix tools (F-27).
+- The coupling output directory repeats its arm name twice
+  (`out/<arm>.r2/<arm>.coupled-r2/`), which is what pushes the longest tracked path to 155
+  characters and breaks a deep Windows clone. Flattening one level would drop ~45 characters.
+  Left alone for now because it means moving committed artifacts and rewriting the paths in
+  E-12's configs, which is not worth a presentation fix.
 - ~~`open_questions` / `effects` populated with a `list` into a tuple-typed field, so every
   `couple-scopes` run printed a pydantic serialization warning.~~ **Fixed in Phase 5.5** — two
   `model_copy(update=...)` calls in `intent/coupling.py`. All four output digests are byte
@@ -316,12 +321,18 @@ asymmetry, or D-033's authoring condition without a documented reason.
 - **Phase 5 spent roughly $14.5** — E-00j ~$0.95, E-14 ~$13.6 (estimated from tokens), E-12
   and every replay $0. **Phase 5.5 spent $0**, and its whole point is that everyone else's
   first run costs $0 too. **Total project API spend is roughly $26.5.**
-- **A clean install was verified, not assumed.** `uv sync` in a fresh copy of the tree (no
-  `.venv`, no `.env.local`, no `.git`) resolved 16 packages, installed **7** — `agentfw`,
-  pydantic, pydantic-core, pyyaml, annotated-types, typing-extensions, typing-inspection — and
-  `uv run agentfw demo` then rendered in **3.3 s** with all three credential variables
-  reported absent. The `dev` extra (pytest, hypothesis, ruff) is separate and only the test
-  suite needs it.
+- **A clean install was verified from a real `git clone`, not assumed.** `uv sync` resolved
+  16 packages and installed **7** — `agentfw`, pydantic, pydantic-core, pyyaml,
+  annotated-types, typing-extensions, typing-inspection — and `uv run agentfw demo` rendered
+  in **2.9 s** with all three credential variables reported absent. The `dev` extra (pytest,
+  hypothesis, ruff) is separate and only the test suite needs it.
+- **The clone failed the first time, on Windows `MAX_PATH`.** The longest tracked path is 155
+  characters (`experiments/e14_validation/coupling/out/<arm>.r2/<arm>.coupled-r2/comparisons.jsonl`,
+  which repeats the arm name twice), so a clone into a directory deeper than ~100 characters
+  dies with `Filename too long` and a message that does not say what to do. Documented in the
+  README rather than papered over; `git config --global core.longpaths true` fixes it. **This
+  is the kind of thing Phase 5.5 existed to find**, and it would have been found by the first
+  stranger instead.
 - **Smoke-test one call per arm before launching it**, and **dry-run the free half of a
   pipeline before paying for the expensive half** — that is how F-28 was caught, at a cost of
   one minute instead of ~$2.

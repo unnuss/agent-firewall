@@ -272,9 +272,12 @@ alongside it so the same four scenes can be watched failing. `tests/test_demo.py
 four constraints as assertions, including that the ablation still lets the $100 charge
 through.
 
-Three things the phase turned up that were not on the list. The demo would have crashed on a
-fresh Windows clone — cp1252 cannot encode `─`, `→` or `│` — so glyph selection now probes the
-attached stream. Under `--scope gold` the preparatory `payments_list_methods` read is
+Four things the phase turned up that were not on the list, three of which only a real clone
+could have found. The demo would have crashed on a fresh Windows console — cp1252 cannot
+encode `─`, `→` or `│` — so glyph selection now probes the attached stream. **The clone itself
+failed** on the first attempt: the longest tracked path is 155 characters and Windows'
+`MAX_PATH` is 260, so a clone into a deep directory dies with `Filename too long`; the README
+now says so and names the one-line `core.longpaths` fix. Under `--scope gold` the preparatory `payments_list_methods` read is
 **refused** where the compiled scope allows it — the blind author did not license
 `READ:FINANCIAL` for that underspecified utterance — so the reference label reaches the same
 prevented outcome by a stricter route. Not a defect, and not F-29; left visible. And
