@@ -1,0 +1,387 @@
+{
+  "draws": {
+    "R1-tfidf": 5,
+    "R3-finetuned": 3
+  },
+  "experiment": "E-15b",
+  "fractions": [
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "n_test": 207,
+  "note": "Sizing measurement, not a hypothesis test about any arm. Nothing here selects a configuration, a rung, a training size or an arm; E-15's numbers stand.",
+  "points": [
+    {
+      "contrast": 0.1667,
+      "exact": 0.1787,
+      "fraction": 0.25,
+      "leakage": 0.0,
+      "n_examples": 20,
+      "n_scenarios": 12,
+      "retention": 0.1818,
+      "rung": "R1-tfidf",
+      "seed": 1
+    },
+    {
+      "contrast": 0.1364,
+      "exact": 0.1304,
+      "fraction": 0.25,
+      "leakage": 0.0,
+      "n_examples": 25,
+      "n_scenarios": 12,
+      "retention": 0.1515,
+      "rung": "R1-tfidf",
+      "seed": 2
+    },
+    {
+      "contrast": 0.1515,
+      "exact": 0.1353,
+      "fraction": 0.25,
+      "leakage": 0.0,
+      "n_examples": 19,
+      "n_scenarios": 12,
+      "retention": 0.197,
+      "rung": "R1-tfidf",
+      "seed": 3
+    },
+    {
+      "contrast": 0.2576,
+      "exact": 0.1401,
+      "fraction": 0.25,
+      "leakage": 0.0,
+      "n_examples": 23,
+      "n_scenarios": 12,
+      "retention": 0.2727,
+      "rung": "R1-tfidf",
+      "seed": 4
+    },
+    {
+      "contrast": 0.1364,
+      "exact": 0.1401,
+      "fraction": 0.25,
+      "leakage": 0.0,
+      "n_examples": 23,
+      "n_scenarios": 12,
+      "retention": 0.197,
+      "rung": "R1-tfidf",
+      "seed": 5
+    },
+    {
+      "contrast": 0.3182,
+      "exact": 0.2415,
+      "fraction": 0.5,
+      "leakage": 0.0,
+      "n_examples": 41,
+      "n_scenarios": 24,
+      "retention": 0.3636,
+      "rung": "R1-tfidf",
+      "seed": 1
+    },
+    {
+      "contrast": 0.1515,
+      "exact": 0.1643,
+      "fraction": 0.5,
+      "leakage": 0.0,
+      "n_examples": 44,
+      "n_scenarios": 24,
+      "retention": 0.1818,
+      "rung": "R1-tfidf",
+      "seed": 2
+    },
+    {
+      "contrast": 0.1515,
+      "exact": 0.1884,
+      "fraction": 0.5,
+      "leakage": 0.0,
+      "n_examples": 40,
+      "n_scenarios": 24,
+      "retention": 0.2121,
+      "rung": "R1-tfidf",
+      "seed": 3
+    },
+    {
+      "contrast": 0.3333,
+      "exact": 0.2512,
+      "fraction": 0.5,
+      "leakage": 0.0,
+      "n_examples": 44,
+      "n_scenarios": 24,
+      "retention": 0.3636,
+      "rung": "R1-tfidf",
+      "seed": 4
+    },
+    {
+      "contrast": 0.2879,
+      "exact": 0.2271,
+      "fraction": 0.5,
+      "leakage": 0.0,
+      "n_examples": 44,
+      "n_scenarios": 24,
+      "retention": 0.3333,
+      "rung": "R1-tfidf",
+      "seed": 5
+    },
+    {
+      "contrast": 0.3939,
+      "exact": 0.2705,
+      "fraction": 0.75,
+      "leakage": 0.0,
+      "n_examples": 65,
+      "n_scenarios": 36,
+      "retention": 0.4394,
+      "rung": "R1-tfidf",
+      "seed": 1
+    },
+    {
+      "contrast": 0.2727,
+      "exact": 0.1981,
+      "fraction": 0.75,
+      "leakage": 0.0,
+      "n_examples": 65,
+      "n_scenarios": 36,
+      "retention": 0.3182,
+      "rung": "R1-tfidf",
+      "seed": 2
+    },
+    {
+      "contrast": 0.2576,
+      "exact": 0.256,
+      "fraction": 0.75,
+      "leakage": 0.0,
+      "n_examples": 62,
+      "n_scenarios": 36,
+      "retention": 0.3182,
+      "rung": "R1-tfidf",
+      "seed": 3
+    },
+    {
+      "contrast": 0.3182,
+      "exact": 0.2319,
+      "fraction": 0.75,
+      "leakage": 0.0,
+      "n_examples": 65,
+      "n_scenarios": 36,
+      "retention": 0.3636,
+      "rung": "R1-tfidf",
+      "seed": 4
+    },
+    {
+      "contrast": 0.3636,
+      "exact": 0.2705,
+      "fraction": 0.75,
+      "leakage": 0.0167,
+      "n_examples": 67,
+      "n_scenarios": 36,
+      "retention": 0.4394,
+      "rung": "R1-tfidf",
+      "seed": 5
+    },
+    {
+      "contrast": 0.3939,
+      "exact": 0.2657,
+      "fraction": 1.0,
+      "leakage": 0.0167,
+      "n_examples": 86,
+      "n_scenarios": 48,
+      "retention": 0.4545,
+      "rung": "R1-tfidf",
+      "seed": 1
+    },
+    {
+      "contrast": 0.0455,
+      "exact": 0.0435,
+      "fraction": 0.25,
+      "leakage": 0.5333,
+      "n_examples": 20,
+      "n_scenarios": 12,
+      "retention": 0.5455,
+      "rung": "R3-finetuned",
+      "seed": 1
+    },
+    {
+      "contrast": 0.0758,
+      "exact": 0.0531,
+      "fraction": 0.25,
+      "leakage": 0.5667,
+      "n_examples": 25,
+      "n_scenarios": 12,
+      "retention": 0.5909,
+      "rung": "R3-finetuned",
+      "seed": 2
+    },
+    {
+      "contrast": 0.0455,
+      "exact": 0.0773,
+      "fraction": 0.25,
+      "leakage": 0.3333,
+      "n_examples": 19,
+      "n_scenarios": 12,
+      "retention": 0.4091,
+      "rung": "R3-finetuned",
+      "seed": 3
+    },
+    {
+      "contrast": 0.0606,
+      "exact": 0.0773,
+      "fraction": 0.5,
+      "leakage": 0.4667,
+      "n_examples": 41,
+      "n_scenarios": 24,
+      "retention": 0.5758,
+      "rung": "R3-finetuned",
+      "seed": 1
+    },
+    {
+      "contrast": 0.0758,
+      "exact": 0.0821,
+      "fraction": 0.5,
+      "leakage": 0.5833,
+      "n_examples": 44,
+      "n_scenarios": 24,
+      "retention": 0.6364,
+      "rung": "R3-finetuned",
+      "seed": 2
+    },
+    {
+      "contrast": 0.0909,
+      "exact": 0.0773,
+      "fraction": 0.5,
+      "leakage": 0.55,
+      "n_examples": 40,
+      "n_scenarios": 24,
+      "retention": 0.6515,
+      "rung": "R3-finetuned",
+      "seed": 3
+    },
+    {
+      "contrast": 0.2879,
+      "exact": 0.1111,
+      "fraction": 0.75,
+      "leakage": 0.3833,
+      "n_examples": 65,
+      "n_scenarios": 36,
+      "retention": 0.7424,
+      "rung": "R3-finetuned",
+      "seed": 1
+    },
+    {
+      "contrast": 0.1212,
+      "exact": 0.1159,
+      "fraction": 0.75,
+      "leakage": 0.5,
+      "n_examples": 65,
+      "n_scenarios": 36,
+      "retention": 0.6818,
+      "rung": "R3-finetuned",
+      "seed": 2
+    },
+    {
+      "contrast": 0.0909,
+      "exact": 0.1063,
+      "fraction": 0.75,
+      "leakage": 0.45,
+      "n_examples": 62,
+      "n_scenarios": 36,
+      "retention": 0.6364,
+      "rung": "R3-finetuned",
+      "seed": 3
+    },
+    {
+      "contrast": 0.2576,
+      "exact": 0.1014,
+      "fraction": 1.0,
+      "leakage": 0.5167,
+      "n_examples": 86,
+      "n_scenarios": 48,
+      "retention": 0.7879,
+      "rung": "R3-finetuned",
+      "seed": 1
+    }
+  ],
+  "summary": {
+    "R1-tfidf": {
+      "final_segment_gain": 0.0727,
+      "rows": [
+        {
+          "contrast_max": 0.2576,
+          "contrast_mean": 0.1697,
+          "contrast_min": 0.1364,
+          "draws": 5,
+          "fraction": 0.25,
+          "n_examples": 20,
+          "retention_mean": 0.2
+        },
+        {
+          "contrast_max": 0.3333,
+          "contrast_mean": 0.2485,
+          "contrast_min": 0.1515,
+          "draws": 5,
+          "fraction": 0.5,
+          "n_examples": 41,
+          "retention_mean": 0.2909
+        },
+        {
+          "contrast_max": 0.3939,
+          "contrast_mean": 0.3212,
+          "contrast_min": 0.2576,
+          "draws": 5,
+          "fraction": 0.75,
+          "n_examples": 65,
+          "retention_mean": 0.3758
+        },
+        {
+          "contrast_max": 0.3939,
+          "contrast_mean": 0.3939,
+          "contrast_min": 0.3939,
+          "draws": 1,
+          "fraction": 1.0,
+          "n_examples": 86,
+          "retention_mean": 0.4545
+        }
+      ]
+    },
+    "R3-finetuned": {
+      "final_segment_gain": 0.0909,
+      "rows": [
+        {
+          "contrast_max": 0.0758,
+          "contrast_mean": 0.0556,
+          "contrast_min": 0.0455,
+          "draws": 3,
+          "fraction": 0.25,
+          "n_examples": 20,
+          "retention_mean": 0.5152
+        },
+        {
+          "contrast_max": 0.0909,
+          "contrast_mean": 0.0758,
+          "contrast_min": 0.0606,
+          "draws": 3,
+          "fraction": 0.5,
+          "n_examples": 41,
+          "retention_mean": 0.6212
+        },
+        {
+          "contrast_max": 0.2879,
+          "contrast_mean": 0.1667,
+          "contrast_min": 0.0909,
+          "draws": 3,
+          "fraction": 0.75,
+          "n_examples": 65,
+          "retention_mean": 0.6869
+        },
+        {
+          "contrast_max": 0.2576,
+          "contrast_mean": 0.2576,
+          "contrast_min": 0.2576,
+          "draws": 1,
+          "fraction": 1.0,
+          "n_examples": 86,
+          "retention_mean": 0.7879
+        }
+      ]
+    }
+  }
+}

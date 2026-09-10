@@ -1,0 +1,68 @@
+# E-15, verdict level — the learned compiler in front of the real monitor.
+#
+#   agentfw replay experiments/e15_learned_compiler/replay.yaml
+#
+# No model is called and no key is read. The learned scopes are artifacts `agentfw learn`
+# wrote, the episodes are E-00j's, and the monitor is deterministic, so this reproduces from
+# files in the repository exactly as E-14 does (D-026).
+#
+# **Why this file exists at all.** F-14 taught the project that a compiler change is not an
+# improvement until the replay says so: a scope-level score can rank a change that makes the
+# system worse, because leakage counts *granted classes* and the verdict counts *executed
+# effects*, and the two come apart when the agent never attempts the class it was wrongly
+# granted. E-15's registration makes the replay a requirement rather than a follow-up.
+#
+# The two learned arms are D-041's:
+#
+#   armL   the learned model IS the compiler. Fitted on dev's 86 hand-written labels,
+#          predicting the 207 held-out utterances. Comparable to per-class and baseline.
+#   armH   the per-class Sonnet scope, intersected with the learned prediction. It can only
+#          withhold, never add, which is D-038's "may never grant" read literally.
+#
+# The prompted arms are carried here too, from their committed E-14 artifacts, so the rows
+# sit in one table and differ in the scope source alone.
+
+experiment: E-15
+sources:
+  - experiments/e00j_heldout_baseline/results/episodes.jsonl
+
+scope_sources:
+  # References, unchanged from E-14. Present so the learned rows are read beside them
+  # rather than against a number quoted from another file.
+  - label: gold
+    kind: gold
+  - label: perclass-sonnet-s1
+    kind: compiled
+    path: experiments/e14_validation/results/per-class-claude-sonnet-5.per-class-v1.s1.jsonl
+  - label: baseline-gpt-s1
+    kind: compiled
+    path: experiments/e14_validation/results/baseline-gpt-4.1-mini.baseline-v2.s1.jsonl
+  - label: read-only
+    kind: compiled
+    path: experiments/e14_validation/results/read-only.s0.jsonl
+
+  # D-041 Arm L: the learned compiler, standing on its own.
+  - label: armL-R1-tfidf
+    kind: compiled
+    path: experiments/e15_learned_compiler/results/armL-R1-tfidf.s1.jsonl
+
+  # D-041 Arm H: per-class Sonnet, narrowed by the learned model. Never widened.
+  - label: armH-R1-over-perclass
+    kind: compiled
+    path: experiments/e15_learned_compiler/results/armH-R1-tfidf-over-per-class.s1.jsonl
+
+# E-14's policies, unchanged, so the verdict-level rows are comparable to the ones already
+# published rather than to a policy invented for this phase.
+policies:
+  - label: M0-consequential
+    ask_on: consequential
+    ask_budget: 3
+    reviewer_epsilon: 0.0
+    with_reviewer: true
+    reviewer_oracle: gold
+  - label: M0-no-ask
+    ask_on: never
+    ask_budget: 0
+    reviewer_epsilon: 0.0
+    with_reviewer: false
+    reviewer_oracle: gold

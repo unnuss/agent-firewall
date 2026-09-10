@@ -53,3 +53,10 @@ experiments/e11_heldout/results/*__*.jsonl
 experiments/e11_heldout/results/M0-*.jsonl
 experiments/e14_validation/results/*__*.jsonl
 experiments/e12_coupling/results/*__*.jsonl
+
+# E-15's replay output, on the same reasoning again: derived data, a pure function of the
+# committed episodes plus the learned scope artifacts, regenerating in minutes with no API
+# access. The reports ARE committed, and so are the two learned scope artifacts themselves --
+# those are *inputs* to the replay rather than outputs of it, which is the D-026 distinction
+# that decides the rule, exactly as it did for E-09a's compiled scopes.
+experiments/e15_learned_compiler/results/*__*.jsonl

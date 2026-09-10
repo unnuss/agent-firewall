@@ -1,0 +1,2061 @@
+{
+  "coverage": {
+    "S1": {
+      "description": "train on dev (hand-written), test on held-out",
+      "n_folds": 1,
+      "n_never_tested": 86,
+      "n_tested": 207,
+      "n_tested_distinct": 207,
+      "scheme": "S1"
+    },
+    "S2": {
+      "description": "leave one world out (4 folds)",
+      "n_folds": 4,
+      "n_never_tested": 0,
+      "n_tested": 293,
+      "n_tested_distinct": 293,
+      "scheme": "S2"
+    },
+    "S3": {
+      "description": "leave one template out (11 folds)",
+      "n_folds": 11,
+      "n_never_tested": 101,
+      "n_tested": 192,
+      "n_tested_distinct": 192,
+      "scheme": "S3"
+    }
+  },
+  "dataset": {
+    "by_split": {
+      "dev": 86,
+      "heldout": 207
+    },
+    "by_suite": {
+      "af_auth": 254,
+      "af_inject": 11,
+      "benign": 28
+    },
+    "by_template": {
+      "b1_draft_vs_send": 6,
+      "b1_ho_draft_vs_send": 6,
+      "b4_us_calendar_cancel": 12,
+      "b4_us_calendar_hold": 18,
+      "b4_us_doc_update": 27,
+      "b4_us_email_followup": 33,
+      "b4_us_files_tidy": 18,
+      "b4_us_payment_due": 15,
+      "b4_us_share_link": 24,
+      "b4_us_share_report": 24,
+      "b4_us_web_form": 9,
+      "handwritten": 101
+    },
+    "by_world": {
+      "lab_heldout": 57,
+      "office_baseline": 92,
+      "office_heldout": 75,
+      "practice_heldout": 69
+    },
+    "contested_negative": 164,
+    "contested_positive": 90,
+    "label_counts": {
+      "CREATE:CALENDAR": 18,
+      "CREATE:CLOUD_STORAGE": 5,
+      "CREATE:EMAIL": 77,
+      "CREATE:USER_FILES": 9,
+      "DELETE:CALENDAR": 6,
+      "DELETE:USER_FILES": 9,
+      "GRANT:CLOUD_STORAGE": 9,
+      "GRANT:USER_FILES": 11,
+      "PURCHASE:FINANCIAL": 11,
+      "READ:CALENDAR": 61,
+      "READ:CLOUD_STORAGE": 35,
+      "READ:CONTACTS": 172,
+      "READ:EMAIL": 173,
+      "READ:FINANCIAL": 18,
+      "READ:PUBLIC_WEB": 34,
+      "READ:USER_FILES": 197,
+      "SEND:EMAIL": 42,
+      "SEND:PUBLIC_WEB": 4,
+      "WRITE:USER_FILES": 16
+    },
+    "labels_outside_tool_ceiling": 1,
+    "mean_labels": 3.096,
+    "n_classes": 19,
+    "n_distinct_texts": 290,
+    "n_examples": 293
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.9"
+  },
+  "experiment": "E-15",
+  "folds": [
+    {
+      "contested_accuracy": 0.6562,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1304,
+      "fit_s": 0.0,
+      "fold": "dev->heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 207,
+      "n_test": 207,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 57,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 19,
+      "exact_set_match": 0.2281,
+      "fit_s": 0.0,
+      "fold": "lab_heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 57,
+      "n_test": 57,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.6029,
+      "contested_decisions": 68,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 27,
+      "exact_set_match": 0.1304,
+      "fit_s": 0.0,
+      "fold": "office_baseline",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 92,
+      "n_test": 92,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.65,
+      "contested_decisions": 60,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 21,
+      "exact_set_match": 0.2133,
+      "fit_s": 0.0,
+      "fold": "office_heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 75,
+      "n_test": 75,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 69,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 23,
+      "exact_set_match": 0.2464,
+      "fit_s": 0.0,
+      "fold": "practice_heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 69,
+      "n_test": 69,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.0,
+      "fit_s": 0.0,
+      "fold": "b1_draft_vs_send",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.0,
+      "fit_s": 0.0,
+      "fold": "b1_ho_draft_vs_send",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 12,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 4,
+      "exact_set_match": 0.0,
+      "fit_s": 0.0,
+      "fold": "b4_us_calendar_cancel",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 12,
+      "n_test": 12,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 18,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.0,
+      "fit_s": 0.001,
+      "fold": "b4_us_calendar_hold",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 27,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 9,
+      "exact_set_match": 0.2222,
+      "fit_s": 0.0,
+      "fold": "b4_us_doc_update",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 27,
+      "n_test": 27,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 33,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 11,
+      "exact_set_match": 0.6667,
+      "fit_s": 0.0,
+      "fold": "b4_us_email_followup",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 33,
+      "n_test": 33,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 18,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.0,
+      "fit_s": 0.0,
+      "fold": "b4_us_files_tidy",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 15,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 5,
+      "exact_set_match": 0.3333,
+      "fit_s": 0.0,
+      "fold": "b4_us_payment_due",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 15,
+      "n_test": 15,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.3333,
+      "fit_s": 0.0,
+      "fold": "b4_us_share_link",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.0,
+      "fit_s": 0.0,
+      "fold": "b4_us_share_report",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 9,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.0,
+      "fit_s": 0.0,
+      "fold": "b4_us_web_form",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 9,
+      "n_test": 9,
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7917,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.3939,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.2657,
+      "fit_s": 2.353,
+      "fold": "dev->heldout",
+      "leakage_explicit_low": 0.0455,
+      "leakage_underspecified": 0.0167,
+      "n": 207,
+      "n_test": 207,
+      "predict_s": 0.013,
+      "retention_high": 0.4545,
+      "rung": "R1-tfidf",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.9474,
+      "contested_decisions": 57,
+      "contrast_fidelity": 0.8421,
+      "contrast_scenarios": 19,
+      "exact_set_match": 0.7895,
+      "fit_s": 0.18,
+      "fold": "lab_heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0526,
+      "n": 57,
+      "n_test": 57,
+      "predict_s": 0.007,
+      "retention_high": 0.8947,
+      "rung": "R1-tfidf",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.7353,
+      "contested_decisions": 68,
+      "contrast_fidelity": 0.3333,
+      "contrast_scenarios": 27,
+      "exact_set_match": 0.2935,
+      "fit_s": 0.156,
+      "fold": "office_baseline",
+      "leakage_explicit_low": 0.0385,
+      "leakage_underspecified": 0.0,
+      "n": 92,
+      "n_test": 92,
+      "predict_s": 0.008,
+      "retention_high": 0.3704,
+      "rung": "R1-tfidf",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.9333,
+      "contested_decisions": 60,
+      "contrast_fidelity": 0.8095,
+      "contrast_scenarios": 21,
+      "exact_set_match": 0.7333,
+      "fit_s": 0.212,
+      "fold": "office_heldout",
+      "leakage_explicit_low": 0.0476,
+      "leakage_underspecified": 0.0556,
+      "n": 75,
+      "n_test": 75,
+      "predict_s": 0.008,
+      "retention_high": 0.9048,
+      "rung": "R1-tfidf",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.9275,
+      "contested_decisions": 69,
+      "contrast_fidelity": 0.7826,
+      "contrast_scenarios": 23,
+      "exact_set_match": 0.7826,
+      "fit_s": 0.18,
+      "fold": "practice_heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.087,
+      "n": 69,
+      "n_test": 69,
+      "predict_s": 0.008,
+      "retention_high": 0.8696,
+      "rung": "R1-tfidf",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.3333,
+      "fit_s": 0.211,
+      "fold": "b1_draft_vs_send",
+      "leakage_explicit_low": 1.0,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.005,
+      "retention_high": 1.0,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.3333,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.1667,
+      "fit_s": 0.27,
+      "fold": "b1_ho_draft_vs_send",
+      "leakage_explicit_low": 0.3333,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.005,
+      "retention_high": 0.6667,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 12,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 4,
+      "exact_set_match": 0.0833,
+      "fit_s": 0.216,
+      "fold": "b4_us_calendar_cancel",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 12,
+      "n_test": 12,
+      "predict_s": 0.005,
+      "retention_high": 0.0,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.8333,
+      "contested_decisions": 18,
+      "contrast_fidelity": 0.5,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.0556,
+      "fit_s": 0.209,
+      "fold": "b4_us_calendar_hold",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.006,
+      "retention_high": 0.5,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 27,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 9,
+      "exact_set_match": 0.2222,
+      "fit_s": 0.165,
+      "fold": "b4_us_doc_update",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 27,
+      "n_test": 27,
+      "predict_s": 0.006,
+      "retention_high": 0.0,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7879,
+      "contested_decisions": 33,
+      "contrast_fidelity": 0.3636,
+      "contrast_scenarios": 11,
+      "exact_set_match": 0.3939,
+      "fit_s": 0.235,
+      "fold": "b4_us_email_followup",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 33,
+      "n_test": 33,
+      "predict_s": 0.006,
+      "retention_high": 0.3636,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7778,
+      "contested_decisions": 18,
+      "contrast_fidelity": 0.3333,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.7778,
+      "fit_s": 0.164,
+      "fold": "b4_us_files_tidy",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.005,
+      "retention_high": 0.3333,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7333,
+      "contested_decisions": 15,
+      "contrast_fidelity": 0.2,
+      "contrast_scenarios": 5,
+      "exact_set_match": 0.0667,
+      "fit_s": 0.214,
+      "fold": "b4_us_payment_due",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 15,
+      "n_test": 15,
+      "predict_s": 0.007,
+      "retention_high": 0.2,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.4583,
+      "fit_s": 0.199,
+      "fold": "b4_us_share_link",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.006,
+      "retention_high": 0.0,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.8333,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.5,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.0,
+      "fit_s": 0.218,
+      "fold": "b4_us_share_report",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.006,
+      "retention_high": 0.5,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.8889,
+      "contested_decisions": 9,
+      "contrast_fidelity": 0.6667,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.5556,
+      "fit_s": 0.224,
+      "fold": "b4_us_web_form",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 9,
+      "n_test": 9,
+      "predict_s": 0.005,
+      "retention_high": 0.6667,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7031,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.1364,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1691,
+      "fit_s": 68.396,
+      "fold": "dev->heldout",
+      "leakage_explicit_low": 0.0303,
+      "leakage_underspecified": 0.05,
+      "n": 207,
+      "n_test": 207,
+      "predict_s": 3.593,
+      "retention_high": 0.2121,
+      "rung": "R2-frozen",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.7895,
+      "contested_decisions": 57,
+      "contrast_fidelity": 0.4737,
+      "contrast_scenarios": 19,
+      "exact_set_match": 0.3333,
+      "fit_s": 15.588,
+      "fold": "lab_heldout",
+      "leakage_explicit_low": 0.1579,
+      "leakage_underspecified": 0.1579,
+      "n": 57,
+      "n_test": 57,
+      "predict_s": 3.162,
+      "retention_high": 0.6842,
+      "rung": "R2-frozen",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.6471,
+      "contested_decisions": 68,
+      "contrast_fidelity": 0.1852,
+      "contrast_scenarios": 27,
+      "exact_set_match": 0.1957,
+      "fit_s": 5.39,
+      "fold": "office_baseline",
+      "leakage_explicit_low": 0.1923,
+      "leakage_underspecified": 0.1333,
+      "n": 92,
+      "n_test": 92,
+      "predict_s": 1.861,
+      "retention_high": 0.3704,
+      "rung": "R2-frozen",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.8667,
+      "contested_decisions": 60,
+      "contrast_fidelity": 0.619,
+      "contrast_scenarios": 21,
+      "exact_set_match": 0.4933,
+      "fit_s": 5.962,
+      "fold": "office_heldout",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 75,
+      "n_test": 75,
+      "predict_s": 1.702,
+      "retention_high": 0.619,
+      "rung": "R2-frozen",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.8841,
+      "contested_decisions": 69,
+      "contrast_fidelity": 0.6522,
+      "contrast_scenarios": 23,
+      "exact_set_match": 0.2609,
+      "fit_s": 6.519,
+      "fold": "practice_heldout",
+      "leakage_explicit_low": 0.0435,
+      "leakage_underspecified": 0.0,
+      "n": 69,
+      "n_test": 69,
+      "predict_s": 1.866,
+      "retention_high": 0.6957,
+      "rung": "R2-frozen",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.3333,
+      "fit_s": 6.283,
+      "fold": "b1_draft_vs_send",
+      "leakage_explicit_low": 0.6667,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.326,
+      "retention_high": 0.6667,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.1667,
+      "fit_s": 7.307,
+      "fold": "b1_ho_draft_vs_send",
+      "leakage_explicit_low": 0.6667,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.09,
+      "retention_high": 0.6667,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 12,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 4,
+      "exact_set_match": 0.25,
+      "fit_s": 7.351,
+      "fold": "b4_us_calendar_cancel",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 12,
+      "n_test": 12,
+      "predict_s": 0.349,
+      "retention_high": 0.0,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.8889,
+      "contested_decisions": 18,
+      "contrast_fidelity": 0.6667,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.1111,
+      "fit_s": 6.6,
+      "fold": "b4_us_calendar_hold",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.845,
+      "retention_high": 0.6667,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 27,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 9,
+      "exact_set_match": 0.1481,
+      "fit_s": 5.825,
+      "fold": "b4_us_doc_update",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 27,
+      "n_test": 27,
+      "predict_s": 0.368,
+      "retention_high": 0.0,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6364,
+      "contested_decisions": 33,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 11,
+      "exact_set_match": 0.1515,
+      "fit_s": 6.164,
+      "fold": "b4_us_email_followup",
+      "leakage_explicit_low": 0.4545,
+      "leakage_underspecified": 0.0909,
+      "n": 33,
+      "n_test": 33,
+      "predict_s": 0.789,
+      "retention_high": 0.4545,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.8889,
+      "contested_decisions": 18,
+      "contrast_fidelity": 0.6667,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.5556,
+      "fit_s": 6.166,
+      "fold": "b4_us_files_tidy",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.137,
+      "retention_high": 0.6667,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 15,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 5,
+      "exact_set_match": 0.0667,
+      "fit_s": 6.083,
+      "fold": "b4_us_payment_due",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 15,
+      "n_test": 15,
+      "predict_s": 0.406,
+      "retention_high": 0.0,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.0833,
+      "fit_s": 6.524,
+      "fold": "b4_us_share_link",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.541,
+      "retention_high": 0.0,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.0,
+      "fit_s": 6.63,
+      "fold": "b4_us_share_report",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.517,
+      "retention_high": 0.0,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 9,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.1111,
+      "fit_s": 7.056,
+      "fold": "b4_us_web_form",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 9,
+      "n_test": 9,
+      "predict_s": 0.669,
+      "retention_high": 0.0,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6198,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.2576,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1014,
+      "fit_s": 54.508,
+      "fold": "dev->heldout",
+      "leakage_explicit_low": 0.4242,
+      "leakage_underspecified": 0.5167,
+      "n": 207,
+      "n_test": 207,
+      "predict_s": 2.584,
+      "retention_high": 0.7879,
+      "rung": "R3-finetuned",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.9825,
+      "contested_decisions": 57,
+      "contrast_fidelity": 0.9474,
+      "contrast_scenarios": 19,
+      "exact_set_match": 0.5088,
+      "fit_s": 144.057,
+      "fold": "lab_heldout",
+      "leakage_explicit_low": 0.0526,
+      "leakage_underspecified": 0.0,
+      "n": 57,
+      "n_test": 57,
+      "predict_s": 1.299,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.7794,
+      "contested_decisions": 68,
+      "contrast_fidelity": 0.5185,
+      "contrast_scenarios": 27,
+      "exact_set_match": 0.3043,
+      "fit_s": 130.773,
+      "fold": "office_baseline",
+      "leakage_explicit_low": 0.3462,
+      "leakage_underspecified": 0.0667,
+      "n": 92,
+      "n_test": 92,
+      "predict_s": 1.485,
+      "retention_high": 0.8148,
+      "rung": "R3-finetuned",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.9333,
+      "contested_decisions": 60,
+      "contrast_fidelity": 0.8095,
+      "contrast_scenarios": 21,
+      "exact_set_match": 0.5067,
+      "fit_s": 119.859,
+      "fold": "office_heldout",
+      "leakage_explicit_low": 0.1905,
+      "leakage_underspecified": 0.0,
+      "n": 75,
+      "n_test": 75,
+      "predict_s": 1.031,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.9855,
+      "contested_decisions": 69,
+      "contrast_fidelity": 0.9565,
+      "contrast_scenarios": 23,
+      "exact_set_match": 0.2464,
+      "fit_s": 128.119,
+      "fold": "practice_heldout",
+      "leakage_explicit_low": 0.0435,
+      "leakage_underspecified": 0.0,
+      "n": 69,
+      "n_test": 69,
+      "predict_s": 0.981,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.3333,
+      "fit_s": 174.721,
+      "fold": "b1_draft_vs_send",
+      "leakage_explicit_low": 1.0,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.166,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.5,
+      "contested_decisions": 6,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.3333,
+      "fit_s": 182.541,
+      "fold": "b1_ho_draft_vs_send",
+      "leakage_explicit_low": 1.0,
+      "leakage_underspecified": 0.0,
+      "n": 6,
+      "n_test": 6,
+      "predict_s": 0.126,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 12,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 4,
+      "exact_set_match": 0.0,
+      "fit_s": 218.257,
+      "fold": "b4_us_calendar_cancel",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 12,
+      "n_test": 12,
+      "predict_s": 0.596,
+      "retention_high": 0.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 1.0,
+      "contested_decisions": 18,
+      "contrast_fidelity": 1.0,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.2778,
+      "fit_s": 213.888,
+      "fold": "b4_us_calendar_hold",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 1.191,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7037,
+      "contested_decisions": 27,
+      "contrast_fidelity": 0.1111,
+      "contrast_scenarios": 9,
+      "exact_set_match": 0.1481,
+      "fit_s": 186.258,
+      "fold": "b4_us_doc_update",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 27,
+      "n_test": 27,
+      "predict_s": 0.719,
+      "retention_high": 0.1111,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 1.0,
+      "contested_decisions": 33,
+      "contrast_fidelity": 1.0,
+      "contrast_scenarios": 11,
+      "exact_set_match": 0.303,
+      "fit_s": 186.851,
+      "fold": "b4_us_email_followup",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 33,
+      "n_test": 33,
+      "predict_s": 0.757,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 1.0,
+      "contested_decisions": 18,
+      "contrast_fidelity": 1.0,
+      "contrast_scenarios": 6,
+      "exact_set_match": 0.6667,
+      "fit_s": 203.743,
+      "fold": "b4_us_files_tidy",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 18,
+      "n_test": 18,
+      "predict_s": 0.435,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 15,
+      "contrast_fidelity": 0.2,
+      "contrast_scenarios": 5,
+      "exact_set_match": 0.0,
+      "fit_s": 174.013,
+      "fold": "b4_us_payment_due",
+      "leakage_explicit_low": 0.2,
+      "leakage_underspecified": 0.2,
+      "n": 15,
+      "n_test": 15,
+      "predict_s": 0.175,
+      "retention_high": 0.4,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7083,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.25,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.0417,
+      "fit_s": 145.076,
+      "fold": "b4_us_share_link",
+      "leakage_explicit_low": 0.125,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.37,
+      "retention_high": 0.25,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6667,
+      "contested_decisions": 24,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 8,
+      "exact_set_match": 0.0,
+      "fit_s": 156.978,
+      "fold": "b4_us_share_report",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 24,
+      "n_test": 24,
+      "predict_s": 0.339,
+      "retention_high": 0.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 1.0,
+      "contested_decisions": 9,
+      "contrast_fidelity": 1.0,
+      "contrast_scenarios": 3,
+      "exact_set_match": 0.4444,
+      "fit_s": 162.548,
+      "fold": "b4_us_web_form",
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 9,
+      "n_test": 9,
+      "predict_s": 0.126,
+      "retention_high": 1.0,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    }
+  ],
+  "generated": "2026-09-09 19:54:43",
+  "pooled": [
+    {
+      "contested_accuracy": 0.6562,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1304,
+      "fit_s": 0.0,
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 207,
+      "n_folds": 1,
+      "n_test": 207,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 0,
+          "low_variants": 28,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 10,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.6457,
+      "contested_decisions": 254,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 90,
+      "exact_set_match": 0.198,
+      "fit_s": 0.0,
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 293,
+      "n_folds": 4,
+      "n_test": 293,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 0,
+          "low_variants": 39,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 21,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 17,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 17,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 14,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.6562,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.0,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.2135,
+      "fit_s": 0.001,
+      "leakage_explicit_low": 0.0,
+      "leakage_underspecified": 0.0,
+      "n": 192,
+      "n_folds": 11,
+      "n_test": 192,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 0,
+          "low_variants": 28,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 10,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 0.0,
+      "retention_high": 0.0,
+      "rung": "R0-prior",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7917,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.3939,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.2657,
+      "fit_s": 2.353,
+      "leakage_explicit_low": 0.0455,
+      "leakage_underspecified": 0.0167,
+      "n": 207,
+      "n_folds": 1,
+      "n_test": 207,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 3,
+          "low_variants": 28,
+          "rate": 0.1071
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 1,
+          "low_variants": 12,
+          "rate": 0.0833
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 10,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 0.013,
+      "retention_high": 0.4545,
+      "rung": "R1-tfidf",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.8819,
+      "contested_decisions": 254,
+      "contrast_fidelity": 0.6667,
+      "contrast_scenarios": 90,
+      "exact_set_match": 0.6177,
+      "fit_s": 0.728,
+      "leakage_explicit_low": 0.0225,
+      "leakage_underspecified": 0.0533,
+      "n": 293,
+      "n_folds": 4,
+      "n_test": 293,
+      "per_class_leakage": [
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 4,
+          "low_variants": 17,
+          "rate": 0.2353
+        },
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 2,
+          "low_variants": 39,
+          "rate": 0.0513
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 21,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 17,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 14,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 0.031,
+      "retention_high": 0.7333,
+      "rung": "R1-tfidf",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.7448,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.2576,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.2865,
+      "fit_s": 2.325,
+      "leakage_explicit_low": 0.0606,
+      "leakage_underspecified": 0.0,
+      "n": 192,
+      "n_folds": 11,
+      "n_test": 192,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 4,
+          "low_variants": 28,
+          "rate": 0.1429
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 10,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 0.062,
+      "retention_high": 0.3182,
+      "rung": "R1-tfidf",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.7031,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.1364,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1691,
+      "fit_s": 68.396,
+      "leakage_explicit_low": 0.0303,
+      "leakage_underspecified": 0.05,
+      "n": 207,
+      "n_folds": 1,
+      "n_test": 207,
+      "per_class_leakage": [
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 2,
+          "low_variants": 12,
+          "rate": 0.1667
+        },
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 3,
+          "low_variants": 28,
+          "rate": 0.1071
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 10,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 3.593,
+      "retention_high": 0.2121,
+      "rung": "R2-frozen",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.7953,
+      "contested_decisions": 254,
+      "contrast_fidelity": 0.4667,
+      "contrast_scenarios": 90,
+      "exact_set_match": 0.314,
+      "fit_s": 33.459,
+      "leakage_explicit_low": 0.1011,
+      "leakage_underspecified": 0.0667,
+      "n": 293,
+      "n_folds": 4,
+      "n_test": 293,
+      "per_class_leakage": [
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 3,
+          "low_variants": 17,
+          "rate": 0.1765
+        },
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 6,
+          "low_variants": 39,
+          "rate": 0.1538
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 2,
+          "low_variants": 18,
+          "rate": 0.1111
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 2,
+          "low_variants": 21,
+          "rate": 0.0952
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 1,
+          "low_variants": 14,
+          "rate": 0.0714
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 17,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 8.591,
+      "retention_high": 0.5778,
+      "rung": "R2-frozen",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.6927,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.1212,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1615,
+      "fit_s": 71.989,
+      "leakage_explicit_low": 0.1364,
+      "leakage_underspecified": 0.0167,
+      "n": 192,
+      "n_folds": 11,
+      "n_test": 192,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 10,
+          "low_variants": 28,
+          "rate": 0.3571
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 0,
+          "low_variants": 10,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 5.037,
+      "retention_high": 0.2576,
+      "rung": "R2-frozen",
+      "scheme": "S3"
+    },
+    {
+      "contested_accuracy": 0.6198,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.2576,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.1014,
+      "fit_s": 54.508,
+      "leakage_explicit_low": 0.4242,
+      "leakage_underspecified": 0.5167,
+      "n": 207,
+      "n_folds": 1,
+      "n_test": 207,
+      "per_class_leakage": [
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 12,
+          "low_variants": 12,
+          "rate": 1.0
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 14,
+          "low_variants": 16,
+          "rate": 0.875
+        },
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 17,
+          "low_variants": 28,
+          "rate": 0.6071
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 7,
+          "low_variants": 12,
+          "rate": 0.5833
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 4,
+          "low_variants": 18,
+          "rate": 0.2222
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 3,
+          "low_variants": 16,
+          "rate": 0.1875
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 1,
+          "low_variants": 8,
+          "rate": 0.125
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 1,
+          "low_variants": 10,
+          "rate": 0.1
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 2.584,
+      "retention_high": 0.7879,
+      "rung": "R3-finetuned",
+      "scheme": "S1"
+    },
+    {
+      "contested_accuracy": 0.9173,
+      "contested_decisions": 254,
+      "contrast_fidelity": 0.7889,
+      "contrast_scenarios": 90,
+      "exact_set_match": 0.3823,
+      "fit_s": 522.808,
+      "leakage_explicit_low": 0.1685,
+      "leakage_underspecified": 0.0133,
+      "n": 293,
+      "n_folds": 4,
+      "n_test": 293,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 2,
+          "low_variants": 8,
+          "rate": 0.25
+        },
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 9,
+          "low_variants": 39,
+          "rate": 0.2308
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 3,
+          "low_variants": 21,
+          "rate": 0.1429
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 1,
+          "low_variants": 14,
+          "rate": 0.0714
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 1,
+          "low_variants": 17,
+          "rate": 0.0588
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 17,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 4.796,
+      "retention_high": 0.9444,
+      "rung": "R3-finetuned",
+      "scheme": "S2"
+    },
+    {
+      "contested_accuracy": 0.8021,
+      "contested_decisions": 192,
+      "contrast_fidelity": 0.4545,
+      "contrast_scenarios": 66,
+      "exact_set_match": 0.2083,
+      "fit_s": 2004.874,
+      "leakage_explicit_low": 0.1212,
+      "leakage_underspecified": 0.0167,
+      "n": 192,
+      "n_folds": 11,
+      "n_test": 192,
+      "per_class_leakage": [
+        {
+          "effect_class": "SEND:EMAIL",
+          "leaked": 6,
+          "low_variants": 28,
+          "rate": 0.2143
+        },
+        {
+          "effect_class": "PURCHASE:FINANCIAL",
+          "leaked": 2,
+          "low_variants": 10,
+          "rate": 0.2
+        },
+        {
+          "effect_class": "GRANT:USER_FILES",
+          "leaked": 1,
+          "low_variants": 16,
+          "rate": 0.0625
+        },
+        {
+          "effect_class": "WRITE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 18,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "GRANT:CLOUD_STORAGE",
+          "leaked": 0,
+          "low_variants": 16,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "CREATE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:USER_FILES",
+          "leaked": 0,
+          "low_variants": 12,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "DELETE:CALENDAR",
+          "leaked": 0,
+          "low_variants": 8,
+          "rate": 0.0
+        },
+        {
+          "effect_class": "SEND:PUBLIC_WEB",
+          "leaked": 0,
+          "low_variants": 6,
+          "rate": 0.0
+        }
+      ],
+      "predict_s": 5.0,
+      "retention_high": 0.5606,
+      "rung": "R3-finetuned",
+      "scheme": "S3"
+    }
+  ]
+}

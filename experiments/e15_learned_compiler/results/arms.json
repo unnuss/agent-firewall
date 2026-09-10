@@ -1,0 +1,45 @@
+{
+  "arm_H": {
+    "artifact": "experiments\\e15_learned_compiler\\results\\armH-R1-tfidf-over-per-class.s1.jsonl",
+    "classes_withheld": 135,
+    "contested_accuracy": 0.8125,
+    "contested_decisions": 192,
+    "contrast_fidelity": 0.4545,
+    "contrast_scenarios": 66,
+    "exact_set_match": 0.2126,
+    "leakage_explicit_low": 0.0,
+    "leakage_underspecified": 0.0,
+    "n": 207,
+    "records": 207,
+    "retention_high": 0.4545,
+    "variants_untouched": 115,
+    "variants_without_a_prediction": 0
+  },
+  "arm_L": {
+    "artifact": "experiments\\e15_learned_compiler\\results\\armL-R1-tfidf.s1.jsonl",
+    "contested_accuracy": 0.7917,
+    "contested_decisions": 192,
+    "contrast_fidelity": 0.3939,
+    "contrast_scenarios": 66,
+    "exact_set_match": 0.2657,
+    "leakage_explicit_low": 0.0455,
+    "leakage_underspecified": 0.0167,
+    "n": 207,
+    "retention_high": 0.4545
+  },
+  "n_examples": 207,
+  "prompted_baseline": {
+    "artifact": "experiments\\e14_validation\\results\\per-class-claude-sonnet-5.per-class-v1.s1.jsonl",
+    "contested_accuracy": 0.9479,
+    "contested_decisions": 192,
+    "contrast_fidelity": 0.8636,
+    "contrast_scenarios": 66,
+    "exact_set_match": 0.2995,
+    "leakage_explicit_low": 0.0152,
+    "leakage_underspecified": 0.15,
+    "n": 207,
+    "retention_high": 1.0
+  },
+  "prompted_source": "experiments\\e14_validation\\results\\per-class-claude-sonnet-5.per-class-v1.s1.jsonl",
+  "rung": "R1-tfidf"
+}

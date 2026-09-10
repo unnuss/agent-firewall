@@ -12,6 +12,7 @@ agentfw couple-scopes            # E-12: withhold grants the compiler itself que
 agentfw authoring-input          # D-033: the utterances an independent labeller is given
 agentfw smoke                    # one scripted episode, no network, no key
 agentfw demo                     # watch it allow, ask and refuse; no key, no network
+agentfw learn                    # E-15: the learned intent compiler, no key, no network
 """
 
 from __future__ import annotations
@@ -681,6 +682,35 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_learn(args: argparse.Namespace) -> int:
+    """E-15 (Phase 6): fit the learned compiler and score it with the project's own scorer.
+
+    No key and no network for R0/R1. R2/R3 download an encoder once, then run on CPU.
+    """
+    from agentfw.ml import models
+    from agentfw.ml import run as run_mod
+    from agentfw.ml import splits as splits_mod
+
+    if args.curve:
+        from agentfw.ml import curve as curve_mod
+
+        rungs = args.rungs.split(",") if args.rungs else list(curve_mod.DRAWS)
+        out = Path(args.out) if args.out else None
+        curve_mod.run(rungs, out)
+        return 0
+
+    rungs = args.rungs.split(",") if args.rungs else list(models.RUNGS)
+    schemes = args.splits.split(",") if args.splits else list(splits_mod.SCHEMES)
+    unknown = [r for r in rungs if r not in models.RUNGS]
+    if unknown:
+        print(f"unknown rung(s) {unknown}; registered: {', '.join(models.RUNGS)}")
+        return 1
+    out = Path(args.out) if args.out else Path("experiments/e15_learned_compiler/results")
+    run_mod.main(rungs, schemes, out)
+    print(f"{NEWLINE}[E-15] wrote {out / 'report.md'}")
+    return 0
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     """Phase 5.5: the sixty-second look at the system, from committed artifacts only."""
     from agentfw import demo as demo_mod
@@ -844,6 +874,20 @@ def main(argv: list[str] | None = None) -> int:
     cp = sub.add_parser("compare")
     cp.add_argument("results", nargs="+", help="[label=]path/to/results ...")
     cp.set_defaults(fn=cmd_compare)
+
+    ln = sub.add_parser(
+        "learn",
+        help="E-15: fit and score the learned intent compiler (Phase 6)",
+    )
+    ln.add_argument("--rungs", help="comma-separated, e.g. R0-prior,R1-tfidf (default: all)")
+    ln.add_argument("--splits", help="comma-separated, e.g. S1,S3 (default: S1,S2,S3)")
+    ln.add_argument("--out", help="results directory")
+    ln.add_argument(
+        "--curve",
+        action="store_true",
+        help="E-15b: learning curve over training-set size instead of the rung/split grid",
+    )
+    ln.set_defaults(fn=cmd_learn)
 
     from agentfw.demo import DEFAULT_SCOPE, SCOPE_CHOICES
 

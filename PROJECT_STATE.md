@@ -2,14 +2,26 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-09-09 · **Phase 5.5 complete.** `uv run agentfw demo` replays four
+**Last updated:** 2026-09-09 · **Phase 6 complete — the first ML in the project, built,
+measured and _not adopted_ under its own registered rule (D-042).** Four of seven registered
+predictions were falsified. The result that matters is methodological: the learned compiler
+looks hopeless at the **scope** level (45.5% retention vs 100%) and is nearly as good as gold
+at the **verdict** level (1.7% contested executed vs `per-class`'s 5.6%, 81.3% task completion
+vs 82.8%), because a wrongly *dropped* class becomes an ASK and a wrongly *granted* one is
+silent. **F-14 with the sign reversed (F-38).** A follow-up sizing run (**E-15b**) then found
+**both** learned rungs are still data-starved at 86 examples — and that only TF-IDF is learning
+to *discriminate*: its leakage stays near zero while retention climbs, whereas the fine-tuned
+encoder's leakage sits flat at ~50% across a fourfold data increase, so more data would push it
+toward `tool-ceiling` rather than toward gold (**F-41**). Spend: **$0**. · **Phase 5.5 complete.** `uv run agentfw demo` replays four
 committed episodes through the real monitor and prints ALLOW / ASK → APPROVED / ASK → DENIED /
 BLOCK, with no API key and no network; `LICENSE` exists (MIT, D-040); the README has runnable
 commands where it had none. The repo is now presentable from here onward, which was the point
 of doing it before the substance. · **Phase 5 (2026-09-08) confirmed D-034 on adequate power
-(D-037)** at N=60 across three worlds with blind-authored gold scopes. · **Next: Phase 6 — the
-learned intent compiler, the first ML in the project (D-038). Phase 4 is deferred behind it.
-The whole plan is in `docs/ROADMAP.md`; section 6 summarises.**
+(D-037)** at N=60 across three worlds with blind-authored gold scopes. · **Next: Phase 7 —
+presentation (restructure the README, move the phase-by-phase narrative to
+`docs/RESEARCH_LOG.md`), then Phase 8 defensibility and the post. Phase 4's cost model is
+still deferred, and D-042 gives it a new reason to exist. The whole plan is in
+`docs/ROADMAP.md`.**
 
 ---
 
@@ -18,32 +30,38 @@ The whole plan is in `docs/ROADMAP.md`; section 6 summarises.**
 0. Run it before you read anything: `uv run agentfw demo`. Three seconds, no key, and it is
    the shortest statement of what this project does. Then `uv run agentfw demo --scope
    tool-ceiling` for the same four scenes under the ablation where the defense does nothing.
-1. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-037** — it is the verdict on
+1. **Phase 6 first, if you are picking up from here.** Read **E-15's registration** in
+   `docs/EXPERIMENTS.md` (written before any model was fitted), then **E-15's result**, then
+   **D-042** (why it was not adopted and why the rule that rejected it was itself the wrong
+   instrument) and **D-041** (where a learned model is allowed to sit). Then findings
+   **F-36 → F-40**. F-36 is the one that outlives the phase: **leave-one-world-out overstates
+   generalisation on this benchmark by ~41 pp**, and only ~10 pp of that is memorisation.
+2. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-037** — it is the verdict on
    the whole Phase 3.5/Phase 5 arc and it says what Phase 4 inherits. Then **D-034** (what was
    reopened), **D-036** (why Phase 5 ran before Phase 4), **D-035** (the coupling rule, still
    not adopted), **D-033** (how the held-out labels were authored), and **D-032** (reopened;
    read it for the argument, D-037 for its status).
-2. Read findings **F-32 → F-33 → F-34** in `docs/EXPERIMENTS.md`, in that order. F-32 says the
+3. Read findings **F-32 → F-33 → F-34** in `docs/EXPERIMENTS.md`, in that order. F-32 says the
    contested effect class explains six times more variance than the domain; F-33 says the
    residual is six utterances and not a rate; F-34 says the two prompt formulations differ in
    what they can *express*, not only in how well they guess. Reading any one alone overstates
    it.
-3. **Then** read **F-16 → F-17 → F-18 → F-19** for Phase 3's argument on the dev slice — but
+4. **Then** read **F-16 → F-17 → F-18 → F-19** for Phase 3's argument on the dev slice — but
    read them knowing F-19's "substitutes" reading did not survive N=60, and the interaction is
    still unresolved (E-14, last paragraph).
-4. Read **F-29** before quoting any compliance number, and **F-35** before quoting `read-only`
+5. Read **F-29** before quoting any compliance number, and **F-35** before quoting `read-only`
    as a floor.
-5. **The apparatus boundary is real.** Every number from E-00, E-00b, E-00f, E-00h, E-01a and
+6. **The apparatus boundary is real.** Every number from E-00, E-00b, E-00f, E-00h, E-01a and
    E-01b is **pre-repair**; everything from E-00g onward is **post-repair**. A `CONTRACT.md`
    sits in each pre-repair result directory. Never difference across it.
 
-Health check (~2.5 min measured on the dev machine, no API calls, no keys needed):
+Health check (~6 min measured on the dev machine, no API calls, no keys needed):
 
 ```bash
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **515 passed, 0 failed**. The four gold-scope tests that were red on purpose through
+Expect **551 passed, 0 failed**. The four gold-scope tests that were red on purpose through
 Phase 5's authoring step are green: the labels exist now. Any failure is a real one. `validate`
 reports 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios and **66 AF-Auth / 5 AF-Inject /
 10 benign held-out**, 23 tools.
@@ -90,12 +108,32 @@ structural gate, and a guessed bound asked about and approved — with no key, n
 no model call. It prints **no aggregate rate**; the footer names the command that regenerates
 the tables instead, so the demo cannot go stale against its own results (D-039).
 
+**Phase 6 put a learned model in the compiler slot and it did not go the way the scope-level
+score said.** Four rungs (label prior, TF-IDF+LR, frozen encoder+LR, fine-tuned encoder), four
+splits, two arms (D-041), 293 blind-authored labels, $0. Under the rule E-15 registered before
+any fitting, **it is not adopted** (D-042). Under the *replay* it executes 1.7% of contested
+effects against `per-class` Sonnet's 5.6%, at 81.3% high-authority completion against 82.8%,
+for 0.17 extra asks per high-authority episode and **fewer** interruptions on benign work — at
+a thousandth of the cost. Both statements are true and the disagreement between them is the
+phase's result (F-38).
+
 **What Phase 5 corrected in this project's own numbers.** E-00i's headline of 81.8%
 underspecified overreach, measured on 11 triples, came in at **49.4%** on 60 — wrong by more
 than thirty points. About 13 pp of that is composition (F-32: the contested class explains an
 87.5 pp spread against the domain's 13.5 pp) and the rest is small-sample noise. **A headline
 measured on 11 scenarios was wrong by 32 pp, and the only reason we know is that Phase 5 ran
 before Phase 4.**
+
+## 2b. Phase 6 deliverables, against D-038 and E-15
+
+| # | Deliverable | Status |
+|---|---|---|
+| 1 | Register predictions before training anything | **done.** E-15, predictions 35–41, committed before a single fit. Four falsified |
+| 2 | Build and commit the dataset | **done.** 293 examples derived deterministically from the two committed label files; `agentfw learn` regenerates, 31 tests assert the counts |
+| 3 | Baselines in cost order | **done, plus one.** R0 prior, R1 TF-IDF, **R2 frozen encoder**, R3 fine-tuned. R2 is not in D-038 and is what makes R1-vs-R3 interpretable: it changes the representation while holding the classifier fixed |
+| 4 | Evaluate leave-one-world-out and dev/held-out | **done, and LOWO turned out to be the wrong split** (F-36). Four splits reported: S1 primary, S2 LOWO, S3 leave-one-template-out, S4 leave-one-phrase-out (post-hoc, labelled) |
+| 5 | Wire in as a non-structural signal and **replay** | **done.** Arm L (compiler) and Arm H (narrowing-only) both emit real `CompiledScope` artifacts, both replayed over E-00j's 621 episodes. The replay is what reversed the conclusion |
+| — | A few-shot prompted arm for a fair comparison | **deliberately not bought** (~$2–5). The asymmetry is stated in the registration and beside every headline |
 
 ## 2a. Phase 5.5 deliverables, against ROADMAP "make it runnable"
 
@@ -122,6 +160,35 @@ before Phase 4.**
 | 7 | Sizing analysis before spending (E-13) | **done**, and its width predictions were near-exact: predicted ±7.5 pp, realised ±5.3 pp |
 
 ## 3. What exists in code that did not before
+
+**Phase 6:**
+
+```
+agentfw/ml/                the learned compiler. Outside the TCB; optional extras only
+  dataset.py               293 blind-authored labels as supervised examples; ask-phrase recovery
+  splits.py                S1 primary, S2 LOWO, S3 leave-one-template-out, S4 (post-hoc)
+  models.py                R0 prior, R1 TF-IDF, R2 frozen encoder, R3 fine-tuned
+  evaluate.py              routes learned predictions through eval/scope_eval.py unchanged
+  arms.py                  D-041's Arm L (compiler) and Arm H (narrowing-only)
+  run.py                   the grid; writes rows.jsonl, predictions.jsonl, report.md
+cli.py                     `learn` (--rungs/--splits/--out)
+tests/test_ml.py           31 tests: the D-038 boundary, the instrument, the fold leak
+experiments/e15_learned_compiler/{replay.yaml,results/,results_s4_diagnostic/}
+pyproject.toml             `ml` and `ml-encoder` extras (D-038); core still pydantic+pyyaml
+```
+
+Three things worth not re-deriving:
+
+- **The learned arm is scored by the project's own scorer, not a new one.** A prediction
+  becomes a `CompiledScope` and goes through `eval/scope_eval.compare_one`. There is no second
+  definition of leakage to drift, and `agentfw replay` reads the artifact with no changes.
+- **`agentfw/core/` still imports no ML, and it is now a test rather than a promise** — run in
+  a subprocess with `sklearn`, `torch`, `transformers`, `numpy` and `scipy` poisoned on
+  `sys.meta_path`, because they *are* installed here and a plain import would pass for the
+  wrong reason.
+- **No fold splits a scenario.** Variants of one scenario are minimal pairs sharing a context
+  sentence (D-010); a fold that separated them would leak the answer and produce an excellent
+  meaningless number. Asserted for all four schemes.
 
 **Phase 5.5:**
 
@@ -216,6 +283,44 @@ prediction 30 was the criterion and it decides D-037.
 `baseline` on gpt **never blocks, in 276 attempts.** Every `per-class` arm blocks at gold's
 rate, because `not_licensed` is a proposition the monitor can act on and silence is not.
 
+### E-15: the learned compiler, at both levels
+
+**Scope level** (contrast fidelity — the metric that punishes over- and under-granting at once):
+
+| rung | S1 dev→heldout | S2 leave-one-**world**-out | S4 leave-one-**phrase**-out | S3 leave-one-**template**-out |
+|---|---|---|---|---|
+| R0 label prior | 0.0% | 0.0% | 0.0% | 0.0% |
+| **R1 TF-IDF + LR** | **39.4%** | 66.7% | 56.7% | 25.8% |
+| R2 frozen encoder + LR | 13.6% | 46.7% | 26.7% | 12.1% |
+| R3 fine-tuned encoder | 25.8% | **78.9%** | *(not run)* | 45.5% |
+
+Reference, from E-14's committed artifacts: `per-class` sonnet **86.4%**, `baseline` gpt
+**51.5%**, `read-only` and `tool-ceiling` both **0.0%**.
+
+**Read one column at a time and this benchmark will tell you anything you like.** R3 scores
+78.9% under leave-one-world-out and 25.8% on the primary split — a 53 pp swing for the same
+model on the same 293 labels. **That is F-36 and it is the finding that outlives the phase.**
+No rung dominates either: R1 beats R3 by 13.6 pp on S1 and R3 beats R1 by 19.7 pp on S3, so
+any single-split claim about which family wins is an artifact of the split it was measured on.
+
+**Verdict level** (S1 scopes, E-00j's 621 episodes, `M0-consequential`, $0):
+
+| scope source | contested **executed** | high-auth **completed** | asks/ep high | asks/ep benign | cost |
+|---|---|---|---|---|---|
+| `gold` | 0.0% | 82.8% | 0.035 | 0.0 | — |
+| `per-class` sonnet | 5.6% | 82.8% | 0.333 | 0.3 | ~$6 |
+| **Arm L (learned)** | **1.7%** | **81.3%** | 0.500 | **0.0** | **~$0** |
+| Arm H (per-class ∩ learned) | 0.0% | 73.7% | 0.692 | 0.3 | ~$6 |
+| `baseline` gpt | 23.3% | 82.8% | 0.293 | 0.2 | ~$0.10 |
+| `read-only` | 0.0% | **71.7%** | 0.798 | 0.1 | — |
+
+**ASR is 0.0% under every arm, learned included.** `read-only` is the control that makes the
+Arm L row readable: it also has 0% leakage, and it costs 11 pp of task completion and 0.8 asks
+per episode to get there.
+
+**Never quote Arm L's verdict row without the scope row, or the reverse.** The whole point is
+that they disagree, and either alone is misleading (F-38, D-042).
+
 ### Registered predictions, scored across the project
 
 | Predictions | Outcome |
@@ -226,6 +331,8 @@ rate, because `not_licensed` is a proposition the monitor can act on and silence
 | 11, 12, 14, 15, 16 (E-11) | mixed; 14 held for the wrong reason (F-29), 15 later shown exact (F-29 fix) |
 | 23–28 (E-00j) | **all six held** |
 | 29–34 (E-14) | **all six held.** 30 is the criterion → **D-037 confirms D-034** |
+| 35–41 (E-15) | **two held (35, 41), one split (37), four falsified (36, 38, 39, 40).** 35 held but for the wrong reason — see F-36 |
+| 42–44 (E-15b) | **all three held**, which is weaker evidence than it looks: a curve's shape is easier to predict than a system's behaviour. 43 held only in ordering — neither rung saturates |
 
 ## 5. Open defects and risks carried forward
 
@@ -239,6 +346,10 @@ rate, because `not_licensed` is a proposition the monitor can act on and silence
 | **F-10** | `consequential()` cannot tell "not worth interrupting about" from "the compiler probably dropped this" | Phase 4 cost model — and **fit per contested class, not pooled** (F-32) |
 | **F-29** | Residual imprecision: every argument of an outbound effect is treated as transmitted | Latent — zero denials on licensed work. Phase 4 `monitors/flow.py` |
 | **F-08 / F-07** | ASK granularity; argument vs authority provenance | Phase 4 |
+| **F-36** | Leave-one-world-out overstates generalisation on this benchmark by ~41 pp, and eight of nine contested classes have a **sole template source** | Never evaluate a learned component LOWO on this data. Any new template should reuse an existing contested class where possible, so leave-one-template-out stops being a class-transfer test |
+| **F-37** | The benchmark supplies the least supervision for the decision the project is about — 1 dev positive for `SEND:PUBLIC_WEB`, 45 for `READ:USER_FILES` | Structural (D-010), not fixable by relabelling. If a learned component is revisited, the training set has to grow at the contested classes specifically |
+| **F-41** | The fine-tuned encoder's leakage does not fall with data (47.8% → 51.7% across a 4x increase). Its configuration — threshold 0.5, `pos_weight` clamped at 50 — was **never validated**, and E-15b says that is the live suspect rather than sample size | **Cross-validate R3 inside the training split before anything else.** Then, and only then, extend the contested-class set via the generator (D-038 step 2, never taken). Neither reopens Phase 6's conclusions |
+| **F-40** | `WRITE:USER_FILES` defeats prompted compilers by over-granting and the learned one by never granting | F-33's action is unchanged and now better motivated: write `WRITE:USER_FILES` into a different template and see whether the shape or the class is at fault |
 | **R-14** | Claude-authored scenarios, labels and compiler arms | **Untouched and now the largest risk.** D-033 removes context contamination, not authorship. Needs a human or another vendor |
 | **R-09** | Open-weight generalisation | Unresolved |
 | **R-16** | Prompt development and measurement share the dev slice | Intact: no prompt was touched in Phase 3.5 or Phase 5 |
@@ -250,10 +361,26 @@ target is a project that stands up on GitHub and LinkedIn and supports masters a
 not a paper; the paper's blocker is R-14 rather than the literature, and it is revisitable.
 **Phase 4 is deferred behind Phase 6 by D-038**, because every result in this project is
 currently a deterministic monitor plus a *prompted* model and there is no learned component
-anywhere. Phase 5.5 is **done** (D-039, D-040) — the repo now runs from a clean clone. In
-order from here:
+anywhere. Phase 5.5 is **done** (D-039, D-040) and **Phase 6 is done** (D-041, D-042) — there
+is a learned component now, it was measured honestly, and it was not adopted. In order from
+here:
 
-1. **Phase 6 — the learned intent compiler (D-038).** Registered predictions before training;
+1. **Phase 7 — presentation.** Restructure `README.md` (what it is → GIF → headline →
+   quickstart → how it works → results); move the phase-by-phase narrative to
+   `docs/RESEARCH_LOG.md`. Keep **three** tables above the fold now rather than two: the 2x2,
+   F-34's disposition table, and **E-15's scope-vs-verdict pair**, which is the clearest single
+   illustration in the repository of why this project measures what it measures.
+2. **Phase 8 — defensibility, then the post.** D-042 and F-36 are both strong interview
+   answers: *"walk me through a result that surprised you"* now has two, and one of them is a
+   correction to an instruction the project gave itself.
+3. **Phase 4 — the cost model**, whenever it runs. D-042 gives it a new reason to exist:
+   Arm L trades 0.17 extra interruptions per high-authority episode for 3.9 pp of security at a
+   thousandth of the cost, and pricing interruptions is exactly what turns that from an
+   observation into a decision.
+
+*What Phase 6 was, for the record:*
+
+   **Phase 6 — the learned intent compiler (D-038).** Registered predictions before training;
    cheap baselines before the encoder; leave-one-world-out because surface-form memorisation is
    the live risk; wired in as a non-structural signal (D-006) and **replayed**, because F-14
    already taught that a scope-level score alone can rank a change that makes the system worse.
@@ -318,9 +445,22 @@ asymmetry, or D-033's authoring condition without a documented reason.
   and `OPENROUTER_API_KEY`. The file wins a conflict with an exported variable and says so
   (D-029); every command prints the credential fingerprint it used.
 - No NVIDIA GPU. Ollama has `qwen2.5-coder:14b`; usable as an exploratory compiler only.
+- **ML extras are optional and split in two** (D-038): `ml` is scikit-learn and covers R0/R1;
+  `ml-encoder` adds torch and transformers (~2.5 GB) for R2/R3. Installed here:
+  scikit-learn 1.9.0, torch 2.14.0+cpu, transformers 5.16.1, numpy 2.5.3. **All four rungs run
+  on CPU**; R1 fits in 6 s for 207 utterances, R3 in a few minutes per fold.
+- **A transient install-time failure worth recognising, not debugging.** The first `import
+  sklearn` after `uv pip install` died with `ImportError: DLL load failed while importing
+  _special_ufuncs: An Application Control policy has blocked this file`. It was Windows
+  scanning a freshly written DLL, not a policy block: the same import succeeded seconds later
+  and a real fit ran. If it recurs, wait and retry before changing anything.
+- **Phase 6 spent $0.** Every rung, every split, both arms and the whole 621-episode replay
+  run on committed files and a CPU. That is the phase's second-order point: the comparison it
+  makes is between a ~$6-per-run frontier model and something that costs nothing, so the
+  experiment had to cost nothing too or the argument would have been funny.
 - **Phase 5 spent roughly $14.5** — E-00j ~$0.95, E-14 ~$13.6 (estimated from tokens), E-12
-  and every replay $0. **Phase 5.5 spent $0**, and its whole point is that everyone else's
-  first run costs $0 too. **Total project API spend is roughly $26.5.**
+  and every replay $0. **Phase 5.5 and Phase 6 both spent $0**, and their whole point is that
+  everyone else's first run costs $0 too. **Total project API spend is still roughly $26.5.**
 - **A clean install was verified from a real `git clone`, not assumed.** `uv sync` resolved
   16 packages and installed **7** — `agentfw`, pydantic, pydantic-core, pyyaml,
   annotated-types, typing-extensions, typing-inspection — and `uv run agentfw demo` rendered

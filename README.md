@@ -1,14 +1,16 @@
 # Agent Firewall
 
 > A runtime authorization layer for tool-using LLM agents.
-> **Status: Phase 5.5 complete — `uv run agentfw demo` works from a clean clone, with no
-> API key.** Behind it: a sandbox, an agent, a 60-triple held-out benchmark across three
+> **Status: Phase 6 complete — `uv run agentfw demo` works from a clean clone with no API key,
+> and there is a learned intent compiler that was measured honestly and _not adopted_.**
+> Behind it: a sandbox, an agent, a 60-triple held-out benchmark across three
 > worlds with blind-authored gold labels, a deterministic reference monitor whose structural
 > properties are enforced as property tests, and an intent compiler validated end to end at
-> N=60 with every prediction registered before the run. 515 tests, ~3,000 baseline
-> episodes, 34 registered predictions scored, 35 findings — several of which correct earlier
-> claims in this file. **Next: Phase 6, a learned intent compiler and the first ML in the
-> project (D-038); Phase 4's cost model is deferred behind it.**
+> N=60 with every prediction registered before the run. 551 tests, ~3,000 baseline
+> episodes, **44 registered predictions scored, 41 findings** — several of which correct
+> earlier claims in this file, and one of which corrects an instruction the project gave
+> itself. **Next: Phase 7, presentation.** Phase 4's cost model is still
+> deferred, and Phase 6 gave it a new reason to exist.
 
 An agent being *capable* of an action does not mean it should be *allowed* to perform it.
 
@@ -57,12 +59,23 @@ demo says so in the same words it used to say it was stopped.
 
 ```bash
 uv sync --extra dev
-uv run pytest -q                                          # 515 tests, ~2.5 min
+uv run pytest -q                                          # 551 tests, ~6 min
 uv run agentfw validate                                   # every scenario loads and gates
 uv run agentfw replay experiments/e14_validation/replay.yaml   # E-14: the headline 2x2
 uv run agentfw replay experiments/e01b_compiled/config.yaml    # E-01b: the Phase 3 replay
 uv run agentfw probe-contract                             # F-20: what the repair moved
 ```
+
+The learned compiler needs one extra install and still no key:
+
+```bash
+uv sync --extra ml
+uv run agentfw learn --rungs R0-prior,R1-tfidf --splits S1,S2,S3
+uv run agentfw replay experiments/e15_learned_compiler/replay.yaml
+```
+
+`--extra ml-encoder` adds torch and transformers (~2.5 GB) for the two encoder rungs. All four
+run on CPU; TF-IDF fits 207 utterances in six seconds.
 
 The three commands that *do* need a credential are `agentfw run` (a fresh undefended
 baseline), `agentfw compile-scopes` (one model call per utterance) and `agentfw models`.

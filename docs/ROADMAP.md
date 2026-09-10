@@ -312,7 +312,63 @@ happens to the rest of the plan.
 
 *Exit:* someone who has never seen the project can watch it refuse something in under a minute.
 
-### Phase 6 — the learned intent compiler (D-038)
+### Phase 6 — the learned intent compiler ✅ complete (2026-09-09)
+
+**Outcome.** Built, measured, and **not adopted** — under the rule E-15 registered before any
+model was fitted, and D-042 follows that rule rather than rewriting it. **Four of the seven
+registered predictions were falsified**, which is the registration working. `agentfw/ml/` holds
+four rungs, four splits, two arms (D-041) and 31 tests; `agentfw learn` regenerates every table
+and `agentfw replay experiments/e15_learned_compiler/replay.yaml` regenerates the verdict rows.
+Total spend: **$0**.
+
+*The result that matters, and it is methodological.* At the **scope** level the learned
+compiler looks hopeless — 45.5% retention against `per-class`'s 100%, contrast fidelity 39.4%
+against 86.4%. At the **verdict** level, on the same 621 committed episodes, it executes
+**1.7%** of contested effects against `per-class`'s **5.6%**, completes **81.3%** of
+high-authority tasks against **82.8%**, and interrupts benign work *less* than the prompted arm
+does — at roughly a thousandth of the cost. The two levels disagree because a wrongly *dropped*
+class becomes an ASK a human can answer while a wrongly *granted* one is silent, and the
+learned compiler errs almost entirely in the recoverable direction (F-38). **This is F-14 with
+the sign reversed**, and E-15 only caught it because F-14 had already made the replay mandatory.
+
+*The finding that outlives the phase.* **Leave-one-world-out — the split D-038 specifically
+asked for — overstates generalisation on this benchmark by about 41 pp**, and a post-hoc split
+shows only about 10 pp of that is surface-form memorisation. The rest is that eight of the nine
+contested classes have a *sole* template source, so leave-one-template-out is a near-zero-shot
+class-transfer test rather than the memorisation test it was taken for (F-36). Anyone who
+evaluates a learned component on this data leave-one-world-out will flatter it by tens of
+points.
+
+*And no rung wins outright.* TF-IDF beats the fine-tuned encoder by 13.6 pp on the primary
+split and loses to it by 19.7 pp on leave-one-template-out, so "cheap baseline matches the
+encoder" is true only of the split it is measured on. D-038 predicted the comparison would be
+interesting; it is interesting for a different reason than expected.
+
+*Three more findings.* F-37: the benchmark supplies the least supervision for exactly the
+decision the project is about, by construction — one training positive for
+`SEND:PUBLIC_WEB` against 45 for `READ:USER_FILES` — though competence does not simply track
+volume. F-39: a *trained* doubt-detector reproduces D-035's rejection of the lexical coupling
+rule exactly, and cannot escape it, because intersection caps a filter's retention at its own.
+F-40: `WRITE:USER_FILES` now defeats five compilers of two entirely different kinds, prompted
+ones by over-granting and the learned one by never granting at all.
+
+*And a sizing follow-up that redirected the obvious next step.* **E-15b** asked whether E-15's
+result was about data or about the model, and answered *both, differently per rung*. Both are
+still rising at 86 training examples — so neither had converged when they were compared, which
+qualifies prediction 36. But only TF-IDF is learning the distinction: its leakage stays near
+zero while retention climbs, where the fine-tuned encoder's leakage is **flat at ~50% across a
+fourfold data increase** while retention climbs. Extrapolating the encoder converges on
+`tool-ceiling`, not on gold (**F-41**). So the missing experiment is **cross-validating R3's
+threshold and class weighting inside the training split** — never done, recorded as a
+limitation — and not simply more data.
+
+*What was deliberately not bought.* A few-shot prompted arm, costed at ~$2–5, which would have
+made the comparison apples-to-apples. The learned model is supervised on the labels it is
+scored against and the prompted one is zero-shot; that asymmetry is stated in the registration,
+in the result, and beside every headline (E-15).
+
+Original plan follows.
+
 
 The substance, and the first ML in the project. Baseline to beat is already measured and
 published: **15.0% leakage / 100% retention at ~$6 per 207-utterance run.**

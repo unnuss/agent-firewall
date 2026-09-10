@@ -38,6 +38,22 @@ dev = [
     "ruff>=0.7",
 ]
 
+# Phase 6 (D-038, D-041). Deliberately an extra and not a dependency: the trusted path must
+# stay installable with pydantic and pyyaml alone, and a reviewer should be able to verify
+# that by reading this file. `tests/test_ml.py` asserts that nothing under agentfw/core/
+# imports any of these, so the boundary is checked rather than promised.
+#
+# Split in two so the cheap rungs stay cheap. `ml` is 7 small packages and covers R0 and R1;
+# `ml-encoder` adds torch and transformers (~2.5 GB) and is needed only for R2 and R3.
+ml = [
+    "scikit-learn>=1.5",
+]
+ml-encoder = [
+    "scikit-learn>=1.5",
+    "torch>=2.4",
+    "transformers>=4.44",
+]
+
 [project.scripts]
 agentfw = "agentfw.cli:main"
 

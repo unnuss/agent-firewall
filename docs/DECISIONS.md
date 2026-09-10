@@ -946,6 +946,127 @@ for it.
 
 ---
 
+### D-042 — The learned compiler is not adopted under E-15's rule, and the rule was the wrong instrument
+**Date:** 2026-09-09 · **Status:** accepted · **Follows:** E-15's registered decision rule ·
+**Qualifies:** D-038's baseline framing · **Does not amend:** E-15
+
+**Decision.** The learned compiler is **not adopted** as a recommended compiler arm. E-15's
+registered rule required it to beat `per-class` on leakage *at equal or better retention* and
+to hold its leave-one-template-out figure within 10 pp of its primary-split figure. It failed
+both of the second two clauses and the rule is followed as written.
+
+**And the rule was the wrong instrument, which is a separate finding and does not change the
+outcome.** The rule is stated in *scope-level* terms. At the scope level Arm L looks hopeless:
+45.5% retention against `per-class`'s 100%, contrast fidelity 39.4% against 86.4%. At the
+**verdict level**, over the same 621 committed episodes, it converts to **1.7% of contested
+effects executed against `per-class`'s 5.6%**, at **81.3% high-authority task completion
+against 82.8%**, for **0.17 extra interruptions per high-authority episode** and **fewer**
+interruptions on benign work than the prompted arm spends.
+
+**Why the two levels disagree, stated once because everything else in this entry follows from
+it.** The two directions of compiler error are not the same size of mistake:
+
+* a class the compiler **wrongly drops** becomes an **ASK**; the human says yes; the work
+  proceeds. The cost is an interruption.
+* a class the compiler **wrongly grants** is **silent**. Nobody is asked. The effect happens.
+
+Scope-level retention weighs these equally. They are not equal, and the whole architecture
+exists because they are not. The learned compiler errs almost entirely in the *recoverable*
+direction, so 45.5% scope-level retention becomes 81.3% real task completion — 1.5 pp below
+gold. `read-only` is the control that makes this legible: also 0% leakage, but 71.7%
+completion and 0.798 asks per high-authority episode. Arm L is nowhere near it.
+
+**This is F-14 with the sign reversed, and it is the phase's methodological result.** F-14
+taught that a scope-level score can rank a change that makes the system *worse*. Here the same
+instrument ranks a change that makes the system *better* as a failure. E-15 required a replay
+because of F-14, and that requirement is the only reason this is known.
+
+**What is adopted, and what is not.**
+
+* **Not adopted:** the learned compiler as a recommended arm, a fifth `agentfw demo --scope`
+  source, or a number quoted anywhere as "the learned compiler beats the prompted one."
+* **Adopted:** the artifacts and the experiment stay committed and reproducible, because the
+  verdict-level rows are evidence and deleting them would leave only the misleading half.
+* **Recorded for whoever writes the next rule:** an adoption criterion for a compiler should
+  be stated at the **verdict level** — contested effects executed, task completion, and
+  interruptions spent — and not at the scope level. Scope-level leakage and retention stay
+  useful as *diagnostics* and are disqualified as *criteria*. This is a recommendation to a
+  future decision, **not a retroactive amendment to E-15**, and the distinction is the point:
+  the rule that was registered is the rule that was applied.
+
+**Alternatives.** (a) *Amend E-15's rule to the verdict level and adopt.* Rejected outright.
+Rewriting a criterion after seeing the result it decides is the single failure this project's
+structure exists to prevent, and doing it once would make every other registered prediction
+in the repository worth nothing. (b) *Report only the verdict-level table and drop the
+scope-level one.* Rejected: the disagreement between them **is** the finding. (c) *Declare the
+phase a failure and delete the code.* Rejected — four of seven registered predictions were
+falsified and that is the phase working, not failing.
+
+**Revisit if.** Phase 4's cost model lands. It prices interruptions, which is exactly the
+currency Arm L pays in, and it is the thing that could turn "0.17 extra asks per high-authority
+episode for 3.9 pp of security at a thousandth of the cost" into a decision rather than an
+observation.
+
+---
+
+### D-041 — The learned compiler runs in two arms: one that grants, one that only withholds
+**Date:** 2026-09-09 · **Status:** accepted · **Resolves an ambiguity in:** D-038 ·
+**Constrained by:** D-006
+
+**The ambiguity, stated plainly.** D-038 says two things that do not obviously fit together.
+It says the model "may **raise an ASK but never grant authority**", which describes a monitor
+signal sitting beside an existing scope. And it says the baseline to beat is **15.0% leakage /
+100% retention** — which are *compiler* metrics, computed from a scope, and a compiler grants
+by definition. Read literally, D-038 asks for a component that must beat a compiler without
+being one.
+
+**Decision.** Phase 6 builds one model and uses it in two arms, both evaluated.
+
+* **Arm L — learned-as-compiler.** The model emits an effect set, which becomes a
+  `CompiledScope` artifact indistinguishable in kind from what `LLMIntentCompiler` writes. It
+  is scored by `scope_eval` beside `per-class` and `baseline`, and replayed by `agentfw
+  replay` for a verdict-level number. **This is the headline comparison and it is what the
+  phase exists to produce.**
+* **Arm H — learned-as-narrowing-signal.** The model may only *withhold* classes an existing
+  prompted scope granted. It cannot add one; the operation is `IntentScope.narrow`, whose
+  signature cannot express widening. This is the literal reading of D-038 and it is the arm
+  that is safe under any interpretation of D-006.
+
+**Why Arm L is not a D-006 violation, which is the part worth getting right.** D-006 keeps ML
+out of the **trusted computing base**. The compiler has never been in it. `intent/compiler.py`
+says so in its own docstring — *"Nothing here is in the TCB. The scope it emits is the
+starting authority set; monotonicity (P1) still means only a human can widen it"* — and a
+*prompted frontier model* already occupies exactly this slot and has produced every compiled
+number in the project. Swapping which model fills it changes the accuracy of the starting
+authority and changes nothing about who may widen it, what the monitor enforces, or what the
+gates do. The invariant that actually binds is unchanged and untouched: **no component here
+may emit `Signal(structural=True)`**, and the existing test still asserts it.
+
+**Why Arm H is worth building anyway, at nearly no extra cost.** It is the learned analogue of
+E-12's coupling rule — withhold the grants the compiler itself questioned — which D-035
+measured at N=60 and **did not adopt**, because it turned out to be a substitute for
+`per-class` rather than a complement and degraded the best arm. Replacing that rule's lexical
+matching with a trained model is a sharp question with a measured precedent to beat, and once
+Arm L exists Arm H is a filter over it.
+
+**What this does not license.** No learned output may become a grant the monitor *trusts* more
+than it trusts a prompted one; both are equally untrusted starting authority. Nothing may read
+a scenario id. The `ml` extra stays optional and nothing under `agentfw/core/` may import it
+(D-038), which gains a test in this phase rather than staying a sentence.
+
+**Alternatives.** (a) *Arm L only.* Rejected: it leaves D-038's own words unaddressed, and
+Arm H is nearly free. (b) *Arm H only — the literal reading.* Rejected: a component that never
+emits a scope cannot be scored on leakage, retention or contrast, so the phase would have no
+comparison to report and D-038's stated baseline would be unreachable by construction. (c)
+*Amend D-038 and pick one.* Rejected in favour of measuring both, which costs one extra
+evaluation pass and answers the question instead of legislating it.
+
+**Revisit if.** Arm H beats Arm L on the security axis at equal retention. That would mean the
+useful learned signal is *doubt about a grant* rather than the grant itself, which is a
+different and more deployable claim than the one this phase set out to test.
+
+---
+
 ### D-040 — MIT, and the benchmark artifacts are under it too
 **Date:** 2026-09-09 · **Status:** accepted
 
