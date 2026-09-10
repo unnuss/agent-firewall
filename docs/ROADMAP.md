@@ -362,6 +362,16 @@ fourfold data increase** while retention climbs. Extrapolating the encoder conve
 threshold and class weighting inside the training split** — never done, recorded as a
 limitation — and not simply more data.
 
+*One registered experiment is owed and it is `(pending)`.* **E-15c** asks the question F-41
+points at — does cross-validated calibration fix R3, or does the Phase 6 conclusion stand — and
+it is registered, implemented, tested and **not run**: Windows Application Control began
+blocking `numpy/random/_common.pyd` on the dev machine, which takes `sklearn` and `torch` with
+it. It was not worked around. So that one point stands **by default rather than by evidence**,
+and `agentfw learn --calibrate` is the first thing to run when the stack imports again. The
+failure did establish, for free, that D-038's optional-extra boundary holds under destruction:
+with the ML stack unloadable, the trusted path and the whole evaluation harness were completely
+unaffected.
+
 *What was deliberately not bought.* A few-shot prompted arm, costed at ~$2–5, which would have
 made the comparison apples-to-apples. The learned model is supervised on the labels it is
 scored against and the prompted one is zero-shot; that asymmetry is stated in the registration,

@@ -236,6 +236,13 @@ class FineTunedEncoder:
     not the architecture is the binding constraint. Epochs and learning rate are fixed here
     rather than tuned: there is no validation set that is not also a test set, and tuning
     against the test set is the failure this whole project is organised against (R-16).
+
+    **That reasoning was half right and E-15c is the correction.** It correctly forbids tuning
+    against held-out; it does not excuse skipping cross-validation *inside the training split*,
+    which touches nothing held out. `pos_weight_cap` and `thresholds` are the two knobs E-15c
+    selects that way. Their defaults are E-15's blind values, so an unconfigured
+    `FineTunedEncoder()` still reproduces E-15's published R3 numbers exactly and the original
+    result stays regenerable.
     """
 
     name: str = "R3-finetuned"
@@ -244,6 +251,11 @@ class FineTunedEncoder:
     lr: float = 3e-5
     batch_size: int = 16
     threshold: float = 0.5
+    # E-15's blind clamp. E-15c searches {1, 5, 10, 50} by grouped CV on the training split.
+    pos_weight_cap: float = 50.0
+    # Per-class decision thresholds, class -> cut. Empty means "use `threshold` for every
+    # class", which is E-15's condition.
+    thresholds: dict[str, float] = field(default_factory=dict)
     classes: tuple[str, ...] = ()
 
     def fit(self, train: Dataset) -> None:
@@ -269,7 +281,7 @@ class FineTunedEncoder:
         # Positive-class weighting, for the same reason R1 uses class_weight="balanced":
         # the rare classes are the interesting ones.
         pos = y.sum(0).clamp(min=1.0)
-        pos_weight = ((len(train) - pos) / pos).clamp(max=50.0)
+        pos_weight = ((len(train) - pos) / pos).clamp(max=self.pos_weight_cap)
         loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
         loader = DataLoader(
@@ -292,10 +304,15 @@ class FineTunedEncoder:
                 opt.step()
         self._enc.eval()
 
-    def predict(self, examples: Sequence[Example]) -> list[set[str]]:
+    def predict_proba(self, examples: Sequence[Example]) -> list[dict[str, float]]:
+        """Per-class probabilities, which is what threshold calibration needs to exist.
+
+        Separated from `predict` so that E-15c can select thresholds from *out-of-fold*
+        probabilities on training data without ever asking the model for a decision.
+        """
         import torch
 
-        out: list[set[str]] = []
+        out: list[dict[str, float]] = []
         with torch.no_grad():
             for start in range(0, len(examples), 32):
                 batch = list(examples[start : start + 32])
@@ -310,12 +327,19 @@ class FineTunedEncoder:
                 m = enc["attention_mask"].unsqueeze(-1).float()
                 pooled = (hidden * m).sum(1) / m.sum(1).clamp(min=1e-9)
                 probs = torch.sigmoid(self._head(pooled)).numpy()
-                for row, ex in zip(probs, batch, strict=True):
-                    predicted = {
-                        c for c, p in zip(self.classes, row, strict=True) if p >= self.threshold
-                    }
-                    out.append(_mask(predicted, ex))
+                for row in probs:
+                    out.append({c: float(p) for c, p in zip(self.classes, row, strict=True)})
         return out
+
+    def cut_for(self, effect_class: str) -> float:
+        """The cut for one class: `thresholds` wins, `threshold` is the fallback."""
+        return self.thresholds.get(effect_class, self.threshold)
+
+    def predict(self, examples: Sequence[Example]) -> list[set[str]]:
+        return [
+            _mask({c for c, p in row.items() if p >= self.cut_for(c)}, ex)
+            for row, ex in zip(self.predict_proba(examples), examples, strict=True)
+        ]
 
 
 RUNGS: dict[str, type] = {
@@ -328,6 +352,56 @@ RUNGS: dict[str, type] = {
 # The two that need only the `ml` extra. Used by the CLI to fail early with a useful
 # sentence rather than at the first torch import inside a fold.
 CHEAP_RUNGS = ("R0-prior", "R1-tfidf")
+
+
+# What each rung needs, so a missing or unloadable extra becomes a sentence rather than a
+# traceback from somewhere inside torch. R0 needs nothing beyond the core dependencies.
+# Whole import *statements*, not module names, because `import transformers` succeeds lazily
+# while `from transformers import AutoModel` is what actually fails when the stack is broken.
+# Probing the shallow name reported a rung as available and then crashed inside the fit.
+RUNG_REQUIRES: dict[str, tuple[str, ...]] = {
+    "R0-prior": (),
+    "R1-tfidf": ("from sklearn.linear_model import LogisticRegression",),
+    "R2-frozen": (
+        "from sklearn.linear_model import LogisticRegression",
+        "from transformers import AutoModel",
+    ),
+    "R3-finetuned": (
+        "from torch.utils.data import DataLoader",
+        "from transformers import AutoModel",
+    ),
+}
+
+
+def unavailable(rung_name: str) -> str | None:
+    """Why this rung cannot run here, or None. Checked in a subprocess, and here is why.
+
+    An ML package can be *installed* and still fail to load — a broken wheel, a missing
+    system library, or an OS policy blocking one compiled DLL. Probing in-process would leave
+    a half-initialised package in ``sys.modules``, which is how a numpy probe once took
+    fifteen unrelated hypothesis property tests down with it. Asking a fresh interpreter costs
+    one process start and has no side effects at all.
+    """
+    import subprocess
+    import sys
+
+    for statement in RUNG_REQUIRES.get(rung_name, ()):
+        probe = subprocess.run(
+            [sys.executable, "-c", statement], capture_output=True, text=True
+        )
+        if probe.returncode != 0:
+            last = [ln for ln in probe.stderr.strip().splitlines() if ln.strip()]
+            reason = last[-1] if last else "import failed"
+            newline = chr(10)
+            return (
+                f"{rung_name} needs `{statement}`, which fails here:"
+                f"{newline}  {reason}{newline}"
+                f"Install the extra with `uv sync --extra ml` (R0/R1) or "
+                f"`--extra ml-encoder` (R2/R3). If it is already installed, the package is "
+                f"present but unloadable, which is an environment problem rather than a "
+                f"missing dependency."
+            )
+    return None
 
 
 def build_rung(name: str) -> Rung:

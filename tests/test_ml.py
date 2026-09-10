@@ -32,6 +32,46 @@ CORE = AGENTFW / "core"
 ML_PACKAGES = ("sklearn", "torch", "transformers", "numpy", "scipy")
 
 
+_IMPORTABLE: dict[str, bool] = {}
+
+
+def _importable(module: str) -> bool:
+    """Can this module be imported — asked in a subprocess, so asking has no side effects.
+
+    Two things forced this shape, and both are worth keeping.
+
+    **`pytest.importorskip` catches only `ModuleNotFoundError`.** It does not cover a package
+    that is *installed* but cannot load: a broken wheel, a missing system library, or — as
+    happened on the dev machine — a Windows Application Control policy blocking one compiled
+    DLL, which took `numpy.random` down and `sklearn` and `torch` with it. The `ml` extra is
+    optional by D-038, so its tests must skip in that case rather than fail; a red suite would
+    report the trusted path as broken when the trusted path is fine.
+
+    **And the probe must not import anything into this process.** `hypothesis` seeds
+    `numpy.random` when it detects numpy in `sys.modules`, so an in-process probe that pulled
+    numpy in made all fifteen property tests in `test_core_*` fail on a DLL they never use.
+    The subprocess keeps the test session numpy-free when the extra is unavailable, and costs
+    one interpreter start per module asked about, once.
+    """
+    if module not in _IMPORTABLE:
+        out = subprocess.run(
+            [sys.executable, "-c", f"import {module}"],
+            capture_output=True,
+            text=True,
+            cwd=AGENTFW.parent,
+        )
+        _IMPORTABLE[module] = out.returncode == 0
+    return _IMPORTABLE[module]
+
+
+needs_sklearn = pytest.mark.skipif(
+    not _importable("sklearn"), reason="the `ml` extra is not loadable here"
+)
+needs_torch = pytest.mark.skipif(
+    not _importable("torch.utils.data"), reason="the `ml-encoder` extra is not loadable here"
+)
+
+
 @pytest.fixture(scope="module")
 def data() -> ds.Dataset:
     return ds.build()
@@ -225,7 +265,8 @@ def test_leave_one_template_out_never_holds_out_handwritten(data: ds.Dataset):
 @pytest.mark.parametrize("name", models.CHEAP_RUNGS)
 def test_a_cheap_rung_never_predicts_outside_the_tool_ceiling(data: ds.Dataset, name: str):
     """The mask is the learned equivalent of showing the compiler its tool list."""
-    pytest.importorskip("sklearn")
+    if name != "R0-prior" and not _importable("sklearn"):
+        pytest.skip("the `ml` extra is not loadable here")
     fold = splits.folds(data, "S1")[0]
     rung = models.build_rung(name)
     predictions, _ = models.fit_and_predict(rung, fold.train, fold.test)
@@ -263,13 +304,13 @@ def test_an_unknown_rung_is_an_error():
 # ---------------------------------------------------------------------------
 
 
+@needs_sklearn
 def test_scoring_goes_through_scope_eval_and_produces_its_shape(data: ds.Dataset):
     """A learned arm must be scored by the same code as a prompted one.
 
     Asserted by shape: the report carries scope_eval's own blocks. If someone later swaps
     in a bespoke metric, the keys change and this fails.
     """
-    pytest.importorskip("sklearn")
     fold = splits.folds(data, "S1")[0]
     rung = models.build_rung("R1-tfidf")
     predictions, _ = models.fit_and_predict(rung, fold.train, fold.test)
@@ -403,3 +444,82 @@ def test_the_full_fraction_returns_the_training_set_unchanged(data: ds.Dataset):
 
     train = splits.folds(data, "S1")[0].train
     assert list(curve.subsample_by_scenario(train, 1.0, 1)) == list(train)
+
+
+# ---------------------------------------------------------------------------
+# E-15c: calibration must be selectable from training data alone
+# ---------------------------------------------------------------------------
+
+
+def test_select_has_no_way_to_see_heldout():
+    """The R-16 guarantee, checked structurally rather than promised in a docstring.
+
+    `select` takes the training split and a fold count. If someone later adds a `test=` or
+    `heldout=` parameter, the selection could be tuned against the slice every S1 number in
+    this repository is measured on, and this fails before that can ship.
+    """
+    import inspect
+
+    from agentfw.ml import calibrate
+
+    params = set(inspect.signature(calibrate.select).parameters)
+    assert params == {"train", "n_folds"}, params
+    forbidden = {"test", "heldout", "held_out", "eval", "evaluation", "target"}
+    assert not (params & forbidden)
+
+
+@pytest.mark.parametrize("n_folds", [3, 5])
+def test_calibration_folds_never_split_a_scenario(data: ds.Dataset, n_folds: int):
+    from agentfw.ml import calibrate
+
+    train = splits.folds(data, "S1")[0].train
+    seen: list[tuple[str, str]] = []
+    for inner_train, inner_val in calibrate.grouped_folds(train, n_folds):
+        overlap = {e.scenario_id for e in inner_train} & {e.scenario_id for e in inner_val}
+        assert not overlap, f"CV fold splits scenario(s) {sorted(overlap)[:3]}"
+        seen += [(e.scenario_id, e.variant_id) for e in inner_val]
+    assert len(seen) == len(set(seen)) == len(train)
+
+
+def test_a_class_never_seen_positive_keeps_the_default_threshold(data: ds.Dataset):
+    """Fitting a cut for a class with no positive example is fitting noise."""
+    from agentfw.ml import calibrate
+
+    train = splits.folds(data, "S1")[0].train
+    examples = list(train)
+    # Every probability 0.9, but no example carries the invented class.
+    probabilities = [{"NEVER:SEEN": 0.9} for _ in examples]
+    chosen = calibrate.thresholds_from_oof(examples, probabilities, ["NEVER:SEEN"], default=0.5)
+    assert chosen["NEVER:SEEN"] == 0.5
+
+
+def test_threshold_search_separates_a_clean_signal(data: ds.Dataset):
+    from agentfw.ml import calibrate
+
+    train = splits.folds(data, "S1")[0].train
+    klass = "READ:EMAIL"
+    examples = [ex for ex in train if klass in ex.labels] + [
+        ex for ex in train if klass not in ex.labels
+    ]
+    # Perfectly separable at 0.5: positives at 0.9, negatives at 0.1.
+    probabilities = [{klass: 0.9 if klass in ex.labels else 0.1} for ex in examples]
+    cut = calibrate.thresholds_from_oof(examples, probabilities, [klass])[klass]
+    assert 0.1 < cut <= 0.9
+
+
+def test_the_frozen_calibration_actually_reconfigures_the_rung():
+    from agentfw.ml import calibrate
+
+    cal = calibrate.Calibration(pos_weight_cap=5.0, thresholds={"READ:EMAIL": 0.35})
+    rung = cal.apply_to(models.build_rung("R3-finetuned"))
+    assert rung.pos_weight_cap == 5.0
+    assert rung.cut_for("READ:EMAIL") == 0.35
+    assert rung.cut_for("PURCHASE:FINANCIAL") == 0.5  # falls back to the default
+
+
+def test_an_unconfigured_r3_still_reproduces_e15s_condition():
+    """E-15's published R3 must stay regenerable after E-15c added the knobs."""
+    rung = models.build_rung("R3-finetuned")
+    assert rung.pos_weight_cap == 50.0
+    assert rung.thresholds == {}
+    assert rung.threshold == 0.5

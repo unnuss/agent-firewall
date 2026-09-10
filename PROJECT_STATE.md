@@ -12,7 +12,12 @@ silent. **F-14 with the sign reversed (F-38).** A follow-up sizing run (**E-15b*
 **both** learned rungs are still data-starved at 86 examples — and that only TF-IDF is learning
 to *discriminate*: its leakage stays near zero while retention climbs, whereas the fine-tuned
 encoder's leakage sits flat at ~50% across a fourfold data increase, so more data would push it
-toward `tool-ceiling` rather than toward gold (**F-41**). Spend: **$0**. · **Phase 5.5 complete.** `uv run agentfw demo` replays four
+toward `tool-ceiling` rather than toward gold (**F-41**). **E-15c then registered the
+calibration experiment F-41 points at — cross-validated thresholds and class weighting,
+selected inside the training split — and it is `(pending)`: Windows Application Control began
+blocking `numpy/random/_common.pyd`, which takes `sklearn` and `torch` with it. Code, tests and
+registration are committed and ready; the experiment waits for the machine. So Phase 6's
+conclusion stands _by default rather than by evidence_ on that one point.** Spend: **$0**. · **Phase 5.5 complete.** `uv run agentfw demo` replays four
 committed episodes through the real monitor and prints ALLOW / ASK → APPROVED / ASK → DENIED /
 BLOCK, with no API key and no network; `LICENSE` exists (MIT, D-040); the README has runnable
 commands where it had none. The repo is now presentable from here onward, which was the point
@@ -34,8 +39,10 @@ still deferred, and D-042 gives it a new reason to exist. The whole plan is in
    `docs/EXPERIMENTS.md` (written before any model was fitted), then **E-15's result**, then
    **D-042** (why it was not adopted and why the rule that rejected it was itself the wrong
    instrument) and **D-041** (where a learned model is allowed to sit). Then findings
-   **F-36 → F-40**. F-36 is the one that outlives the phase: **leave-one-world-out overstates
-   generalisation on this benchmark by ~41 pp**, and only ~10 pp of that is memorisation.
+   **F-36 → F-41**. F-36 is the one that outlives the phase: **leave-one-world-out overstates
+   generalisation on this benchmark by 35–41 pp**. Then read **E-15c's status**: it is
+   registered, implemented, tested and **not run**, and it is the first thing to run when the
+   ML stack works again.
 2. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-037** — it is the verdict on
    the whole Phase 3.5/Phase 5 arc and it says what Phase 4 inherits. Then **D-034** (what was
    reopened), **D-036** (why Phase 5 ran before Phase 4), **D-035** (the coupling rule, still
@@ -61,7 +68,8 @@ Health check (~6 min measured on the dev machine, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **551 passed, 0 failed**. The four gold-scope tests that were red on purpose through
+Expect **556 passed, 2 skipped**. The two skips are the `ml` extra, which is blocked on this
+machine — see section 7; where it imports, expect **558 passed**. The four gold-scope tests that were red on purpose through
 Phase 5's authoring step are green: the labels exist now. Any failure is a real one. `validate`
 reports 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios and **66 AF-Auth / 5 AF-Inject /
 10 benign held-out**, 23 tools.
@@ -348,7 +356,7 @@ that they disagree, and either alone is misleading (F-38, D-042).
 | **F-08 / F-07** | ASK granularity; argument vs authority provenance | Phase 4 |
 | **F-36** | Leave-one-world-out overstates generalisation on this benchmark by ~41 pp, and eight of nine contested classes have a **sole template source** | Never evaluate a learned component LOWO on this data. Any new template should reuse an existing contested class where possible, so leave-one-template-out stops being a class-transfer test |
 | **F-37** | The benchmark supplies the least supervision for the decision the project is about — 1 dev positive for `SEND:PUBLIC_WEB`, 45 for `READ:USER_FILES` | Structural (D-010), not fixable by relabelling. If a learned component is revisited, the training set has to grow at the contested classes specifically |
-| **F-41** | The fine-tuned encoder's leakage does not fall with data (47.8% → 51.7% across a 4x increase). Its configuration — threshold 0.5, `pos_weight` clamped at 50 — was **never validated**, and E-15b says that is the live suspect rather than sample size | **Cross-validate R3 inside the training split before anything else.** Then, and only then, extend the contested-class set via the generator (D-038 step 2, never taken). Neither reopens Phase 6's conclusions |
+| **F-41** | The fine-tuned encoder's leakage does not fall with data (47.8% → 51.7% across a 4x increase). Its configuration — threshold 0.5, `pos_weight` clamped at 50 — was **never validated**, and E-15b says that is the live suspect rather than sample size | **E-15c is registered, implemented, tested and `(pending)`** — blocked by the Application Control issue above, not by design. Run `agentfw learn --calibrate` first thing once the ML stack imports. Then, and only then, extend the contested-class set via the generator (D-038 step 2, never taken). Neither reopens Phase 6's conclusions |
 | **F-40** | `WRITE:USER_FILES` defeats prompted compilers by over-granting and the learned one by never granting | F-33's action is unchanged and now better motivated: write `WRITE:USER_FILES` into a different template and see whether the shape or the class is at fault |
 | **R-14** | Claude-authored scenarios, labels and compiler arms | **Untouched and now the largest risk.** D-033 removes context contamination, not authorship. Needs a human or another vendor |
 | **R-09** | Open-weight generalisation | Unresolved |
@@ -449,6 +457,22 @@ asymmetry, or D-033's authoring condition without a documented reason.
   `ml-encoder` adds torch and transformers (~2.5 GB) for R2/R3. Installed here:
   scikit-learn 1.9.0, torch 2.14.0+cpu, transformers 5.16.1, numpy 2.5.3. **All four rungs run
   on CPU**; R1 fits in 6 s for 207 utterances, R3 in a few minutes per fold.
+- **The ML stack is currently BLOCKED on this machine, and it is not a code problem.**
+  Windows Application Control blocks `numpy/random/_common.cp312-win_amd64.pyd`, so
+  `numpy.random`, `sklearn` and `transformers`/`torch.utils.data` all fail to import while
+  `numpy`, `scipy` and bare `torch` still work. It is not transient. **It was not worked
+  around** — evading an application-control policy, including by pinning an older numpy until
+  one passes the scan, is not a thing this project does for a number. To unblock, allow that
+  file in Windows Security yourself, or recreate the venv and see whether the replacement
+  passes the scan. Until then `agentfw learn` cannot fit anything and its two tests skip.
+- **Two things that failure established for free.** `agentfw/core/`, `agentfw/policy/`,
+  `firewall.py` and the whole evaluation harness were **completely unaffected** — the first real
+  test of D-038's optional-extra boundary, and it held. And it exposed a defect in this
+  repository's own suite: `pytest.importorskip` catches only `ModuleNotFoundError`, so the
+  optional-extra tests failed where they should have skipped, and because the availability probe
+  imported numpy into the session, **`hypothesis` — which seeds `numpy.random` when it sees numpy
+  in `sys.modules` — took fifteen property tests down with it.** The probe now runs in a
+  subprocess. Worth remembering beyond this project.
 - **A transient install-time failure worth recognising, not debugging.** The first `import
   sklearn` after `uv pip install` died with `ImportError: DLL load failed while importing
   _special_ufuncs: An Application Control policy has blocked this file`. It was Windows

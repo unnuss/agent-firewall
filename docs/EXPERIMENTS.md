@@ -2551,6 +2551,167 @@ three scenarios scored 0/3 on high-authority compliance:
 
 ---
 
+### E-15c — status: **(pending)**, blocked by a machine security policy, not by the design
+
+**Attempted 2026-09-10.** Registered, implemented, tested, and **not run**. The result is
+`(pending)` and no number below is an estimate of what it would have been.
+
+**What happened.** Windows Application Control began blocking a single compiled DLL in the
+virtual environment — `numpy/random/_common.cp312-win_amd64.pyd`, installed the previous day
+and working all through E-15 and E-15b. Everything downstream went with it:
+
+```
+>>> import numpy.random
+ImportError: DLL load failed while importing _common:
+             An Application Control policy has blocked this file.
+
+>>> import sklearn
+ImportError: DLL load failed while importing _common: (same)
+
+>>> from transformers import AutoModel
+ImportError: cannot import name 'NP_SUPPORTED_MODULES' from 'torch._dynamo.utils'
+```
+
+`numpy`, `scipy` and `torch` still import; `numpy.random`, `sklearn` and
+`torch.utils.data`/`transformers` do not. So **R1 and R3 both cannot be fitted**, and E-15c's
+whole design depends on fitting R3 twenty times for the cross-validated selection.
+
+It is not transient — it was retried, and unlike the install-time scare recorded in
+`PROJECT_STATE` section 7 it does not clear. **It was not worked around.** Disabling or
+evading an application-control policy is not a thing this project does to get a number, and
+the alternatives (pinning an older numpy until one passes the scan) are evasion wearing a
+requirements file. The experiment waits for the machine.
+
+**What is committed and ready to run the moment the policy allows the file:**
+
+* `agentfw/ml/calibrate.py` — grouped-by-scenario 5-fold CV on the 86 training examples,
+  per-class F1 thresholds over a 19-point grid, positive-weight caps `{1, 5, 10, 50}`,
+  configuration frozen to `calibration.json` **before** held-out is touched, then one refit and
+  one held-out read.
+* `agentfw learn --calibrate`.
+* `FineTunedEncoder.predict_proba`, `pos_weight_cap` and per-class `thresholds` — whose
+  **defaults are E-15's blind values**, so an unconfigured R3 still reproduces E-15's published
+  numbers exactly and the original result stays regenerable.
+* Seven tests, including `test_select_has_no_way_to_see_heldout`, which asserts by signature
+  that the selection function has no parameter through which held-out could reach it.
+
+**So the question the user asked — does calibration fix R3, or does Phase 6's conclusion stand
+— is unanswered, and Phase 6's conclusion stands _by default rather than by evidence_.** That
+distinction matters and should not be smoothed over: D-042's non-adoption rests on E-15's
+measured numbers and is unaffected, but F-41's calibration *suspicion* is still a suspicion.
+
+#### Two things this failure established for free
+
+**D-038's optional-extra boundary worked, and this is the first real test of it.** With the
+entire ML stack unloadable, `agentfw/core/`, `agentfw/policy/`, `firewall.py` and the whole
+evaluation harness were **completely unaffected**: no module under any of them imports numpy,
+and `pytest --ignore=tests/test_ml.py` passed in full. A reviewer can now be told that the
+trusted path's independence from ML is not merely declared in `pyproject.toml` — it survived
+the ML stack being destroyed underneath it.
+
+**And it exposed a real defect in this repository's own test suite.** `pytest.importorskip`
+catches only `ModuleNotFoundError`, so it does not skip for a package that is installed but
+cannot load; the optional-extra tests *failed* where they should have skipped. Worse, the
+availability probe imported numpy into the test session, and **`hypothesis` seeds
+`numpy.random` whenever it detects numpy in `sys.modules`** — so fifteen property tests in
+`test_core_*` and `test_policy` failed on a DLL they do not use and cannot reach. The probe now
+runs in a subprocess, which keeps the session numpy-free when the extra is unavailable. Suite:
+**556 passed, 2 skipped** with the ML stack down.
+
+That second one is worth keeping in mind beyond this project: a property-test suite can be
+taken down by an optional dependency it never imports, through a test helper that merely asks
+whether that dependency exists.
+
+---
+
+## E-15c — registration: does calibration fix R3, or does Phase 6's conclusion stand? ($0, written before any fit)
+
+**Phase:** 6.1 · **Status:** registered 2026-09-10, before a single calibration fit ·
+**Budget: $0** · **Tests exactly one hypothesis**, the one F-41 named and E-15 recorded as a
+limitation in its own execution.
+
+### The hypothesis, and where it came from
+
+E-15's R3 used threshold 0.5 and `pos_weight` clamped at 50, **fixed blind and never
+validated**. F-41 then found that R3's leakage does not fall with data — 47.8% at n≈20 and
+51.7% at n=86, flat across a fourfold increase — while its retention climbs steadily. A model
+whose recall improves and whose precision does not is the signature of a **decision rule set in
+the wrong place**, not of a model short of capacity or examples.
+
+So: **is R3's failure calibration, or is it real?** If calibration fixes it, E-15's prediction-36
+result ("TF-IDF beat the fine-tuned encoder") is a statement about one unvalidated configuration
+and must be qualified. If calibration does not fix it, **Phase 6's conclusion stands as written**
+and the negative result is about the model.
+
+**Where the hypothesis came from is worth stating plainly.** It came from looking at held-out
+behaviour in E-15 and E-15b. That is ordinary — you observe, you form a hypothesis, you test it
+— and it is *not* the thing that would invalidate this experiment. What would invalidate it is
+using held-out to **choose** the configuration. That is what the design below forbids.
+
+### What is and is not being changed
+
+**Changed:** R3's positive class weighting and its per-class decision thresholds. Nothing else.
+
+**Explicitly not changed**, so this cannot drift into the architecture search D-038 forbids:
+no additional training data, no change to the held-out set, no new model family, no new encoder,
+no change to epochs, learning rate, batch size, or the feature (the utterance, and only the
+utterance). R1, R2, R0, Arm H, both floors and every prompted arm are untouched.
+
+### The design, and the one rule that makes it legitimate
+
+**Selection happens entirely inside the S1 training split** (`dev`, 86 examples, 48 scenarios),
+by **grouped 5-fold cross-validation with the scenario as the group** — because variants of one
+scenario are minimal pairs sharing a context sentence (D-010) and splitting a triple would leak
+the answer into the selection itself.
+
+1. For each candidate positive-weight cap in **{1, 5, 10, 50}** — 1 meaning no weighting at all,
+   50 being E-15's unvalidated value — run the grouped CV and collect **out-of-fold predicted
+   probabilities** for every training example.
+2. From those OOF probabilities derive **per-class decision thresholds** by maximising per-class
+   F1, searched over a fixed grid of 19 thresholds from 0.05 to 0.95. A class with no OOF
+   positive keeps 0.5; inventing a threshold for a class never seen positive would be fitting
+   noise.
+3. Score each (cap, thresholds) configuration by **out-of-fold contrast fidelity** — the same
+   metric E-15 reports, computed on training data only — and select the best.
+4. **Freeze the configuration. Write it to disk before held-out is touched.**
+5. Refit once on the full 86 training examples with the frozen configuration, predict the 207
+   held-out variants **once**, score with `eval/scope_eval.py` unchanged, and run the mandatory
+   firewall replay over E-00j's 621 episodes (F-14: a compiler change is not an improvement
+   until the replay says so).
+
+**Held-out is read exactly once, after the configuration is frozen, and no result from it may
+change the configuration.** If this run's held-out number is disappointing, that is the answer;
+there is no second attempt with a different grid. A second attempt would make every S1 number in
+this repository meaningless, which is why the grid is written down here in full.
+
+### Registered predictions
+
+| # | Prediction | What it decides |
+|---|---|---|
+| 45 | **Calibration at least halves R3's held-out leakage**: from 51.7% to **below 25%** | The criterion. If it holds, F-41's calibration diagnosis is confirmed and E-15's prediction-36 reading becomes configuration-dependent rather than a fact about encoders. If it fails, **Phase 6's conclusion stands unqualified** and "a small encoder cannot do this" is the right reading |
+| 46 | **Calibrated R3's contrast fidelity reaches ≥ 39.4%**, i.e. at least matches R1's S1 figure | Whether calibration closes the R1-vs-R3 gap or merely narrows it. Leakage can fall while retention falls with it, which contrast would catch and leakage alone would not — this is F-35's trap and prediction 45 is vulnerable to it without this companion |
+| 47 | **Calibrated R3 still does not reach `per-class` sonnet's 86.4% contrast** | The sanity bound. A calibrated 19-class classifier fitted on 86 examples matching a frontier model would be surprising enough to suspect a leak, and this is where that suspicion would surface |
+| 48 | **The selected positive-weight cap is below 50** | E-15's blind value was the most aggressive available. If CV picks 50 anyway, the original configuration was not the problem and prediction 45 is unlikely to hold — the two predictions should agree, and it is worth knowing if they do not |
+
+### The decision rule, fixed now
+
+**If prediction 45 holds** — record that R3's E-15 result was a calibration artifact, qualify
+prediction 36 in E-15's result section, and report the calibrated row **beside** the original
+rather than replacing it. The original stands as what an unvalidated configuration produces,
+because that is a real thing to know about fine-tuning on 86 examples.
+
+**If prediction 45 fails** — record that calibration is not the explanation, **Phase 6's
+conclusion stands as written**, and F-41's calibration suspicion is withdrawn in favour of the
+simpler reading: at this sample size a fine-tuned encoder cannot separate these classes,
+however its decision rule is placed.
+
+**Either way** the configuration selected by CV is committed, so the selection can be audited
+independently of whether it worked. And either way **D-042's non-adoption is unaffected**: its
+criterion is `per-class`'s leakage at equal-or-better retention, and prediction 47 says no
+outcome here reaches it.
+
+---
+
 ### E-15b — result: both rungs are starved, and only one of them is learning the distinction
 
 **Phase:** 6 (reopened) · **Run 2026-09-10** · **Cost $0** · **Predictions 42, 43 and 44 all

@@ -691,6 +691,21 @@ def cmd_learn(args: argparse.Namespace) -> int:
     from agentfw.ml import run as run_mod
     from agentfw.ml import splits as splits_mod
 
+    # Fail with a sentence rather than a traceback from inside torch, which is what
+    # `models.py` has always claimed and did not do until the dev machine's ML stack broke.
+    rungs = args.rungs.split(",") if args.rungs else list(models.RUNGS)
+    for name in rungs if not args.calibrate else ["R3-finetuned"]:
+        why = models.unavailable(name)
+        if why:
+            print(f"cannot run {name}:{NEWLINE}{why}")
+            return 1
+
+    if args.calibrate:
+        from agentfw.ml import calibrate as calibrate_mod
+
+        calibrate_mod.run(Path(args.out) if args.out else None)
+        return 0
+
     if args.curve:
         from agentfw.ml import curve as curve_mod
 
@@ -886,6 +901,14 @@ def main(argv: list[str] | None = None) -> int:
         "--curve",
         action="store_true",
         help="E-15b: learning curve over training-set size instead of the rung/split grid",
+    )
+    ln.add_argument(
+        "--calibrate",
+        action="store_true",
+        help=(
+            "E-15c: select R3's class weighting and per-class thresholds by grouped CV on "
+            "the training split, freeze them, then read held-out once"
+        ),
     )
     ln.set_defaults(fn=cmd_learn)
 

@@ -6,7 +6,7 @@
 > Behind it: a sandbox, an agent, a 60-triple held-out benchmark across three
 > worlds with blind-authored gold labels, a deterministic reference monitor whose structural
 > properties are enforced as property tests, and an intent compiler validated end to end at
-> N=60 with every prediction registered before the run. 551 tests, ~3,000 baseline
+> N=60 with every prediction registered before the run. 558 tests, ~3,000 baseline
 > episodes, **44 registered predictions scored, 41 findings** — several of which correct
 > earlier claims in this file, and one of which corrects an instruction the project gave
 > itself. **Next: Phase 7, presentation.** Phase 4's cost model is still
@@ -59,7 +59,7 @@ demo says so in the same words it used to say it was stopped.
 
 ```bash
 uv sync --extra dev
-uv run pytest -q                                          # 551 tests, ~6 min
+uv run pytest -q                                          # 558 tests, ~4 min
 uv run agentfw validate                                   # every scenario loads and gates
 uv run agentfw replay experiments/e14_validation/replay.yaml   # E-14: the headline 2x2
 uv run agentfw replay experiments/e01b_compiled/config.yaml    # E-01b: the Phase 3 replay
