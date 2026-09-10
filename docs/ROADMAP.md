@@ -362,15 +362,19 @@ fourfold data increase** while retention climbs. Extrapolating the encoder conve
 threshold and class weighting inside the training split** — never done, recorded as a
 limitation — and not simply more data.
 
-*One registered experiment is owed and it is `(pending)`.* **E-15c** asks the question F-41
-points at — does cross-validated calibration fix R3, or does the Phase 6 conclusion stand — and
-it is registered, implemented, tested and **not run**: Windows Application Control began
-blocking `numpy/random/_common.pyd` on the dev machine, which takes `sklearn` and `torch` with
-it. It was not worked around. So that one point stands **by default rather than by evidence**,
-and `agentfw learn --calibrate` is the first thing to run when the stack imports again. The
-failure did establish, for free, that D-038's optional-extra boundary holds under destruction:
-with the ML stack unloadable, the trusted path and the whole evaluation harness were completely
-unaffected.
+*And the calibration question is settled (**E-15c**, Phase 6.1).* Cross-validated class
+weighting and per-class thresholds, selected inside the training split and frozen before
+held-out was read. **Calibration improves R3 at the verdict level** — contested effects executed
+27.8% → 16.1% for 3 pp of task completion — **and makes it worse at the scope level**, contrast
+25.8% → 13.6%. It does not rescue it: TF-IDF still executes 1.7% at better completion. Three of
+four predictions falsified, the decisive one being that **CV selected E-15's blind weight cap**,
+so the configuration was never the problem. **Phase 6's conclusion now stands by evidence.**
+Two findings came out of it — F-42, that all four leakage-reducing interventions in this project
+paid for it in retention and contrast fidelity caught every one; and F-43, that nineteen
+thresholds from 48 scenarios overfit invisibly to an out-of-fold estimate. The run was blocked
+for a day by Windows Application Control flagging one DLL, which tested D-038's optional-extra
+boundary by accident: with the ML stack unloadable the trusted path and the whole evaluation
+harness were completely unaffected.
 
 *What was deliberately not bought.* A few-shot prompted arm, costed at ~$2–5, which would have
 made the comparison apples-to-apples. The learned model is supervised on the labels it is

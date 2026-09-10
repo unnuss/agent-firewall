@@ -12,12 +12,13 @@ silent. **F-14 with the sign reversed (F-38).** A follow-up sizing run (**E-15b*
 **both** learned rungs are still data-starved at 86 examples — and that only TF-IDF is learning
 to *discriminate*: its leakage stays near zero while retention climbs, whereas the fine-tuned
 encoder's leakage sits flat at ~50% across a fourfold data increase, so more data would push it
-toward `tool-ceiling` rather than toward gold (**F-41**). **E-15c then registered the
-calibration experiment F-41 points at — cross-validated thresholds and class weighting,
-selected inside the training split — and it is `(pending)`: Windows Application Control began
-blocking `numpy/random/_common.pyd`, which takes `sklearn` and `torch` with it. Code, tests and
-registration are committed and ready; the experiment waits for the machine. So Phase 6's
-conclusion stands _by default rather than by evidence_ on that one point.** Spend: **$0**. · **Phase 5.5 complete.** `uv run agentfw demo` replays four
+toward `tool-ceiling` rather than toward gold (**F-41**). **E-15c then ran the calibration
+experiment F-41 points at and settled it: calibration materially *improves* R3 at the verdict
+level (contested executed 27.8% → 16.1%) and makes it *worse* at the scope level (contrast 25.8%
+→ 13.6%), and leaves it roughly ten times worse than TF-IDF on the security axis. Three of four
+predictions falsified, including the decisive one — cross-validation chose E-15's blind weight
+cap, so the weighting was never misconfigured. Phase 6's conclusion now stands _by evidence_
+(F-42, F-43).** Spend: **$0**. · **Phase 5.5 complete.** `uv run agentfw demo` replays four
 committed episodes through the real monitor and prints ALLOW / ASK → APPROVED / ASK → DENIED /
 BLOCK, with no API key and no network; `LICENSE` exists (MIT, D-040); the README has runnable
 commands where it had none. The repo is now presentable from here onward, which was the point
@@ -39,10 +40,12 @@ still deferred, and D-042 gives it a new reason to exist. The whole plan is in
    `docs/EXPERIMENTS.md` (written before any model was fitted), then **E-15's result**, then
    **D-042** (why it was not adopted and why the rule that rejected it was itself the wrong
    instrument) and **D-041** (where a learned model is allowed to sit). Then findings
-   **F-36 → F-41**. F-36 is the one that outlives the phase: **leave-one-world-out overstates
-   generalisation on this benchmark by 35–41 pp**. Then read **E-15c's status**: it is
-   registered, implemented, tested and **not run**, and it is the first thing to run when the
-   ML stack works again.
+   **F-36 → F-43**. Two outlive the phase. **F-36**: leave-one-world-out overstates
+   generalisation on this benchmark by 35–41 pp. **F-42**: four unrelated interventions have now
+   lowered leakage here and **all four did it by granting less**, so treat any leakage
+   improvement as paid for in retention until the contrast number is shown. Then read
+   **E-15c's result** for the two criticisms it makes of its own design — one of them is that
+   it registered its criterion in the currency D-042 had disqualified one experiment earlier.
 2. Read `CLAUDE.md`, then this file, then **`docs/DECISIONS.md` D-037** — it is the verdict on
    the whole Phase 3.5/Phase 5 arc and it says what Phase 4 inherits. Then **D-034** (what was
    reopened), **D-036** (why Phase 5 ran before Phase 4), **D-035** (the coupling rule, still
@@ -326,6 +329,19 @@ any single-split claim about which family wins is an artifact of the split it wa
 Arm L row readable: it also has 0% leakage, and it costs 11 pp of task completion and 0.8 asks
 per episode to get there.
 
+**E-15c, the calibration follow-up** (same 621 episodes, both R3 arms side by side):
+
+| | scope: leakage | scope: retention | scope: contrast | verdict: executed | verdict: high done |
+|---|---|---|---|---|---|
+| R3 blind (E-15) | 51.7% | 78.8% | **25.8%** | 27.8% | 82.8% |
+| R3 calibrated (E-15c) | 31.7% | 48.5% | **13.6%** | **16.1%** | 79.8% |
+| R1 TF-IDF, for scale | 1.7% | 45.5% | 39.4% | **1.7%** | 81.3% |
+
+**Calibration improves R3 at the verdict level and makes it worse at the scope level** — the
+second time the two have disagreed, in the opposite direction from F-38. It does not make R3
+competitive: R1 is ~10x better on the security axis at better task completion. Phase 6's
+conclusion stands.
+
 **Never quote Arm L's verdict row without the scope row, or the reverse.** The whole point is
 that they disagree, and either alone is misleading (F-38, D-042).
 
@@ -341,6 +357,7 @@ that they disagree, and either alone is misleading (F-38, D-042).
 | 29–34 (E-14) | **all six held.** 30 is the criterion → **D-037 confirms D-034** |
 | 35–41 (E-15) | **two held (35, 41), one split (37), four falsified (36, 38, 39, 40).** 35 held but for the wrong reason — see F-36 |
 | 42–44 (E-15b) | **all three held**, which is weaker evidence than it looks: a curve's shape is easier to predict than a system's behaviour. 43 held only in ordering — neither rung saturates |
+| 45–48 (E-15c) | **one held (47), three falsified (45, 46, 48).** 48 is the decisive one: CV chose E-15's blind weight cap, so the weighting was never misconfigured. 45 is falsified as written *and* was registered in the wrong currency — see the self-criticism in E-15c's result |
 
 ## 5. Open defects and risks carried forward
 
@@ -356,7 +373,8 @@ that they disagree, and either alone is misleading (F-38, D-042).
 | **F-08 / F-07** | ASK granularity; argument vs authority provenance | Phase 4 |
 | **F-36** | Leave-one-world-out overstates generalisation on this benchmark by ~41 pp, and eight of nine contested classes have a **sole template source** | Never evaluate a learned component LOWO on this data. Any new template should reuse an existing contested class where possible, so leave-one-template-out stops being a class-transfer test |
 | **F-37** | The benchmark supplies the least supervision for the decision the project is about — 1 dev positive for `SEND:PUBLIC_WEB`, 45 for `READ:USER_FILES` | Structural (D-010), not fixable by relabelling. If a learned component is revisited, the training set has to grow at the contested classes specifically |
-| **F-41** | The fine-tuned encoder's leakage does not fall with data (47.8% → 51.7% across a 4x increase). Its configuration — threshold 0.5, `pos_weight` clamped at 50 — was **never validated**, and E-15b says that is the live suspect rather than sample size | **E-15c is registered, implemented, tested and `(pending)`** — blocked by the Application Control issue above, not by design. Run `agentfw learn --calibrate` first thing once the ML stack imports. Then, and only then, extend the contested-class set via the generator (D-038 step 2, never taken). Neither reopens Phase 6's conclusions |
+| **F-43** | Nineteen per-class thresholds fitted from 48 training scenarios overfit, and the out-of-fold estimate **could not see it** — 45.8% OOF against 13.6% held-out, because the threshold search and the OOF score read the same probabilities | Anyone repeating E-15c needs a **nested** inner loop: select thresholds on k−1 folds, score on the held-back fold. The general rule is that a per-class decision rule needs examples *per class*, and 86/19 is 4.5 |
+| **F-41** | The fine-tuned encoder's leakage does not fall with data (47.8% → 51.7% across a 4x increase) | **Answered by E-15c.** Its mechanism is withdrawn — CV chose E-15's blind weight cap, so the weighting was never wrong. Its effect is partly upheld: thresholds help at the verdict level. Still owed, and now the only live lever: **extend the contested-class training set via the generator** (D-038 step 2, never taken). Does not reopen Phase 6's conclusions |
 | **F-40** | `WRITE:USER_FILES` defeats prompted compilers by over-granting and the learned one by never granting | F-33's action is unchanged and now better motivated: write `WRITE:USER_FILES` into a different template and see whether the shape or the class is at fault |
 | **R-14** | Claude-authored scenarios, labels and compiler arms | **Untouched and now the largest risk.** D-033 removes context contamination, not authorship. Needs a human or another vendor |
 | **R-09** | Open-weight generalisation | Unresolved |
@@ -457,14 +475,16 @@ asymmetry, or D-033's authoring condition without a documented reason.
   `ml-encoder` adds torch and transformers (~2.5 GB) for R2/R3. Installed here:
   scikit-learn 1.9.0, torch 2.14.0+cpu, transformers 5.16.1, numpy 2.5.3. **All four rungs run
   on CPU**; R1 fits in 6 s for 207 utterances, R3 in a few minutes per fold.
-- **The ML stack is currently BLOCKED on this machine, and it is not a code problem.**
-  Windows Application Control blocks `numpy/random/_common.cp312-win_amd64.pyd`, so
-  `numpy.random`, `sklearn` and `transformers`/`torch.utils.data` all fail to import while
-  `numpy`, `scipy` and bare `torch` still work. It is not transient. **It was not worked
-  around** — evading an application-control policy, including by pinning an older numpy until
-  one passes the scan, is not a thing this project does for a number. To unblock, allow that
-  file in Windows Security yourself, or recreate the venv and see whether the replacement
-  passes the scan. Until then `agentfw learn` cannot fit anything and its two tests skip.
+- **Application Control once blocked the ML stack, and recreating the venv fixed it.** On
+  2026-09-10 Windows Application Control began blocking
+  `numpy/random/_common.cp312-win_amd64.pyd`, taking `numpy.random`, `sklearn` and
+  `transformers`/`torch.utils.data` with it while `numpy`, `scipy` and bare `torch` kept
+  working. **The decisive diagnostic: the blocked copy and a freshly installed one are
+  byte-identical** (SHA256 `8BD4FCD6...`, 174,080 bytes), so the policy had flagged the *file
+  instance at that path* rather than the content. `rm -rf .venv && uv sync --extra dev --extra
+  ml-encoder` cleared it in under a minute, **with no security setting changed**. If it recurs,
+  recreate the venv first and do not touch Smart App Control. Do not pin an older numpy to get
+  past a scan — that is evasion wearing a requirements file.
 - **Two things that failure established for free.** `agentfw/core/`, `agentfw/policy/`,
   `firewall.py` and the whole evaluation harness were **completely unaffected** — the first real
   test of D-038's optional-extra boundary, and it held. And it exposed a defect in this

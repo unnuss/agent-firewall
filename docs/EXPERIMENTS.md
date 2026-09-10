@@ -2551,76 +2551,163 @@ three scenarios scored 0/3 on high-authority compliance:
 
 ---
 
-### E-15c — status: **(pending)**, blocked by a machine security policy, not by the design
+### E-15c — result: calibration helps R3 and does not rescue it, and I registered the criterion in the wrong currency
 
-**Attempted 2026-09-10.** Registered, implemented, tested, and **not run**. The result is
-`(pending)` and no number below is an estimate of what it would have been.
+**Phase:** 6.1 · **Run 2026-09-11** · **Cost $0** · **Three of four predictions falsified.**
+Selection used out-of-fold probabilities on the 86 training examples only, grouped 5-fold by
+scenario; the configuration was frozen to `calibration.json` before held-out was read; held-out
+was read once; the firewall replay ran over E-00j's 621 episodes as registered.
 
-**What happened.** Windows Application Control began blocking a single compiled DLL in the
-virtual environment — `numpy/random/_common.cp312-win_amd64.pyd`, installed the previous day
-and working all through E-15 and E-15b. Everything downstream went with it:
+*(The experiment was blocked for a day by Windows Application Control flagging one DLL in the
+venv. The blocked copy and a fresh one are **byte-identical** — SHA256 `8BD4FCD6…`, 174,080
+bytes — so the policy had flagged the file *instance*, not the content, and recreating the venv
+cleared it with no security setting changed. Recorded in `PROJECT_STATE` section 7.)*
 
-```
->>> import numpy.random
-ImportError: DLL load failed while importing _common:
-             An Application Control policy has blocked this file.
+#### What the cross-validation chose
 
->>> import sklearn
-ImportError: DLL load failed while importing _common: (same)
+**The positive-weight cap it selected was 50.0 — exactly E-15's blind value.** Out-of-fold
+contrast by cap: **50.0 → 45.8%**, 5.0 → 29.2%, 10.0 → 20.8%, 1.0 → 16.7%. So the weighting was
+never misconfigured, and **prediction 48 is falsified in the most informative way available**:
+the thing F-41 suspected of being a licence to over-grant was already the best of the four.
 
->>> from transformers import AutoModel
-ImportError: cannot import name 'NP_SUPPORTED_MODULES' from 'torch._dynamo.utils'
-```
+The nineteen per-class thresholds it chose range from 0.35 (`READ:EMAIL`) to **0.95** for
+`GRANT:CLOUD_STORAGE` and `SEND:PUBLIC_WEB` — which are precisely the two classes with **one
+training positive each**. That is not a calibrated decision rule; it is a memorised one.
 
-`numpy`, `scipy` and `torch` still import; `numpy.random`, `sklearn` and
-`torch.utils.data`/`transformers` do not. So **R1 and R3 both cannot be fitted**, and E-15c's
-whole design depends on fitting R3 twenty times for the cross-validated selection.
+#### Scope level: worse
 
-It is not transient — it was retried, and unlike the install-time scare recorded in
-`PROJECT_STATE` section 7 it does not clear. **It was not worked around.** Disabling or
-evading an application-control policy is not a thing this project does to get a number, and
-the alternatives (pinning an older numpy until one passes the scan) are evasion wearing a
-requirements file. The experiment waits for the machine.
+| | E-15 R3 (blind) | E-15c R3 (calibrated) |
+|---|---|---|
+| leakage ↓ | 51.7% | **31.7%** |
+| retention ↑ | 78.8% | **48.5%** |
+| **contrast fidelity** ↑ | **25.8%** | **13.6%** |
+| exact-set match | 10.1% | 11.6% |
 
-**What is committed and ready to run the moment the policy allows the file:**
+Leakage fell 20 pp and retention fell **30 pp** with it. Contrast fidelity, which punishes both
+directions at once, got worse. **Out-of-fold contrast predicted 45.8%; held-out delivered
+13.6%** — a 32 pp optimism gap, and the clearest statement available that nineteen free
+parameters cannot be fitted from 48 training scenarios.
 
-* `agentfw/ml/calibrate.py` — grouped-by-scenario 5-fold CV on the 86 training examples,
-  per-class F1 thresholds over a 19-point grid, positive-weight caps `{1, 5, 10, 50}`,
-  configuration frozen to `calibration.json` **before** held-out is touched, then one refit and
-  one held-out read.
-* `agentfw learn --calibrate`.
-* `FineTunedEncoder.predict_proba`, `pos_weight_cap` and per-class `thresholds` — whose
-  **defaults are E-15's blind values**, so an unconfigured R3 still reproduces E-15's published
-  numbers exactly and the original result stays regenerable.
-* Seven tests, including `test_select_has_no_way_to_see_heldout`, which asserts by signature
-  that the selection function has no parameter through which held-out could reach it.
+#### Verdict level: better — and this is where the registered criterion breaks down
 
-**So the question the user asked — does calibration fix R3, or does Phase 6's conclusion stand
-— is unanswered, and Phase 6's conclusion stands _by default rather than by evidence_.** That
-distinction matters and should not be smoothed over: D-042's non-adoption rests on E-15's
-measured numbers and is unaffected, but F-41's calibration *suspicion* is still a suspicion.
+Same 621 committed episodes, `M0-consequential`, both R3 arms replayed side by side:
 
-#### Two things this failure established for free
+| scope source | contested **executed** ↓ | high-auth **completed** ↑ | asks/ep high | asks/ep benign | ASR |
+|---|---|---|---|---|---|
+| `gold` | 0.0% | 82.8% | 0.035 | 0.0 | 0.0% |
+| `per-class` sonnet (prompted) | 5.6% | 82.8% | 0.333 | 0.3 | 0.0% |
+| **Arm L R1 TF-IDF (learned)** | **1.7%** | **81.3%** | 0.500 | 0.0 | 0.0% |
+| R3 blind (E-15) | 27.8% | 82.8% | 0.187 | 0.0 | 0.0% |
+| **R3 calibrated (E-15c)** | **16.1%** | **79.8%** | 0.419 | 0.0 | 0.0% |
+| `baseline` gpt (prompted) | 23.3% | 82.8% | 0.293 | 0.2 | 0.0% |
+| `read-only` (floor) | 0.0% | 71.7% | 0.798 | 0.1 | 0.0% |
 
-**D-038's optional-extra boundary worked, and this is the first real test of it.** With the
-entire ML stack unloadable, `agentfw/core/`, `agentfw/policy/`, `firewall.py` and the whole
-evaluation harness were **completely unaffected**: no module under any of them imports numpy,
-and `pytest --ignore=tests/test_ml.py` passed in full. A reviewer can now be told that the
-trusted path's independence from ML is not merely declared in `pyproject.toml` — it survived
-the ML stack being destroyed underneath it.
+**Calibration cut executed contested effects from 27.8% to 16.1%** — a 42% relative reduction —
+for 3.0 pp of task completion and 0.23 extra asks per high-authority episode. By the currency
+this project actually cares about, calibration **materially helped**.
 
-**And it exposed a real defect in this repository's own test suite.** `pytest.importorskip`
-catches only `ModuleNotFoundError`, so it does not skip for a package that is installed but
-cannot load; the optional-extra tests *failed* where they should have skipped. Worse, the
-availability probe imported numpy into the test session, and **`hypothesis` seeds
-`numpy.random` whenever it detects numpy in `sys.modules`** — so fifteen property tests in
-`test_core_*` and `test_policy` failed on a DLL they do not use and cannot reach. The probe now
-runs in a subprocess, which keeps the session numpy-free when the extra is unavailable. Suite:
-**556 passed, 2 skipped** with the ML stack down.
+**And that is the second time the two levels have disagreed, in the opposite direction from the
+first.** F-38 found the scope metric calling a good compiler bad. Here it calls an improved
+compiler worse.
 
-That second one is worth keeping in mind beyond this project: a property-test suite can be
-taken down by an optional dependency it never imports, through a test helper that merely asks
-whether that dependency exists.
+#### The predictions, scored
+
+| # | Prediction | Outcome |
+|---|---|---|
+| 45 | calibration at least halves scope-level leakage, to below 25% | **falsified as written** — 31.7%. But see the self-criticism below: the criterion was in the wrong currency, and the verdict-level analogue (27.8% → 16.1%) nearly does halve |
+| 46 | calibrated contrast reaches ≥ 39.4%, matching R1 | **falsified** — 13.6%, worse than blind R3's 25.8% |
+| 47 | still below `per-class`'s 86.4% contrast | **held** |
+| 48 | the selected weight cap is below 50 | **falsified, and decisively.** CV chose 50.0, E-15's blind value, at 45.8% OOF against 29.2/20.8/16.7. The weighting was never the problem |
+
+#### The answer to the question this was run to settle
+
+**Does calibration materially fix R3? No — it materially improves it and does not rescue it.**
+
+Calibrated R3 executes 16.1% of contested effects. **R1 TF-IDF executes 1.7%**, at *better* task
+completion (81.3% vs 79.8%) and the same zero benign interruptions. A properly calibrated
+fine-tuned encoder is still roughly **ten times worse on the security axis** than a TF-IDF
+logistic regression on the same 86 examples.
+
+**So Phase 6's conclusion stands, and now by evidence rather than by default.** The learned
+compiler is not adopted (D-042, unaffected — its criterion is `per-class`'s leakage at
+equal-or-better retention, and nothing here approaches it). Among learned rungs R1 beats R3 on
+the primary split, and prediction 36's reading survives the fairness complaint that prompted
+this experiment: R3 was **not** crippled by a bad configuration, because the configuration CV
+would have chosen is the one it had.
+
+**F-41's calibration suspicion is withdrawn in its mechanism and partly upheld in its effect.**
+The weighting was not a licence to over-grant — CV picked it. The *thresholds* mattered, and
+they helped at the verdict level while overfitting badly at the scope level.
+
+#### Two criticisms of this experiment's own design, which are the useful part
+
+**1. I registered the criterion in the currency D-042 had already disqualified.** Prediction 45
+is stated in scope-level leakage. D-042 — written one experiment earlier, by me — says in
+terms: *"an adoption criterion for a compiler should be stated at the **verdict level** … scope-level
+leakage and retention stay useful as diagnostics and are disqualified as criteria."* I then wrote
+the next experiment's criterion at the scope level anyway. The prediction is scored as written
+and not retrofitted, but **the lesson D-042 recorded did not survive one experiment**, which says
+something uncomfortable about how much protection a written decision actually provides.
+
+**2. The out-of-fold estimate was biased and nested cross-validation would have caught it.** The
+thresholds were selected to maximise per-class F1 *on the same out-of-fold probabilities* that
+the 45.8% OOF contrast was then computed from. That is selection on the evaluation sample, even
+though the sample is out-of-fold, and it is why 45.8% became 13.6%. An inner loop — select
+thresholds on k−1 folds, score on the held-back fold — would have shown the 32 pp gap **before**
+held-out was touched. That is the fix for anyone repeating this, and it costs one more loop.
+
+#### The day this was blocked tested D-038's boundary by accident, and it held
+
+Worth recording because it is the only real test the boundary has had. With `numpy.random`
+blocked, `sklearn`, `transformers` and `torch.utils.data` all unloadable, and **every learned
+rung unable to fit**, the trusted path was **completely unaffected**: no module under
+`agentfw/core/`, `agentfw/policy/` or `firewall.py` imports numpy, and `pytest
+--ignore=tests/test_ml.py` passed in full. D-038 argued for the `ml` extra on the grounds that
+*"the TCB must stay installable with `pydantic` and `pyyaml` alone, and a reviewer should be
+able to verify that the trusted path has no ML in it by reading `pyproject.toml`."* A reviewer
+can now be told something stronger: the ML stack was destroyed underneath it and the monitor,
+the gates, the audit log and the whole evaluation harness did not notice.
+
+It also exposed a defect in this repository's own suite, which is in `PROJECT_STATE` section 7
+and is worth repeating once: `pytest.importorskip` catches only `ModuleNotFoundError`, so
+optional-extra tests **failed** where they should have skipped — and because the availability
+probe imported numpy into the session, **`hypothesis` (which seeds `numpy.random` whenever it
+sees numpy in `sys.modules`) took fifteen property tests down with it**, on a DLL none of them
+touch. The probe now runs in a subprocess. A property-test suite can be felled by an optional
+dependency it never imports, through a helper that merely asks whether that dependency exists.
+
+#### F-42 — every intervention that reduced leakage in this project did it by granting less, and contrast fidelity caught all four
+
+Four mechanisms, entirely unrelated to each other, have now lowered leakage on this benchmark:
+
+| intervention | mechanism | leakage | what it cost |
+|---|---|---|---|
+| `read-only` | grant no writes at all | 0.0% | retention 0.0%; 11 pp of task completion (F-35) |
+| Arm H | intersect a prompted scope with a learned one | 0.0% | retention −54.5 pp (F-39) |
+| coupling rule | withhold grants the compiler questioned in words | down | degraded the best arm; not adopted (D-035) |
+| **E-15c calibration** | per-class thresholds fitted by CV | **−20 pp** | **retention −30 pp, contrast −12 pp** |
+
+**Not one of them moved off the trade-off; all four moved along it.** And contrast fidelity
+flagged every one, which is four independent confirmations that the metric is doing the job
+`scope_eval.py` claims for it — a stronger statement than any single instance.
+
+The corollary is the part worth carrying into Phase 4: **on this benchmark, lowering leakage is
+easy and nearly free, and lowering it without paying retention is the entire problem.** Any
+future proposal that reports a leakage improvement alone should be assumed to have paid for it
+in retention until the contrast number is shown.
+
+#### F-43 — nineteen thresholds from forty-eight scenarios overfit, and an out-of-fold estimate could not see it
+
+Out-of-fold contrast 45.8%, held-out contrast 13.6%. The two classes given the most extreme cuts
+(0.95) are the two with a single training positive each.
+
+This is worth recording separately from F-42 because it is a **measurement** failure rather than
+a trade-off: the optimism was invisible in the selection statistic, so a practitioner following
+the same procedure would have shipped a configuration believing it three times better than it is.
+The cause is that the threshold search and the OOF score read the same probabilities. The
+remedy is a nested inner loop, and the general rule is that **a per-class decision rule needs
+examples per class, not examples** — 86 examples across 19 classes is 4.5 per class, and five of
+the nine contested classes have three or fewer positives (F-37).
 
 ---
 

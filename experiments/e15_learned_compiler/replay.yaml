@@ -51,6 +51,20 @@ scope_sources:
     kind: compiled
     path: experiments/e15_learned_compiler/results/armH-R1-tfidf-over-per-class.s1.jsonl
 
+  # E-15c: R3 with its class weighting and per-class thresholds selected by grouped CV on
+  # the training split, frozen before held-out was read. Present so the calibrated arm gets
+  # the verdict-level number its registration requires (F-14), beside the blind R3 it is
+  # compared against rather than replacing it.
+  - label: armL-R3-calibrated
+    kind: compiled
+    path: experiments/e15_learned_compiler/results_calibration/armL-R3-calibrated.s1.jsonl
+
+  # E-15's blind R3, for the same 621 episodes, so the calibration delta is a difference and
+  # not two numbers from different runs.
+  - label: armL-R3-blind
+    kind: compiled
+    path: experiments/e15_learned_compiler/results/armL-R3-blind.s1.jsonl
+
 # E-14's policies, unchanged, so the verdict-level rows are comparable to the ones already
 # published rather than to a policy invented for this phase.
 policies:

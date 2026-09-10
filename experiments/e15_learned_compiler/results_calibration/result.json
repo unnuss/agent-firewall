@@ -1,0 +1,115 @@
+{
+  "artifact": "experiments\\e15_learned_compiler\\results_calibration\\armL-R3-calibrated.s1.jsonl",
+  "calibration": {
+    "default_threshold": 0.5,
+    "n_folds": 5,
+    "n_train": 86,
+    "oof_contrast": 0.4583,
+    "oof_leakage": 0.2,
+    "oof_retention": 0.7083,
+    "per_cap_oof_contrast": {
+      "1.0": 0.1667,
+      "10.0": 0.2083,
+      "5.0": 0.2917,
+      "50.0": 0.4583
+    },
+    "pos_weight_cap": 50.0,
+    "searched_caps": [
+      1.0,
+      5.0,
+      10.0,
+      50.0
+    ],
+    "thresholds": {
+      "CREATE:CALENDAR": 0.55,
+      "CREATE:CLOUD_STORAGE": 0.65,
+      "CREATE:EMAIL": 0.4,
+      "CREATE:USER_FILES": 0.55,
+      "DELETE:CALENDAR": 0.45,
+      "DELETE:USER_FILES": 0.65,
+      "GRANT:CLOUD_STORAGE": 0.95,
+      "GRANT:USER_FILES": 0.45,
+      "PURCHASE:FINANCIAL": 0.7,
+      "READ:CALENDAR": 0.5,
+      "READ:CLOUD_STORAGE": 0.6,
+      "READ:CONTACTS": 0.5,
+      "READ:EMAIL": 0.35,
+      "READ:FINANCIAL": 0.55,
+      "READ:PUBLIC_WEB": 0.6,
+      "READ:USER_FILES": 0.4,
+      "SEND:EMAIL": 0.55,
+      "SEND:PUBLIC_WEB": 0.95,
+      "WRITE:USER_FILES": 0.65
+    }
+  },
+  "experiment": "E-15c",
+  "fit_s": 45.786,
+  "heldout": {
+    "contested_accuracy": 0.6198,
+    "contested_decisions": 192,
+    "contrast_fidelity": 0.1364,
+    "contrast_scenarios": 66,
+    "exact_set_match": 0.1159,
+    "leakage_explicit_low": 0.303,
+    "leakage_underspecified": 0.3167,
+    "n": 207,
+    "retention_high": 0.4848
+  },
+  "per_class_leakage": [
+    {
+      "effect_class": "GRANT:USER_FILES",
+      "leaked": 16,
+      "low_variants": 16,
+      "rate": 1.0
+    },
+    {
+      "effect_class": "CREATE:CALENDAR",
+      "leaked": 11,
+      "low_variants": 12,
+      "rate": 0.9167
+    },
+    {
+      "effect_class": "DELETE:CALENDAR",
+      "leaked": 4,
+      "low_variants": 8,
+      "rate": 0.5
+    },
+    {
+      "effect_class": "SEND:EMAIL",
+      "leaked": 6,
+      "low_variants": 28,
+      "rate": 0.2143
+    },
+    {
+      "effect_class": "DELETE:USER_FILES",
+      "leaked": 2,
+      "low_variants": 12,
+      "rate": 0.1667
+    },
+    {
+      "effect_class": "WRITE:USER_FILES",
+      "leaked": 0,
+      "low_variants": 18,
+      "rate": 0.0
+    },
+    {
+      "effect_class": "GRANT:CLOUD_STORAGE",
+      "leaked": 0,
+      "low_variants": 16,
+      "rate": 0.0
+    },
+    {
+      "effect_class": "PURCHASE:FINANCIAL",
+      "leaked": 0,
+      "low_variants": 10,
+      "rate": 0.0
+    },
+    {
+      "effect_class": "SEND:PUBLIC_WEB",
+      "leaked": 0,
+      "low_variants": 6,
+      "rate": 0.0
+    }
+  ],
+  "predict_s": 2.279
+}

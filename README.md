@@ -7,7 +7,7 @@
 > worlds with blind-authored gold labels, a deterministic reference monitor whose structural
 > properties are enforced as property tests, and an intent compiler validated end to end at
 > N=60 with every prediction registered before the run. 558 tests, ~3,000 baseline
-> episodes, **44 registered predictions scored, 41 findings** — several of which correct
+> episodes, **48 registered predictions scored, 43 findings** — several of which correct
 > earlier claims in this file, and one of which corrects an instruction the project gave
 > itself. **Next: Phase 7, presentation.** Phase 4's cost model is still
 > deferred, and Phase 6 gave it a new reason to exist.
