@@ -412,6 +412,37 @@ confident cases, escalates the rest to the frontier compiler. Note for whoever p
 this is *compiler routing* and is **not** the M0–M5 authority ladder that D-032 retired. Do not
 conflate them; it needs its own decision entry.
 
+### Phase 6.9 — one authoritative account ✅ complete (2026-09-11)
+
+**Why it came before Phase 7.** The README could not safely be simplified while the truth was
+distributed across a 4,783-line `EXPERIMENTS.md`, a 1,586-line `DECISIONS.md` and a handoff
+document, with a **retracted headline (E-00i's 81.8%) still loose in the repository**. A clean
+front door on an unconsolidated account is a *misleading* front door.
+
+*Delivered.*
+
+| | |
+|---|---|
+| `agentfw results` + `eval/canonical.py` | The canonical tables are now **generated from the committed `report.json` artifacts**, not transcribed. 48 table rows. A figure with no artifact renders `(pending)` and is never estimated |
+| `docs/RESULTS.md` | The authoritative account: the headline pair, every arm at both levels, the learned ladder, the undefended baselines, five rules for not misquoting any of it |
+| `docs/PREDICTIONS.md` | All **48** registered predictions with outcomes — **32 held, 14 falsified, 2 partial** |
+| `docs/FINDINGS.md` | All **43** findings, each marked live / fixed / superseded / narrowed / open, counted by subject |
+| `docs/LIMITATIONS.md` | Everything the project does not establish, ordered by how much it should change a reader's conclusions |
+| `docs/RESEARCH_LOG.md` | The phase narrative, moved **verbatim** out of `README.md` — 359 lines, nothing rewritten to look better in hindsight |
+| `tests/test_canonical.py` | 13 tests, including one that fails if `RESULTS.md` drifts from the artifacts and one that round-trips every headline figure back to the JSON it came from |
+
+**README: 611 → 267 lines**, with the 16-F-number glossary gone from the front door.
+
+*Two record-keeping defects it found, and did not silently fix.* There are **two overlapping
+prediction numbering schemes** — E-09a, E-01b and E-10 used local `1..N` numbering colliding with
+the global 1–48 — so a bare prediction number is only meaningful inside its own section. And
+`PROJECT_STATE.md`'s own summary table **omitted predictions 17–22** entirely. Neither was
+renumbered: renumbering would invalidate every cross-reference in the repository and the commit
+history, which is worse than an ambiguity that is written down.
+
+*What Phase 7 inherits.* A front door that can now quote `RESULTS.md` and be verified by
+`agentfw results`, and four documents that carry the depth so the README does not have to.
+
 ### Phase 7 — presentation
 
 Done *after* Phase 6, so it is done once rather than twice.

@@ -31,7 +31,28 @@ still deferred, and D-042 gives it a new reason to exist. The whole plan is in
 
 ---
 
-## 0. If you are the next session, do exactly this
+## 0. Where the authoritative account lives (new in Phase 6.9)
+
+**This file is a handoff document, not a reference.** For what the project concluded, read these
+instead — they were written in Phase 6.9 precisely so that the truth stops being distributed
+across a 4,700-line experiment log and this file:
+
+| | |
+|---|---|
+| [`docs/RESULTS.md`](docs/RESULTS.md) | **The canonical numbers.** Every table **generated** from committed artifacts by `agentfw results`. Where it disagrees with anything else, including this file, it wins |
+| [`docs/PREDICTIONS.md`](docs/PREDICTIONS.md) | All 48 registered predictions with outcomes — **32 held, 14 falsified, 2 partial** |
+| [`docs/FINDINGS.md`](docs/FINDINGS.md) | All 43 findings, each marked live / fixed / superseded / narrowed / open |
+| [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) | Everything the project does not establish, ordered by how much it should change your reading |
+| [`docs/RESEARCH_LOG.md`](docs/RESEARCH_LOG.md) | The phase narrative, moved verbatim out of `README.md` |
+
+**Two record-keeping defects Phase 6.9 found and did not silently fix.** There are **two
+overlapping prediction numbering schemes** — E-09a, E-01b and E-10 used local `1..N` numbering
+that collides with the global 1–48 — so a bare prediction number is only meaningful inside its
+own experiment's section. And this file's own summary table **omitted predictions 17–22**
+entirely. Both are documented in `PREDICTIONS.md`; neither was renumbered, because renumbering
+would invalidate every cross-reference in the repository.
+
+## 0b. If you are the next session, do exactly this
 
 0. Run it before you read anything: `uv run agentfw demo`. Three seconds, no key, and it is
    the shortest statement of what this project does. Then `uv run agentfw demo --scope

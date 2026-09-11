@@ -13,6 +13,7 @@ agentfw authoring-input          # D-033: the utterances an independent labeller
 agentfw smoke                    # one scripted episode, no network, no key
 agentfw demo                     # watch it allow, ask and refuse; no key, no network
 agentfw learn                    # E-15: the learned intent compiler, no key, no network
+agentfw results                  # regenerate docs/RESULTS.md from committed artifacts
 """
 
 from __future__ import annotations
@@ -682,6 +683,36 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_results(args: argparse.Namespace) -> int:
+    """Regenerate the canonical results tables from the committed artifacts.
+
+    The numbers in `docs/RESULTS.md` are a function of files in the repository rather than
+    prose someone typed, which is what CLAUDE.md has always required of every table and what
+    Phase 6.9 finally made true.
+    """
+    from agentfw.eval import canonical
+
+    absent = canonical.missing()
+    if absent:
+        print(f"[results] WARNING  {len(absent)} artifact(s) a table wanted are absent:")
+        for path in absent[:8]:
+            print(f"  - {path}")
+        print("  those cells render as (pending); nothing is estimated")
+
+    if args.stdout:
+        # The tables contain arrows and em dashes; a fresh Windows console is cp1252 and
+        # would raise on them. Same fix as `demo`.
+        with contextlib.suppress(Exception):
+            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        print(canonical.render())
+        return 0
+
+    document = Path(args.out) if args.out else Path("docs/RESULTS.md")
+    changed, message = canonical.inject(document)
+    print(f"[results] {message}")
+    return 0 if changed or "up to date" in message else 1
+
+
 def cmd_learn(args: argparse.Namespace) -> int:
     """E-15 (Phase 6): fit the learned compiler and score it with the project's own scorer.
 
@@ -889,6 +920,16 @@ def main(argv: list[str] | None = None) -> int:
     cp = sub.add_parser("compare")
     cp.add_argument("results", nargs="+", help="[label=]path/to/results ...")
     cp.set_defaults(fn=cmd_compare)
+
+    rs = sub.add_parser(
+        "results",
+        help="regenerate docs/RESULTS.md's tables from the committed result artifacts",
+    )
+    rs.add_argument("--out", help="document to regenerate (default: docs/RESULTS.md)")
+    rs.add_argument(
+        "--stdout", action="store_true", help="print the tables instead of writing a file"
+    )
+    rs.set_defaults(fn=cmd_results)
 
     ln = sub.add_parser(
         "learn",
