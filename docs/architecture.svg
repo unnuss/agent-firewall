@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 400" width="940" height="400"
+     font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+     role="img" aria-label="Agent Firewall architecture: the agent emits proposals, the reference monitor decides allow, ask or block, and only the monitor holds credentials.">
+  <title>Agent Firewall — the reference monitor sits between the agent and its tools</title>
+
+  <!-- An explicit light panel rather than a transparent background, so the diagram reads
+       identically in GitHub's light and dark themes. GitHub sanitises SVG in Markdown and does
+       not pass down a theme, so inheriting colour is not an option. -->
+  <rect x="0" y="0" width="940" height="400" fill="#fbfbfd" rx="8"/>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6472"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f48"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9a6700"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b42318"/>
+    </marker>
+  </defs>
+
+  <!-- ── user ─────────────────────────────────────────────────────────── -->
+  <rect x="24" y="150" width="116" height="62" rx="8" fill="#eef1f6" stroke="#c6cdd8"/>
+  <text x="82" y="176" text-anchor="middle" font-size="14" font-weight="600" fill="#1f2733">USER</text>
+  <text x="82" y="195" text-anchor="middle" font-size="11" fill="#5b6472">one turn</text>
+
+  <!-- ── agent ────────────────────────────────────────────────────────── -->
+  <rect x="184" y="138" width="150" height="86" rx="8" fill="#eef1f6" stroke="#c6cdd8"/>
+  <text x="259" y="166" text-anchor="middle" font-size="14" font-weight="600" fill="#1f2733">LLM AGENT</text>
+  <text x="259" y="186" text-anchor="middle" font-size="11" fill="#5b6472">tool-calling loop</text>
+  <text x="259" y="204" text-anchor="middle" font-size="11" font-weight="600" fill="#b42318">holds no credentials</text>
+
+  <!-- ── the monitor ──────────────────────────────────────────────────── -->
+  <rect x="386" y="74" width="250" height="252" rx="10" fill="#ffffff" stroke="#1f2733" stroke-width="2"/>
+  <text x="511" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2733">AGENT FIREWALL</text>
+  <text x="511" y="120" text-anchor="middle" font-size="11" fill="#5b6472">deterministic reference monitor</text>
+
+  <line x1="402" y1="132" x2="620" y2="132" stroke="#e3e7ee"/>
+
+  <text x="404" y="152" font-size="11" fill="#1f2733">1. map (tool, args) → <tspan font-weight="600">Effect</tspan></text>
+  <text x="404" y="174" font-size="11" fill="#1f2733">2. check against <tspan font-weight="600">IntentScope</tspan></text>
+  <text x="404" y="196" font-size="11" fill="#1f2733">3. four structural gates</text>
+  <text x="404" y="218" font-size="11" fill="#1f2733">4. propagate labels</text>
+  <text x="404" y="240" font-size="11" fill="#1f2733">5. append to <tspan font-weight="600">audit log</tspan></text>
+
+  <line x1="402" y1="258" x2="620" y2="258" stroke="#e3e7ee"/>
+  <text x="404" y="278" font-size="10.5" fill="#5b6472">deny by default · only a human widens</text>
+  <text x="404" y="295" font-size="10.5" fill="#5b6472">hash-chained · replays offline</text>
+  <text x="404" y="312" font-size="10.5" font-weight="600" fill="#1f2733">no ML in this path</text>
+
+  <!-- ── outcomes ─────────────────────────────────────────────────────── -->
+  <rect x="742" y="86" width="116" height="50" rx="8" fill="#e8f5ed" stroke="#1a7f48"/>
+  <text x="800" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#1a7f48">ALLOW</text>
+  <text x="800" y="124" text-anchor="middle" font-size="10" fill="#1a7f48">in scope</text>
+
+  <rect x="742" y="175" width="116" height="50" rx="8" fill="#fdf5e3" stroke="#9a6700"/>
+  <text x="800" y="197" text-anchor="middle" font-size="13" font-weight="700" fill="#9a6700">ASK</text>
+  <text x="800" y="213" text-anchor="middle" font-size="10" fill="#9a6700">consequential</text>
+
+  <rect x="742" y="264" width="116" height="50" rx="8" fill="#fdecea" stroke="#b42318"/>
+  <text x="800" y="286" text-anchor="middle" font-size="13" font-weight="700" fill="#b42318">BLOCK</text>
+  <text x="800" y="302" text-anchor="middle" font-size="10" fill="#b42318">refused</text>
+
+  <!-- ── tools ────────────────────────────────────────────────────────── -->
+  <rect x="742" y="344" width="190" height="42" rx="8" fill="#eef1f6" stroke="#c6cdd8"/>
+  <text x="837" y="363" text-anchor="middle" font-size="12" font-weight="600" fill="#1f2733">TOOLS · the world</text>
+  <text x="837" y="378" text-anchor="middle" font-size="10" fill="#5b6472">email · files · payments · web</text>
+
+  <!-- ── edges ────────────────────────────────────────────────────────── -->
+  <line x1="140" y1="181" x2="180" y2="181" stroke="#5b6472" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="334" y1="181" x2="382" y2="190" stroke="#5b6472" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="358" y="172" text-anchor="middle" font-size="9.5" fill="#5b6472">proposal</text>
+
+  <line x1="636" y1="160" x2="738" y2="111" stroke="#1a7f48" stroke-width="1.6" marker-end="url(#arrowGreen)"/>
+  <line x1="636" y1="200" x2="738" y2="200" stroke="#9a6700" stroke-width="1.6" marker-end="url(#arrowAmber)"/>
+  <line x1="636" y1="240" x2="738" y2="289" stroke="#b42318" stroke-width="1.6" marker-end="url(#arrowRed)"/>
+
+  <!-- allow reaches the tools; ask reaches them only after a human says yes -->
+  <path d="M 858 111 L 914 111 L 914 344" fill="none" stroke="#1a7f48" stroke-width="1.6"
+        marker-end="url(#arrowGreen)"/>
+  <path d="M 858 200 L 892 200 L 892 344" fill="none" stroke="#9a6700" stroke-width="1.6"
+        stroke-dasharray="4 3" marker-end="url(#arrowAmber)"/>
+  <text x="892" y="226" text-anchor="middle" font-size="9" fill="#9a6700">if approved</text>
+
+  <!-- block terminates: it never reaches a tool -->
+  <line x1="866" y1="278" x2="884" y2="296" stroke="#b42318" stroke-width="1.8"/>
+  <line x1="884" y1="278" x2="866" y2="296" stroke="#b42318" stroke-width="1.8"/>
+
+  <!-- ── the measured claim ───────────────────────────────────────────── -->
+  <rect x="24" y="266" width="310" height="108" rx="8" fill="#ffffff" stroke="#c6cdd8"/>
+  <text x="40" y="290" font-size="11.5" font-weight="700" fill="#1f2733">Measured on 60 held-out triples</text>
+  <text x="40" y="312" font-size="11" fill="#1f2733">unlicensed action executed</text>
+  <text x="40" y="330" font-size="13" font-weight="700" fill="#b42318">49.4%</text>
+  <text x="92" y="330" font-size="11" fill="#5b6472">undefended</text>
+  <text x="176" y="330" font-size="11" fill="#5b6472">→</text>
+  <text x="196" y="330" font-size="13" font-weight="700" fill="#1a7f48">5.6%</text>
+  <text x="238" y="330" font-size="11" fill="#5b6472">defended</text>
+  <text x="40" y="352" font-size="11" fill="#1f2733">injection attack succeeded</text>
+  <text x="40" y="368" font-size="13" font-weight="700" fill="#b42318">46.7%</text>
+  <text x="92" y="368" font-size="11" fill="#5b6472">undefended</text>
+  <text x="176" y="368" font-size="11" fill="#5b6472">→</text>
+  <text x="196" y="368" font-size="13" font-weight="700" fill="#1a7f48">0.0%</text>
+  <text x="238" y="368" font-size="11" fill="#5b6472">defended</text>
+
+  <text x="687" y="194" text-anchor="middle" font-size="9" fill="#9a6700">put to the user</text>
+</svg>

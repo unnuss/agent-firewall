@@ -92,8 +92,8 @@ Health check (~6 min measured on the dev machine, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **556 passed, 2 skipped**. The two skips are the `ml` extra, which is blocked on this
-machine — see section 7; where it imports, expect **558 passed**. The four gold-scope tests that were red on purpose through
+Expect **575 passed**. If the `ml` extra will not import, two of them skip instead — see
+section 7. The four gold-scope tests that were red on purpose through
 Phase 5's authoring step are green: the labels exist now. Any failure is a real one. `validate`
 reports 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios and **66 AF-Auth / 5 AF-Inject /
 10 benign held-out**, 23 tools.

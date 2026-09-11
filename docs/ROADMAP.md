@@ -443,7 +443,35 @@ history, which is worse than an ambiguity that is written down.
 *What Phase 7 inherits.* A front door that can now quote `RESULTS.md` and be verified by
 `agentfw results`, and four documents that carry the depth so the README does not have to.
 
-### Phase 7 — presentation
+### Phase 7 — presentation ✅ complete (2026-09-11)
+
+**README: 267 → 255 lines, and restructured around a reader rather than around the project's
+history.** Sixteen F-numbers on the front door became two. The order is now: what it is →
+architecture diagram → the problem in one concrete example → the headline table → a 60-second
+quickstart with real output → how it works → why it is more than a demo → what it is not.
+
+*Delivered.* A committed `docs/architecture.svg` that renders identically in both GitHub themes
+(an explicit light panel, because GitHub sanitises SVG and passes down no theme). Four honest
+badges, none of which go stale. A real captured demo excerpt as the visual, with a commented-out
+`docs/demo.gif` line ready to uncomment so the README is never broken while the GIF does not
+exist. A `<details>` block absorbing the reproduction commands that do not belong in the first
+minute.
+
+*Two factual errors in the draft, caught by checking against the artifacts rather than by
+reading.* It claimed 82.8% undefended task completion where the artifact says **83.3%**, and
+**"0 of 30"** benign interruptions where the compiled arm actually interrupts **9 of 30** — both
+carried over from an older table measured on a different arm. Four tests now guard the front
+door: every README link resolves, every headline figure round-trips to the artifact it came from,
+the benign interruption cost is stated as measured, and the retracted 81.8% may appear only
+framed as the correction it became.
+
+**The nine interruptions are now a feature of the writeup rather than a hidden cost.** With a
+hand-written scope the same firewall interrupts 0 of 30, so they are compiler error rather than
+architectural noise — which is exactly the argument for Phases 3 through 6 existing.
+
+Original plan follows.
+
+### Phase 7 — presentation (as planned)
 
 Done *after* Phase 6, so it is done once rather than twice.
 
