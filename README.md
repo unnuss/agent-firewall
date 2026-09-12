@@ -74,6 +74,18 @@ uv sync
 uv run agentfw demo
 ```
 
+> **If `agentfw` will not start**, run it as a module instead — same CLI, no console-script
+> launcher:
+>
+> ```bash
+> uv run python -m agentfw demo
+> ```
+>
+> Installers generate a small unsigned `agentfw.exe` for the console script, and a Windows
+> Application Control policy can block it while the signed `python.exe` runs fine. `python -m`
+> also works wherever the script simply is not on `PATH`. Every `agentfw …` command below
+> accepts the `python -m agentfw …` form.
+
 Three seconds. Here is the middle of what it prints — read out of the hash-chained audit log
 *that run* produced, not from a transcript:
 
@@ -117,7 +129,7 @@ the same intervention as compiling a scope.
 
 ```bash
 uv sync --extra dev
-uv run pytest -q                                                 # 575 tests
+uv run pytest -q                                                 # 585 tests
 uv run agentfw results                                           # regenerate every results table
 uv run agentfw replay experiments/e14_validation/replay.yaml     # the headline 2x2
 uv run agentfw replay experiments/e15_learned_compiler/replay.yaml
@@ -138,8 +150,11 @@ Only three commands cost money — `agentfw run`, `agentfw compile-scopes`, `age
 command prints the credential fingerprint it used *before* it does anything, so a run against the
 wrong key is visible in its own log rather than three hours later.
 
-**Windows:** the committed artifacts nest deep; clone somewhere shallow or run
-`git config --global core.longpaths true` once.
+**Windows, two things.** The committed artifacts nest deep, so clone somewhere shallow or run
+`git config --global core.longpaths true` once. And if an Application Control policy blocks the
+generated `agentfw.exe`, substitute `python -m agentfw` for `agentfw` in any command here —
+they are the same entry point and `tests/test_entrypoints.py` asserts the two produce identical
+output.
 </details>
 
 ## How it works

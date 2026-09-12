@@ -92,7 +92,7 @@ Health check (~6 min measured on the dev machine, no API calls, no keys needed):
 .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m agentfw.cli validate
 ```
 
-Expect **575 passed**. If the `ml` extra will not import, two of them skip instead — see
+Expect **585 passed**. If the `ml` extra will not import, two of them skip instead — see
 section 7. The four gold-scope tests that were red on purpose through
 Phase 5's authoring step are green: the labels exist now. Any failure is a real one. `validate`
 reports 24 AF-Auth / 6 AF-Inject / 18 benign **dev** scenarios and **66 AF-Auth / 5 AF-Inject /
@@ -514,6 +514,12 @@ asymmetry, or D-033's authoring condition without a documented reason.
   imported numpy into the session, **`hypothesis` — which seeds `numpy.random` when it sees numpy
   in `sys.modules` — took fifteen property tests down with it.** The probe now runs in a
   subprocess. Worth remembering beyond this project.
+- **The `agentfw` console script is blocked on this machine; use `python -m agentfw`.**
+  Application Control blocks the generated unsigned `agentfw.exe` (*Permission denied*) while
+  the signed `python.exe` runs normally, and recreating the venv does **not** clear it — unlike
+  the numpy DLL below, which it did clear. `agentfw/__main__.py` makes `python -m agentfw <cmd>`
+  the same entry point; `tests/test_entrypoints.py` asserts the two produce byte-identical
+  output. Every command in this file also works in the `python -m agentfw` form.
 - **The two ML tests occasionally skip, and that is the guard working rather than a
   regression.** `tests/test_ml.py` probes importability in a subprocess; on this machine the
   Application Control scan is intermittent, so a probe can momentarily see a blocked DLL and skip
