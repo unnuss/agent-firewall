@@ -187,6 +187,53 @@ may well have meant it) and ALLOW is wrong (they may not). The real design quest
 interruptions buy how much coverage — which is why every result reports interruptions spent
 beside effects prevented.
 
+## What was actually run, and what the cheap model cost
+
+**Agents measured.** `gpt-4.1-mini` and `gpt-5-mini` on the dev slice, `claude-sonnet-5` for the
+cross-vendor replication, and `gpt-4.1-mini` for the 60-triple held-out baseline (621 episodes).
+The finding replicates across both vendors independently.
+
+**Three open-weight attempts failed a competency floor registered in advance** — Qwen3-8B at
+31.9%, Qwen3-14B-AWQ at 36.1%, Llama 3.3 70B at 44.4% against a 60% floor. They are reported as
+**inconclusive by that gate**, not as evidence: an agent that often fails to act produces low
+overreach rates everywhere, which would look like a defense working.
+
+**Scope compilers.** The `IntentScope` has to come from somewhere. Four prompted arms —
+`baseline` and `per-class` formulations × `gpt-4.1-mini` and `claude-sonnet-5` — plus two
+deterministic ablations (`tool-ceiling`, `read-only`) and hand-written gold labels as the
+reference.
+
+### Then a TF-IDF logistic regression on 86 examples, for nothing
+
+Phase 6 asked whether a small *trained* model could replace a prompted frontier one. The
+learned compiler is **TF-IDF over word n-grams plus one-vs-rest logistic regression**, fitted on
+86 blind-authored utterances, running on CPU. It fits 207 utterances in **six seconds**.
+
+| | prompted frontier model | **learned TF-IDF** |
+|---|---|---|
+| Unlicensed action **executed** | 5.6% | **1.7%** |
+| Licensed work completed | 82.8% | 81.3% |
+| Interruptions / high-authority episode | 0.33 | 0.50 |
+| Interruptions / benign episode | 0.3 | **0.0** |
+| **Cost per 207-utterance run** | **~$6** | **~$0** |
+
+**And it was not adopted.** That is not modesty — it failed a rule written down before it was
+fitted. At the **scope** level it retains the contested class on only 45.5% of the cases where
+the user explicitly asked, against the frontier model's 100%, and the adoption criterion was
+stated in scope-level terms. So the registered rule rejected it and the rule was followed.
+
+The disagreement between those two levels is the interesting part. A class the compiler wrongly
+**drops** becomes a question a human can answer; a class it wrongly **grants** is silent. The
+learned model errs almost entirely in the recoverable direction, which is why 45.5% scope-level
+retention becomes 81.3% real task completion. A scope-level score alone would have called this a
+failure, and a replay over 621 committed episodes says otherwise — both numbers are real, and
+neither should be quoted without the other.
+
+A frozen sentence encoder and a fine-tuned MiniLM were also measured, and **both lost to
+TF-IDF** on the primary split. A follow-up found the fine-tuned encoder's leakage flat at ~50%
+across a fourfold increase in training data, and cross-validated calibration did not rescue it.
+Full account: [`docs/RESULTS.md`](docs/RESULTS.md) §4.
+
 ## Why this is more than a demo
 
 The numbers above are ordinary. What is not ordinary is what happens when they are wrong.
