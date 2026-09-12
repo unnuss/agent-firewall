@@ -514,6 +514,11 @@ asymmetry, or D-033's authoring condition without a documented reason.
   imported numpy into the session, **`hypothesis` — which seeds `numpy.random` when it sees numpy
   in `sys.modules` — took fifteen property tests down with it.** The probe now runs in a
   subprocess. Worth remembering beyond this project.
+- **The two ML tests occasionally skip, and that is the guard working rather than a
+  regression.** `tests/test_ml.py` probes importability in a subprocess; on this machine the
+  Application Control scan is intermittent, so a probe can momentarily see a blocked DLL and skip
+  instead of failing the suite. Observed once as `573 passed, 2 skipped`, then `575 passed` on an
+  immediate re-run with nothing changed. If you see two skips, re-run before investigating.
 - **A transient install-time failure worth recognising, not debugging.** The first `import
   sklearn` after `uv pip install` died with `ImportError: DLL load failed while importing
   _special_ufuncs: An Application Control policy has blocked this file`. It was Windows
