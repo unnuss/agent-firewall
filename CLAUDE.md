@@ -21,6 +21,15 @@
   authority, it is wrong regardless of how well it performs.
 - **Scope is defended, not expanded.** `PROJECT_SPEC.md` section 7 lists what is out of
   scope. Adding multi-agent, memory poisoning, or computer-use is how this project dies.
+- **No AI attribution in commits, ever.** Commit messages carry no `Co-Authored-By`,
+  `Generated-By`, `Assisted-By` or "Generated with" trailer, and the author and committer are
+  always Unnus Ahmad Usmani. This is a deliberate ownership decision for a portfolio repository,
+  not an oversight, and it is enforced at two levels: this rule, and
+  `includeCoAuthoredBy: false` in `.claude/settings.json`. Three such trailers were stripped from
+  local history on 2026-09-12 before the first push; if any reappear, remove them before pushing.
+  **Prose that discusses Claude is a different thing and must be preserved** — R-14 is literally
+  the risk that scenarios and labels are Claude-authored, and deleting those sentences would
+  corrupt the record.
 - **Prefer deleting a component to adding a heuristic.** If something fails, log a finding;
   do not patch it with a special case that will be indistinguishable from hardcoded demo
   logic later.
