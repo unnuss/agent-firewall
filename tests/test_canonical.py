@@ -143,6 +143,32 @@ def test_every_readme_link_resolves():
     assert not broken, f"README links to files that do not exist: {broken}"
 
 
+def test_every_readme_anchor_resolves_to_a_real_heading():
+    """In-page links are skipped by the link test above, so they get their own.
+
+    The README now leans on anchors to keep the first half readable: the achievements section
+    states a result in plain English and points down to the depth. A dead `#anchor` fails
+    silently in a browser -- it just scrolls nowhere -- which makes it exactly the kind of rot
+    a test should catch rather than a reader.
+    """
+    readme = _readme_without_comments()
+
+    def slug(heading: str) -> str:
+        # GitHub's rule: lowercase, strip anything that is not alphanumeric, space, hyphen or
+        # underscore, then spaces to hyphens.
+        kept = [c for c in heading.lower() if c.isalnum() or c in " -_"]
+        return "".join(kept).strip().replace(" ", "-")
+
+    headings = {
+        slug(line.lstrip("#").strip()) for line in readme.splitlines() if line.startswith("#")
+    }
+    targets = {m.group(1) for m in re.finditer(r"\]\(#([^)]+)\)", readme)}
+    broken = sorted(targets - headings)
+    assert not broken, (
+        f"README anchors point at no heading: {broken} (have: {sorted(headings)})"
+    )
+
+
 def test_the_readme_headline_matches_the_generated_numbers():
     """The front door must not drift from the artifacts.
 
