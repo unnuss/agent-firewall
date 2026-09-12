@@ -40,6 +40,20 @@ policy, no live agent, no animation. Every verdict, gate, bound and explanation 
 from the `SceneResult`; 32 tests assert the provenance, that no verdict literal or scenario id
 appears in `viewer.py`, that off-policy steps are marked, and that the committed files equal a
 fresh build. It measures nothing and prints no rate — presentation work, not research.
+· **Phase 7.2 complete (2026-09-12) — the README restructured for a non-specialist.** The
+Kestrel example now opens the document and every term is introduced in plain English before it
+is named (`effect`, `IntentScope`, `reference monitor`, ALLOW/BLOCK/ASK). The dense vocabulary
+first appears past the halfway mark: depth was moved down, not deleted. A single **"What it
+achieves"** section now carries all four results — 49.4% → 5.6% at 0.5 points of completion, the
+four properties, the TF-IDF result, and 48 predictions with 14 falsified — because they had been
+scattered across 200 lines and a two-minute reader saw one of them. No caveat was softened to do
+it. New guard: `test_every_readme_anchor_resolves_to_a_real_heading` (the link test skips `#`
+targets and a dead anchor fails silently in a browser). **620 tests.**
+
+**Unpushed:** three commits on `master` ahead of `origin/master` — `7684bbd` (README: models and
+the TF-IDF cost), `dc44528` (Phase 7.1 viewer, D-043), `9d3f2c1` (README restructure). All
+authored by Unnus Ahmad Usmani with zero attribution trailers; the filter-branch backup ref and
+tag are already deleted, so a plain `git push` is safe.
 
 ---
 
