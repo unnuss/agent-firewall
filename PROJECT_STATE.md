@@ -2,7 +2,7 @@
 
 **Read this first.** It is the handoff document between development sessions.
 
-**Last updated:** 2026-09-09 · **Phase 6 complete — the first ML in the project, built,
+**Last updated:** 2026-09-12 · **Phase 6 complete — the first ML in the project, built,
 measured and _not adopted_ under its own registered rule (D-042).** Four of seven registered
 predictions were falsified. The result that matters is methodological: the learned compiler
 looks hopeless at the **scope** level (45.5% retention vs 100%) and is nearly as good as gold
@@ -28,6 +28,18 @@ presentation (restructure the README, move the phase-by-phase narrative to
 `docs/RESEARCH_LOG.md`), then Phase 8 defensibility and the post. Phase 4's cost model is
 still deferred, and D-042 gives it a new reason to exist. The whole plan is in
 `docs/ROADMAP.md`.**
+
+· **Phase 7 complete** — the README is restructured around a reader (611 → ~330 lines), the
+phase-by-phase narrative moved to `docs/RESEARCH_LOG.md`, and the trailer cleanup done (three
+`Co-Authored-By` commits rewritten before the first push; the rule is now in `CLAUDE.md`).
+· **Phase 7.1 complete (2026-09-12) — the trace viewer.** `uv run agentfw viewer` writes
+`docs/viewer.html`, one self-contained page showing the four curated cases as *Without the
+firewall → With Agent Firewall*, and `docs/viewer-hero.svg`, the README's first figure. It is a
+**renderer over `demo.run_scene()` and nothing else** (D-043): no second replay path, no second
+policy, no live agent, no animation. Every verdict, gate, bound and explanation on it is quoted
+from the `SceneResult`; 32 tests assert the provenance, that no verdict literal or scenario id
+appears in `viewer.py`, that off-policy steps are marked, and that the committed files equal a
+fresh build. It measures nothing and prints no rate — presentation work, not research.
 
 ---
 
@@ -57,6 +69,8 @@ would invalidate every cross-reference in the repository.
 0. Run it before you read anything: `uv run agentfw demo`. Three seconds, no key, and it is
    the shortest statement of what this project does. Then `uv run agentfw demo --scope
    tool-ceiling` for the same four scenes under the ablation where the defense does nothing.
+   For the same four cases as a page rather than a terminal, open `docs/viewer.html`
+   (regenerate with `uv run agentfw viewer`; read D-043 before changing anything in it).
 1. **Phase 6 first, if you are picking up from here.** Read **E-15's registration** in
    `docs/EXPERIMENTS.md` (written before any model was fitted), then **E-15's result**, then
    **D-042** (why it was not adopted and why the rule that rejected it was itself the wrong

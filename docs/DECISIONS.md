@@ -946,6 +946,55 @@ for it.
 
 ---
 
+### D-043 — The viewer is a renderer over the replay, and there will be no live-agent demo
+**Date:** 2026-09-12 · **Status:** accepted · **Constrains:** `agentfw/viewer.py` ·
+**Does not amend:** any experiment, policy or scope source
+
+**Decision.** `agentfw viewer` renders `docs/viewer.html` and `docs/viewer-hero.svg` from
+`demo.run_scene()` and nothing else. It performs no replay of its own, declares no policy, and
+loads no second scope source. A live-agent demo is **rejected**, not deferred.
+
+**Why a renderer and not a dashboard.** `CLAUDE.md` names "a dashboard that animates decisions
+rather than replaying real audit logs" as the sixth way this project fails, and a viewer is the
+likeliest place for it to appear, because a page that *looks* right is indistinguishable from
+one that *is* right until somebody checks. Three things make the claim checkable rather than
+asserted: every verdict, gate, bound and explanation on the page is quoted from the
+`SceneResult`, and a test collects the chips the page contains and requires each to be a
+verdict some action actually returned; no verdict literal appears in `viewer.py` outside
+`LEGEND`, so a chip's label and colour are derived from `policy_verdict` and an unknown verdict
+renders unstyled rather than mislabelled; and no scenario id appears in the module, so the
+running order, the headlines and the emphasis are functions of each episode's own outcome flags
+(a scenario leads the page because it *has* a contested effect or an injected instruction, not
+because it was named). The committed page must equal a fresh build, so it cannot drift.
+
+**Alternatives rejected.** (a) **A live agent behind the page.** It needs an API key, costs
+money per view, is nondeterministic, and would retire the `reproduces with no API key` claim
+that is currently the repository's most load-bearing one. A live demo is *weaker* evidence than
+a replay of a committed trace, not stronger. The honest version of "watch it defend in real
+time" already exists as a registered, budgeted experiment — **E-01c**, the live defended run —
+and it stays there. (b) **A served application.** Nothing here needs a server; a single file
+that opens from `file://` is more likely to still work in a year. (c) **Animating the verdicts
+in sequence.** Delay implies latency, and latency implies a live system. The page is complete
+the moment it renders. (d) **A committed screenshot for the README.** It would drift from the
+artifacts silently; the still is an SVG emitted by the same command and diffed as text.
+
+**What it deliberately does not hide.** Replay is faithful only up to the first refusal
+(`eval/replay.py`). A step after a refusal was taken in a world where that refusal never
+happened, and stacking four such steps as equals would read as an agent that tried twice and
+was stopped twice. Off-policy steps are marked on the page and the footer states the limit.
+Presented plainly this is the better story: the undefended agent retried the same exfiltration
+through a second tool, and the structural gate caught that one too.
+
+**This is presentation work and is not research.** It measures nothing, and no number in it is
+a result — the page prints no aggregate rate, and a test enforces that, because a percentage
+over four hand-picked episodes would be a figure with no population behind it.
+
+**Revisit if.** E-01c is funded and run, at which point a *second* panel showing a genuinely
+live defended trajectory becomes honest and should be labelled as a different kind of object
+from the replay; or the scene set stops being representative of the suite.
+
+---
+
 ### D-042 — The learned compiler is not adopted under E-15's rule, and the rule was the wrong instrument
 **Date:** 2026-09-09 · **Status:** accepted · **Follows:** E-15's registered decision rule ·
 **Qualifies:** D-038's baseline framing · **Does not amend:** E-15

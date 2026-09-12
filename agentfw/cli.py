@@ -12,6 +12,7 @@ agentfw couple-scopes            # E-12: withhold grants the compiler itself que
 agentfw authoring-input          # D-033: the utterances an independent labeller is given
 agentfw smoke                    # one scripted episode, no network, no key
 agentfw demo                     # watch it allow, ask and refuse; no key, no network
+agentfw viewer                   # the same replay as a self-contained HTML page
 agentfw learn                    # E-15: the learned intent compiler, no key, no network
 agentfw results                  # regenerate docs/RESULTS.md from committed artifacts
 """
@@ -788,6 +789,34 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_viewer(args: argparse.Namespace) -> int:
+    """Phase 7.1: the same replay as `demo`, rendered for a reader who has no terminal."""
+    from agentfw import viewer as viewer_mod
+
+    results, _ = viewer_mod.build_results(args.scope)
+    if args.stdout:
+        with contextlib.suppress(Exception):
+            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        page, _hero = viewer_mod.build(args.scope)
+        print(page)
+        return 0
+    html_path, hero_path = viewer_mod.write(
+        Path(args.out), Path(args.hero), scope_label=args.scope
+    )
+    print(f"[viewer] {len(results)} scene(s) replayed, authority source {args.scope}")
+    print(viewer_mod.summary(results))
+    for path in (html_path, hero_path):
+        # Repo-relative when it is inside the repo, absolute when `--out` points elsewhere.
+        # `relative_to` raises rather than returning None, and a crash *after* the files are
+        # already written would be a confusing way to report success.
+        shown = path
+        with contextlib.suppress(ValueError):
+            shown = path.relative_to(viewer_mod.ROOT)
+        print(f"[viewer] wrote {shown}")
+    print("[viewer] open the HTML in a browser; nothing in it needs a server or a key")
+    return 0
+
+
 def cmd_smoke(args: argparse.Namespace) -> int:
     from agentfw.agent.loop import run_episode
     from agentfw.agent.providers.scripted import ScriptedClient, call, say
@@ -954,6 +983,8 @@ def main(argv: list[str] | None = None) -> int:
     ln.set_defaults(fn=cmd_learn)
 
     from agentfw.demo import DEFAULT_SCOPE, SCOPE_CHOICES
+    from agentfw.viewer import DEFAULT_HERO as VIEWER_HERO
+    from agentfw.viewer import DEFAULT_HTML as VIEWER_HTML
 
     dm = sub.add_parser(
         "demo",
@@ -979,6 +1010,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     dm.add_argument("--no-color", action="store_true", help="plain text, no ANSI")
     dm.set_defaults(fn=cmd_demo)
+
+    vw = sub.add_parser(
+        "viewer",
+        help="render the same replay as a self-contained HTML page plus a README still",
+    )
+    vw.add_argument(
+        "--scope",
+        default=DEFAULT_SCOPE,
+        choices=[c.label for c in SCOPE_CHOICES],
+        help="where the episode's starting authority comes from (default: %(default)s)",
+    )
+    vw.add_argument("--out", default=str(VIEWER_HTML), help="HTML output path")
+    vw.add_argument("--hero", default=str(VIEWER_HERO), help="SVG still output path")
+    vw.add_argument(
+        "--stdout", action="store_true", help="print the HTML instead of writing files"
+    )
+    vw.set_defaults(fn=cmd_viewer)
 
     sub.add_parser("smoke").set_defaults(fn=cmd_smoke)
 
