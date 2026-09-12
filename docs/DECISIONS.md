@@ -950,7 +950,7 @@ for it.
 **Date:** 2026-09-12 · **Status:** accepted · **Constrains:** `agentfw/viewer.py` ·
 **Does not amend:** any experiment, policy or scope source
 
-**Decision.** `agentfw viewer` renders `docs/viewer.html` and `docs/viewer-hero.svg` from
+**Decision.** `agentfw viewer` renders `docs/viewer.html` and `docs/replay-hero.svg` from
 `demo.run_scene()` and nothing else. It performs no replay of its own, declares no policy, and
 loads no second scope source. A live-agent demo is **rejected**, not deferred.
 

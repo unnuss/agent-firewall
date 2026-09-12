@@ -49,7 +49,7 @@ from agentfw.sandbox.registry import load_all
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_HTML = ROOT / "docs" / "viewer.html"
-DEFAULT_HERO = ROOT / "docs" / "viewer-hero.svg"
+DEFAULT_HERO = ROOT / "docs" / "replay-hero.svg"
 
 # The only place in this module where a verdict is written out. Everything else derives its
 # label from `action.policy_verdict` and its CSS class from that string lowercased, so this

@@ -34,7 +34,7 @@ phase-by-phase narrative moved to `docs/RESEARCH_LOG.md`, and the trailer cleanu
 `Co-Authored-By` commits rewritten before the first push; the rule is now in `CLAUDE.md`).
 · **Phase 7.1 complete (2026-09-12) — the trace viewer.** `uv run agentfw viewer` writes
 `docs/viewer.html`, one self-contained page showing the four curated cases as *Without the
-firewall → With Agent Firewall*, and `docs/viewer-hero.svg`, the README's first figure. It is a
+firewall → With Agent Firewall*, and `docs/replay-hero.svg`, the README's first figure. It is a
 **renderer over `demo.run_scene()` and nothing else** (D-043): no second replay path, no second
 policy, no live agent, no animation. Every verdict, gate, bound and explanation on it is quoted
 from the `SceneResult`; 32 tests assert the provenance, that no verdict literal or scenario id
